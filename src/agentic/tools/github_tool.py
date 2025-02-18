@@ -55,16 +55,18 @@ class GithubTool:
             self.download_repo_file
         ]
 
-    def clone_repository(self, run_context: RunContext, repo_url: str) -> str:
+    def clone_repository(self, run_context: RunContext, repo_url: str, directory_path: str) -> str:
         """
         Clone a git repository from the given URL.
         :param repo_url: str
             The URL of the repository to clone.
+        :param directory_path: str
+            The path to the directory where the repository should be cloned. This should always be a relative path of the form 'owner/repo'.
         :return: str
             Status message.
         """
         try:
-            Repo.clone_from(repo_url, self.repo_dir)
+            Repo.clone_from(repo_url, os.path.join(self.repo_dir, directory_path))
             return "Repository cloned successfully."
         except GitCommandError as e:
             return f"Error cloning repository: {str(e)}"
@@ -328,12 +330,15 @@ class GithubTool:
                 response = await client.post(url, headers=headers, json=data, params=params)
             elif method.upper() == 'DELETE':
                 response = await client.delete(url, headers=headers, params=params)
+            elif method.upper() == 'PATCH':
+                response = await client.patch(url, headers=headers, json=data, params=params)
             else:
                 return {'status': 'error', 'message': f"Unsupported HTTP method: {method}"}
 
-            if response.status_code in [200, 201]:
+            if response.status_code in [200, 201, 204]:
                 return {'status': 'success', 'results': response.json()}
             else:
+                print(response.headers)
                 return {'status': 'error', 'message': f"API request failed: {response.text}"}
         
     def _get_repo_info(self, run_context: RunContext, repo_owner: Optional[str] = None, repo_name: Optional[str] = None) -> Tuple[str, str]:
@@ -462,17 +467,17 @@ class GithubTool:
                 'updated_at': issue.get('updated_at'),
                 'closed_at': issue.get('closed_at'),
                 'labels': [label.get('name') for label in issue.get('labels', [])],
-                'assignee': issue.get('assignee', {}).get('login', None),
-                'creator': issue.get('user', {}).get('login', None),
+                'assignee': issue.get('assignee', {}).get('login') if issue.get('assignee') else None,
+                'creator': issue.get('user', {}).get('login') if issue.get('user') else None,
                 'comments': issue.get('comments'),
-                'pull_request_url': issue.get('pull_request', {}).get('url', None),
+                'pull_request_url': issue.get('pull_request', {}).get('html_url') if issue.get('pull_request') else None,
                 'description': issue.get('body'),
             }
             for issue in results
         ]
         print(slim_issues)
         return pd.DataFrame(slim_issues)
-    
+  
     async def get_github_issue_comments(self, run_context: RunContext, issue_number: int, repo_owner: Optional[str] = None, repo_name: Optional[str] = None) -> dict[str, Any]:
         """
         Get comments for a GitHub issue.
@@ -484,6 +489,19 @@ class GithubTool:
         owner, name = self._get_repo_info(run_context, repo_owner, repo_name)
         endpoint = f'/repos/{owner}/{name}/issues/{issue_number}/comments'
         return await self._github_request('GET', endpoint, run_context)
+    
+    async def close_github_issue(self, run_context: RunContext, issue_number: int, repo_owner: Optional[str] = None, repo_name: Optional[str] = None) -> Dict[str, Any]:
+        """
+        Close a GitHub issue.
+        :param issue_number: The number of the issue
+        :param repo_owner: Repository owner (if None, uses default_repo owner)
+        :param repo_name: Repository name (if None, uses default_repo name)
+        :return: Closed issue data
+        """
+        owner, name = self._get_repo_info(run_context, repo_owner, repo_name)
+        endpoint = f'/repos/{owner}/{name}/issues/{issue_number}'
+        data = {'state': 'closed'}
+        return await self._github_request('PATCH', endpoint, run_context, data)
 
     async def create_pull_request(self, run_context: RunContext, title: str, body: str, head: str, base: str,
                         repo_owner: Optional[str] = None, repo_name: Optional[str] = None) -> Dict[str, Any]:
@@ -577,15 +595,16 @@ class GithubTool:
         """
         return await self._github_request('GET', f'/users/{username}', run_context)
     
-    async def list_user_repositories(self, run_context: RunContext, username: str, sort: str = 'updated', direction: str = 'desc') -> pd.DataFrame:
+    async def list_user_repositories(self, run_context: RunContext, sort: str = 'updated', direction: str = 'desc') -> pd.DataFrame:
         """
-        List repositories for a user.
+        List repositories for the authenticated user.
         :param username: The GitHub username
         :param sort: The property to sort the repositories by. Can be one of: created, updated, pushed, full_name. (Default: 'updated')
         :param direction: The direction of the sort. Can be either 'asc' or 'desc'. (Default: 'desc')
         :return: List of repositories
         """
-        response = await self._github_request('GET', f'/users/{username}/repos?sort={sort}&direction={direction}', run_context)
+        params = {'sort': sort, 'direction': direction}
+        response = await self._github_request('GET', f'/user/repos', run_context, params=params)
 
         # Check for API request errors
         if isinstance(response, dict) and response.get('status') == 'error':
