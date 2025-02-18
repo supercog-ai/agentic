@@ -97,7 +97,12 @@ class SecretManager:
         try:
             cursor.execute("SELECT value FROM secrets WHERE name=?", (name,))
             result = cursor.fetchone()
-            return self.encrypter.decrypt(result[0]) if result else default_value
+            if result:
+                return self.encrypter.decrypt(result[0])
+            elif os.environ.get(name):
+                return os.environ.get(name)
+            elif default_value is not None:
+                return default_value
         finally:
             conn.close()
 
