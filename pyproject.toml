@@ -38,7 +38,7 @@ dependencies = [
     "httpx>=0.28.1",
     "unicodedata2>=16.0.0",
     "sse-starlette>=2.2.1",
-    "gitpython>=3.1.44",
+    "sqlmodel>=0.0.22",
 ]
 
 [project.optional-dependencies]

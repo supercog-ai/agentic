@@ -82,11 +82,11 @@ from agentic.tools.registry import tool_registry
 
 __CTX_VARS_NAME__ = "run_context"
 
-# define a CallbackType Enum with values: "handle_turn_start", "handle_turn_end"
-CallbackType = Literal["handle_turn_start", "handle_turn_end"]
+# define a CallbackType Enum with values: "handle_turn_start", "handle_event", "handle_turn_end"
+CallbackType = Literal["handle_turn_start", "handle_event", "handle_turn_end"]
 
 # make a Callable type that expects a Prompt and RunContext
-CallbackFunc = Callable[[Prompt, RunContext], None]
+CallbackFunc = Callable[[Event, RunContext], None]
 
 @dataclass
 class AgentPauseContext:
@@ -402,6 +402,12 @@ class ActorBaseAgent:
         )
 
     def handlePromptOrResume(self, actor_message: Prompt | ResumeWithInput):
+        for event in self._handlePromptOrResume(actor_message):
+            if self._callbacks.get('handle_event'):
+                self._callbacks['handle_event'](event, self.run_context)
+            yield event
+
+    def _handlePromptOrResume(self, actor_message: Prompt | ResumeWithInput):
         if isinstance(actor_message, Prompt):
             # Middleware to modify the input prompt (or change agent context)
             self.run_context = (
@@ -633,8 +639,14 @@ class ActorBaseAgent:
         self.debug = debug
         print("agent set new debug level: ", debug)
 
-    def set_callback(self, key: CallbackType, callback: Callable):
-        self._callbacks[key] = callback
+    def get_callback(self, key: CallbackType) -> Optional[CallbackFunc]:
+        return self._callbacks.get(key)
+
+    def set_callback(self, key: CallbackType, callback: Optional[CallbackFunc]):
+        if callback is None:
+            self._callbacks.pop(key, None)
+        else:
+            self._callbacks[key] = callback
 
     def list_tools(self) -> list[str]:
         return self.tools
@@ -773,6 +785,7 @@ class RayFacadeAgent:
         model: str | None = None,
         template_path: str | Path = None,
         max_tokens: int = None,
+        enable_run_tracking: bool = True,
         memories: list[str] = [],
         handle_turn_start: Callable[[Prompt, RunContext], None] = None,
         debug: DebugLevel = DebugLevel(DebugLevel.OFF),
@@ -803,6 +816,13 @@ class RayFacadeAgent:
 
         # Initialize the base actor
         self._init_base_actor(instructions or "")
+
+        # Initialize adding runs to the agent
+        if enable_run_tracking:
+            from .run_manager import init_run_tracking
+            self.run_manager = init_run_tracking(self)
+        else:
+            self.run_manager = None
 
         # Ensure API key is set
         self.ensure_api_key_for_model(self.model)
@@ -994,3 +1014,13 @@ class RayFacadeAgent:
 
     def get_history(self):
         return ray.get(self._agent.get_history.remote())
+        
+    def set_run_tracking(self, enabled: bool, user_id: str = "default") -> None: #TODO: create a real user_id
+        """Enable or disable run tracking for this agent"""
+        if enabled and not self.run_manager:
+            from .run_manager import init_run_tracking
+            self.run_manager = init_run_tracking(self, user_id)
+        elif not enabled and self.run_manager:
+            from .run_manager import disable_run_tracking
+            disable_run_tracking(self)
+            self.run_manager = None

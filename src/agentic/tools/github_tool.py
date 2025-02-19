@@ -338,7 +338,6 @@ class GithubTool:
             if response.status_code in [200, 201, 204]:
                 return {'status': 'success', 'results': response.json()}
             else:
-                print(response.headers)
                 return {'status': 'error', 'message': f"API request failed: {response.text}"}
         
     def _get_repo_info(self, run_context: RunContext, repo_owner: Optional[str] = None, repo_name: Optional[str] = None) -> Tuple[str, str]:
@@ -475,7 +474,6 @@ class GithubTool:
             }
             for issue in results
         ]
-        print(slim_issues)
         return pd.DataFrame(slim_issues)
   
     async def get_github_issue_comments(self, run_context: RunContext, issue_number: int, repo_owner: Optional[str] = None, repo_name: Optional[str] = None) -> dict[str, Any]:
