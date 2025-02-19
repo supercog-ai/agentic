@@ -1,4 +1,5 @@
 from typing import Optional, Dict
+from uuid import uuid4
 from litellm import Message
 from .events import (
     Event,
@@ -19,9 +20,10 @@ class RunManager:
     This is automatically initialized for all agents unless disabled with enable_run_logs=False.
     """
     
-    def __init__(self, user_id: str = "default", db_path: str = "~/.agentic/database.db"):
+    def __init__(self, initial_run_id: Optional[str] = None, user_id: str = "default", db_path: str = "~/.agentic/database.db"):
         self.user_id = user_id
-        self.current_run_id: Optional[int] = None
+        self.initial_run_id: Optional[str] = initial_run_id
+        self.current_run_id: Optional[str] = None
         self.usage_data: Dict = {}
         self.db_path = db_path
     
@@ -30,8 +32,9 @@ class RunManager:
         db_manager = DatabaseManager(db_path=self.db_path)
         # Initialize a new run when we see a Prompt event
         # TODO: Handle multiple prompts in a single run
-        if isinstance(event, PromptStarted):
+        if isinstance(event, PromptStarted) and not self.current_run_id:
             run = db_manager.create_run(
+                run_id=self.initial_run_id,
                 agent_id=run_context.agent_name,
                 user_id=self.user_id,
                 initial_prompt=event.payload,
@@ -103,9 +106,10 @@ class RunManager:
 
 def init_run_tracking(agent: Agent, user_id: str = "default", db_path: str = "~/.agentic/database.db") -> RunManager:
     """Helper function to set up run tracking for an agent"""
-    run_manager = RunManager(user_id, db_path)
+    run_id = str(uuid4())
+    run_manager = RunManager(run_id, user_id, db_path)
     agent._agent.set_callback.remote('handle_event', run_manager.handle_event)
-    return run_manager
+    return run_id
 
 def disable_run_tracking(agent: Agent) -> None:
     """Helper function to disable run tracking for an agent"""

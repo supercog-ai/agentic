@@ -21,14 +21,16 @@ class DatabaseManager:
     def get_session(self) -> Session:
         return Session(self.engine)
 
-    def create_run(self, 
+    def create_run(self,
                    agent_id: str,
                    user_id: str,
                    initial_prompt: str,
+                   run_id: Optional[str] = None,
                    description: Optional[str] = None,
                    usage_data: Dict = None,
                    run_metadata: Dict = None) -> Run:
         run = Run(
+            id=run_id,
             agent_id=agent_id,
             user_id=user_id,
             initial_prompt=initial_prompt,

@@ -55,6 +55,7 @@ def test_run_logging_enabled(test_agent, db_manager):
     runs = db_manager.get_runs_by_user("default")
     assert len(runs) == 1
     run = runs[0]
+    initial_run_logs_count = len(db_manager.get_run_logs(run.id))
     
     # Verify run metadata
     assert run.agent_id == "Calculator"
@@ -87,7 +88,10 @@ def test_run_logging_enabled(test_agent, db_manager):
     runner.turn("What is 10 minus 4?")
     
     runs = db_manager.get_runs_by_user("default")
-    assert len(runs) == 2
+    new_run_logs_count = len(db_manager.get_run_logs(run.id))
+    # Make sure the length of runs is one but that the number of run logs increased
+    assert len(runs) == 1
+    assert new_run_logs_count > initial_run_logs_count
 
 def test_run_logging_disabled(db_manager):
     """Test that no logging occurs when run logging is disabled."""
