@@ -785,7 +785,7 @@ class RayFacadeAgent:
         model: str | None = None,
         template_path: str | Path = None,
         max_tokens: int = None,
-        enable_run_tracking: bool = True,
+        enable_run_logs: bool = True,
         memories: list[str] = [],
         handle_turn_start: Callable[[Prompt, RunContext], None] = None,
         debug: DebugLevel = DebugLevel(DebugLevel.OFF),
@@ -818,7 +818,7 @@ class RayFacadeAgent:
         self._init_base_actor(instructions or "")
 
         # Initialize adding runs to the agent
-        if enable_run_tracking:
+        if enable_run_logs:
             from .run_manager import init_run_tracking
             self.run_manager = init_run_tracking(self)
         else:

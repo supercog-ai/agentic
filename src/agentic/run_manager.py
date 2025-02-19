@@ -14,7 +14,7 @@ from agentic.utils.sqlite import make_json_serializable
 class RunManager:
     """
     Context manager that tracks agent runs and logs events to the database.
-    This is automatically initialized for all agents unless disabled with enable_run_tracking=False.
+    This is automatically initialized for all agents unless disabled with enable_run_logs=False.
     """
     
     def __init__(self, user_id: str = "default"):
