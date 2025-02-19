@@ -79,6 +79,7 @@ from .events import (
     AgentDescriptor,
 )
 from agentic.tools.registry import tool_registry
+from agentic.db.db_manager import DatabaseManager
 
 __CTX_VARS_NAME__ = "run_context"
 
@@ -401,7 +402,7 @@ class ActorBaseAgent:
             self.depth,
         )
 
-    def handlePromptOrResume(self, actor_message: Prompt | ResumeWithInput):
+    def handlePromptOrResume(self, actor_message: Prompt | ResumeWithInput):            
         for event in self._handlePromptOrResume(actor_message):
             if self._callbacks.get('handle_event'):
                 self._callbacks['handle_event'](event, self.run_context)
@@ -786,6 +787,7 @@ class RayFacadeAgent:
         template_path: str | Path = None,
         max_tokens: int = None,
         enable_run_logs: bool = True,
+        db_path: Optional[str | Path] = None,
         memories: list[str] = [],
         handle_turn_start: Callable[[Prompt, RunContext], None] = None,
         debug: DebugLevel = DebugLevel(DebugLevel.OFF),
@@ -820,7 +822,10 @@ class RayFacadeAgent:
         # Initialize adding runs to the agent
         if enable_run_logs:
             from .run_manager import init_run_tracking
-            self.run_manager = init_run_tracking(self)
+            if db_path:
+                self.run_manager = init_run_tracking(self, db_path=db_path)
+            else:
+                self.run_manager = init_run_tracking(self)
         else:
             self.run_manager = None
 

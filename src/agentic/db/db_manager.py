@@ -1,6 +1,6 @@
-from datetime import datetime
+from datetime import datetime, UTC
 from typing import Dict, Optional
-from sqlmodel import Session, SQLModel, create_engine
+from sqlmodel import Session, SQLModel, create_engine, select
 from pathlib import Path
 from copy import deepcopy
 
@@ -9,7 +9,7 @@ from agentic.events import FinishCompletion
 
 # Database setup and management
 class DatabaseManager:
-    def __init__(self, db_path: str = "~/.agentic/runs.db"):
+    def __init__(self, db_path: str = "~/.agentic/database.db"):
         self.db_path = Path(db_path).expanduser()
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
         self.engine = create_engine(f"sqlite:///{self.db_path}", echo=False)
@@ -51,7 +51,7 @@ class DatabaseManager:
                   event_name: str,
                   event_data: Dict) -> RunLog:
         with self.get_session() as session:
-            run_timestamp = datetime.utcnow()
+            run_timestamp = datetime.now(UTC)
             # Create the log entry
             log = RunLog(
                 run_id=run_id,
@@ -100,10 +100,15 @@ class DatabaseManager:
                 if description is not None:
                     run.description = description
                 if usage_data is not None:
-                    run.usage_data.update(usage_data)
+                    updated_usage_data = deepcopy(run.usage_data)
+                    updated_usage_data.update(usage_data)
+                    run.usage_data = updated_usage_data
                 if run_metadata is not None:
+                    updated_run_metadata = deepcopy(run.run_metadata)
+                    updated_run_metadata.update(run_metadata)
+                    run.run_metadata = updated_run_metadata
                     run.run_metadata.update(run_metadata)
-                run.updated_at = datetime.utcnow()
+                run.updated_at = datetime.now(UTC)
                 session.add(run)
                 session.commit()
                 session.refresh(run)
@@ -116,15 +121,12 @@ class DatabaseManager:
 
     def get_run_logs(self, run_id: int) -> list[RunLog]:
         with self.get_session() as session:
-            return session.query(RunLog).filter(RunLog.run_id == run_id).all()
+            return session.exec(select(RunLog).where(RunLog.run_id == run_id)).all()
 
     def get_runs_by_user(self, user_id: str) -> list[Run]:
         with self.get_session() as session:
-            return session.query(Run).filter(Run.user_id == user_id).all()
+            return session.exec(select(Run).where(Run.user_id == user_id)).all()
 
     def get_runs_by_agent(self, agent_id: str) -> list[Run]:
         with self.get_session() as session:
-            return session.query(Run).filter(Run.agent_id == agent_id).all()
-
-# Create a global database manager instance
-db_manager = DatabaseManager()
+            return session.exec(select(Run).where(Run.agent_id == agent_id)).all()

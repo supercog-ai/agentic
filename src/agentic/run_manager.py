@@ -3,6 +3,7 @@ from litellm import Message
 from .events import (
     Event,
     PromptStarted,
+    Output,
     TurnEnd,
     FinishCompletion,
     ToolCall,
@@ -10,6 +11,7 @@ from .events import (
 )
 from .common import Agent, RunContext
 from agentic.utils.sqlite import make_json_serializable
+from agentic.db.db_manager import DatabaseManager
 
 class RunManager:
     """
@@ -17,15 +19,15 @@ class RunManager:
     This is automatically initialized for all agents unless disabled with enable_run_logs=False.
     """
     
-    def __init__(self, user_id: str = "default"):
+    def __init__(self, user_id: str = "default", db_path: str = "~/.agentic/database.db"):
         self.user_id = user_id
         self.current_run_id: Optional[int] = None
         self.usage_data: Dict = {}
+        self.db_path = db_path
     
     def handle_event(self, event: Event, run_context: RunContext) -> None:
-        """Generic event handler that processes all events and logs them appropriately"""
-        from agentic.db.db_manager import db_manager
-        
+        """Generic event handler that processes all events and logs them appropriately"""      
+        db_manager = DatabaseManager(db_path=self.db_path)
         # Initialize a new run when we see a Prompt event
         # TODO: Handle multiple prompts in a single run
         if isinstance(event, PromptStarted):
@@ -59,7 +61,10 @@ class RunManager:
         payload = event.payload.content if isinstance(event.payload, Message) else event.payload
         event_data = {"content": payload} if payload else {}
         
-        if isinstance(event, ToolCall):
+        if isinstance(event, Output):
+            event_data = payload
+        
+        elif isinstance(event, ToolCall):
             role = "tool"
             event_data = {
                 "name": payload,
@@ -96,9 +101,9 @@ class RunManager:
         if isinstance(event, TurnEnd):
             self.usage_data = {}
 
-def init_run_tracking(agent: Agent, user_id: str = "default") -> RunManager:
+def init_run_tracking(agent: Agent, user_id: str = "default", db_path: str = "~/.agentic/database.db") -> RunManager:
     """Helper function to set up run tracking for an agent"""
-    run_manager = RunManager(user_id)
+    run_manager = RunManager(user_id, db_path)
     agent._agent.set_callback.remote('handle_event', run_manager.handle_event)
     return run_manager
 
