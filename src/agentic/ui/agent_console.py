@@ -1,16 +1,25 @@
-from openai import OpenAI
 import streamlit as st
 
-from agentic import AgentRunner
-from agentic.events import ToolCall
-from examples import all
+from openai import OpenAI
 
+from agentic.common import AgentRunner
+from agentic.events import ToolCall
+from examples.basic_agent import agent as basic_agent
+
+st.title("Agentic")
+
+#======================
+# Define Agent        #
+#======================
+selected_agent = st.selectbox(
+    "", [basic_agent], format_func=lambda x: x.name 
+)
+
+#======================
+# Create Session      #
+#======================
 if "messages" not in st.session_state:
     st.session_state.messages = []
-
-selected_agent = st.selectbox(
-    "", all, format_func=lambda x: x.name, on_change=lambda: st.session_state.clear()
-)
 
 if "agent" not in st.session_state:
     st.session_state.agent = selected_agent
@@ -18,7 +27,7 @@ if "agent" not in st.session_state:
 
 if "agent" in st.session_state:
     agent = st.session_state.agent
-    st.title(agent.name)
+    st.subheader(agent.name)
     with st.chat_message("assistant"):
         st.markdown(agent.welcome)
 
