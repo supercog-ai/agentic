@@ -82,6 +82,7 @@ from .events import (
     ToolError,
     AgentDescriptor,
 )
+from agentic.utils.json import make_json_serializable
 from agentic.tools.registry import tool_registry
 from agentic.db.db_manager import DatabaseManager
 
@@ -723,12 +724,31 @@ class DynamicFastAPIHandler:
         if not stream:
             results = []
             for event in self.agent_facade.get_events(request_id):
-                results.append(str(event))
+                # Create a serializable version of the event
+                event_data = {
+                    "type": event.type,
+                    "agent": event.agent,
+                    "depth": event.depth,
+                    "payload": make_json_serializable(event.payload),
+                }
+
+                results.append(event_data)
             return results
         else:
             def render_events():
                 for event in self.agent_facade.get_events(request_id):
-                    yield (str(event))
+                    # Create a serializable version of the event
+                    event_data = {
+                        "type": event.type,
+                        "agent": event.agent,
+                        "depth": event.depth,
+                        "payload": make_json_serializable(event.payload),
+                    }
+
+                    yield {
+                        "data": json.dumps(event_data),
+                        "event": "message",
+                    }
             return EventSourceResponse(render_events())
 
     @app.post('/stream_request')
@@ -1041,7 +1061,7 @@ class RayFacadeAgent:
         t.start()
         return request_obj.request_id
 
-    def get_events(self, request_id: str):
+    def get_events(self, request_id: str) -> Generator[Event, Any, Any]:
         queue = self.request_queues[request_id]
         while True:
             event = queue.get()
