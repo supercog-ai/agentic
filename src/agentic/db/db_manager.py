@@ -9,7 +9,7 @@ from agentic.events import FinishCompletion
 
 # Database setup and management
 class DatabaseManager:
-    def __init__(self, db_path: str = "~/.agentic/database.db"):
+    def __init__(self, db_path: str = "./runtime/agent_runs.db"):
         self.db_path = Path(db_path).expanduser()
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
         self.engine = create_engine(f"sqlite:///{self.db_path}", echo=False)
@@ -71,7 +71,7 @@ class DatabaseManager:
             if run:
                 run.updated_at = run_timestamp
                 # Update usage data if event contains it
-                if event_name == "completion_end" and "usage" in event_data:
+                if event_name == "completion_end":
                     usage = event_data["usage"]
 
                     # Make a copy so changes are detected

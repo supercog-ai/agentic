@@ -20,7 +20,7 @@ class RunManager:
     This is automatically initialized for all agents unless disabled with enable_run_logs=False.
     """
     
-    def __init__(self, initial_run_id: Optional[str] = None, user_id: str = "default", db_path: str = "~/.agentic/database.db"):
+    def __init__(self, initial_run_id: Optional[str] = None, user_id: str = "default", db_path: str = "./runtime/agent_runs.db"):
         self.user_id = user_id
         self.initial_run_id: Optional[str] = initial_run_id
         self.current_run_id: Optional[str] = None
@@ -104,7 +104,7 @@ class RunManager:
         if isinstance(event, TurnEnd):
             self.usage_data = {}
 
-def init_run_tracking(agent: Agent, user_id: str = "default", db_path: str = "~/.agentic/database.db") -> RunManager:
+def init_run_tracking(agent: Agent, user_id: str = "default", db_path: str = "./runtime/agent_runs.db") -> RunManager:
     """Helper function to set up run tracking for an agent"""
     run_id = str(uuid4())
     run_manager = RunManager(run_id, user_id, db_path)
