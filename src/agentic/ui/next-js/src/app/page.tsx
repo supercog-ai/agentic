@@ -173,7 +173,7 @@ function AgentSidebar({
 }: AgentSidebarProps) {
   return (
     <div className="flex flex-col h-full">
-      <div className="p-4 border-b">
+      <div className="p-4">
         <Button 
           variant="secondary" 
           className="w-full justify-start gap-2"
@@ -184,12 +184,12 @@ function AgentSidebar({
         </Button>
       </div>
       
-      <div className="flex-none p-2">
+      <div className="flex-none p-4">
         {agents.map(({ path, info }) => (
           <Button
             key={path}
             variant={selectedAgent === path ? "secondary" : "ghost"}
-            className="w-full justify-start gap-2 mb-1"
+            className="w-full justify-start gap-2"
             onClick={() => onSelectAgent(path)}
           >
             <Bot className="h-4 w-4" />

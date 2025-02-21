@@ -101,7 +101,7 @@ export default function RunsTable({ agentPath, className = "", onRunSelected }: 
   return (
     <div className={className}>
       <h3 className="mb-2 px-2 text-sm font-semibold">Run History</h3>
-      <ScrollArea className="h-[calc(100vh-400px)]">
+      <ScrollArea className="h-[calc(100vh-200px)]">
         <div className="space-y-2 px-2">
           {runs.length === 0 ? (
             <p className="text-center text-sm text-muted-foreground">
