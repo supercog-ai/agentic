@@ -50,16 +50,19 @@ export default function RunsTable({ agentPath, className = "", onRunSelected }: 
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
+
+    // convert from UTC to local time
+    const localDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
     
     // Get month name
-    const month = date.toLocaleString('en-US', { month: 'short' });
+    const month = localDate.toLocaleString('en-US', { month: 'short' });
     
     // Get day with ordinal suffix
-    const day = date.getDate();
+    const day = localDate.getDate();
     const suffix = ['th', 'st', 'nd', 'rd'][(day % 10 > 3 ? 0 : day % 10)] || 'th';
     
     // Get time in 12-hour format
-    const time = date.toLocaleString('en-US', { 
+    const time = localDate.toLocaleString('en-US', { 
       hour: 'numeric',
       minute: '2-digit',
       hour12: true

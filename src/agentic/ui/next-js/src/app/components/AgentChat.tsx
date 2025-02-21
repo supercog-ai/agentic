@@ -24,12 +24,24 @@ export default function AgentChat({ agentPath, agentInfo, runLogs }: AgentChatPr
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [currentRunId, setCurrentRunId] = useState<string | undefined>();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const latestContent = useRef('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'inherit';
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+    }
+  }, [input]);
+
+  useEffect(() => {
     if (runLogs) {
+      // Find the run ID from the logs
+      const runId = runLogs[0]?.run_id;
+      setCurrentRunId(runId);
+
       // Convert run logs to chat messages, coalescing consecutive chat_outputs
       const newMessages = [];
       let currentMessage = null;
@@ -76,6 +88,9 @@ export default function AgentChat({ agentPath, agentInfo, runLogs }: AgentChatPr
 
       // Filter out any empty messages and set state
       setMessages(newMessages.filter(msg => msg.content));
+    } else {
+      setCurrentRunId(undefined);
+      setMessages([]);
     }
   }, [runLogs]);
 
@@ -106,7 +121,7 @@ export default function AgentChat({ agentPath, agentInfo, runLogs }: AgentChatPr
     setMessages(prev => [...prev, { role: 'user', content: userInput }]);
 
     try {
-      const requestId = await agenticApi.sendPrompt(agentPath, userInput);
+      const requestId = await agenticApi.sendPrompt(agentPath, userInput, currentRunId);
 
       if (!requestId) {
         throw new Error('No request ID received from server');

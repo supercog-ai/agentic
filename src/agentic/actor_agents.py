@@ -701,6 +701,7 @@ app.add_middleware(
 class ProcessRequest(BaseModel):
     prompt: str
     debug: Optional[str] = None
+    run_id: Optional[str] = None
 
 from sse_starlette.sse import EventSourceResponse
 
@@ -718,7 +719,8 @@ class DynamicFastAPIHandler:
     async def handle_post(self, prompt: ProcessRequest) -> str:
         self.prompt = prompt
         level = DebugLevel(prompt.debug) if prompt.debug else DebugLevel(DebugLevel.OFF)
-        return self.agent_facade.start_request(prompt.prompt, debug=level)
+        print(f"Received run_id: {prompt.run_id}")
+        return self.agent_facade.start_request(prompt.prompt, debug=level, run_id=prompt.run_id)
 
     @app.get("/getevents", response_model=None)
     async def get_events(self, request_id: str, stream: bool = False) -> list[str]|EventSourceResponse:
@@ -868,12 +870,7 @@ class RayFacadeAgent:
         # Initialize adding runs to the agent
         self.db_path = None
         if enable_run_logs:
-            from .run_manager import init_run_tracking
-            if db_path:
-                self.db_path = db_path
-                self.run_manager = init_run_tracking(self, db_path=db_path)
-            else:
-                self.run_manager = init_run_tracking(self)
+            self.init_run_tracking(db_path)
         else:
             self.run_manager = None
 
@@ -1048,17 +1045,24 @@ class RayFacadeAgent:
     def start_request(
         self, 
         request: str, 
+        run_id: Optional[str] = None,
         debug: DebugLevel = DebugLevel(DebugLevel.OFF),
     ) -> str: # returns the request_id
         self.debug = debug
         self.queue_done_sentinel = "QUEUE_DONE"
-        event: Event
+
+        # Initialize new request
         request_obj = Prompt(
             self.name,
             request,
             debug=self.debug,
             depth=0,
         )
+
+        # Re-initialize run tracking if continuing a run
+        if run_id and self.run_manager:
+            self.init_run_tracking(self.db_path, run_id)
+
         remote_gen = self._agent.handlePromptOrResume.remote(
             request_obj,
         )
@@ -1083,6 +1087,14 @@ class RayFacadeAgent:
             yield event
             time.sleep(0.01)
     
+    def init_run_tracking(self, db_path: Optional[str] = None, run_id: Optional[str] = None):
+        from .run_manager import init_run_tracking
+        if db_path:
+            self.db_path = db_path
+            self.run_manager = init_run_tracking(self, db_path=db_path, resume_run_id=run_id)
+        else:
+            self.run_manager = init_run_tracking(self, resume_run_id=run_id)
+
     def get_db_manager(self) -> DatabaseManager:
         if self.db_path:
             db_manager = DatabaseManager(self.db_path)
