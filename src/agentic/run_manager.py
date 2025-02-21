@@ -11,7 +11,7 @@ from .events import (
     ToolResult
 )
 from .common import Agent, RunContext
-from agentic.utils.sqlite import make_json_serializable
+from agentic.utils.json import make_json_serializable
 from agentic.db.db_manager import DatabaseManager
 
 class RunManager:
@@ -20,10 +20,10 @@ class RunManager:
     This is automatically initialized for all agents unless disabled with enable_run_logs=False.
     """
     
-    def __init__(self, initial_run_id: Optional[str] = None, user_id: str = "default", db_path: str = "./runtime/agent_runs.db"):
+    def __init__(self, initial_run_id: Optional[str] = None, current_run_id: Optional[str] = None, user_id: str = "default", db_path: str = "./runtime/agent_runs.db"):
         self.user_id = user_id
         self.initial_run_id: Optional[str] = initial_run_id
-        self.current_run_id: Optional[str] = None
+        self.current_run_id: Optional[str] = current_run_id
         self.usage_data: Dict = {}
         self.db_path = db_path
     
@@ -31,7 +31,7 @@ class RunManager:
         """Generic event handler that processes all events and logs them appropriately"""      
         db_manager = DatabaseManager(db_path=self.db_path)
         # Initialize a new run when we see a Prompt event
-        # TODO: Handle multiple prompts in a single run
+
         if isinstance(event, PromptStarted) and not self.current_run_id:
             run = db_manager.create_run(
                 run_id=self.initial_run_id,
@@ -104,10 +104,20 @@ class RunManager:
         if isinstance(event, TurnEnd):
             self.usage_data = {}
 
-def init_run_tracking(agent: Agent, user_id: str = "default", db_path: str = "./runtime/agent_runs.db") -> RunManager:
+def init_run_tracking(
+        agent: Agent,
+        user_id: str = "default",
+        db_path: str = "./runtime/agent_runs.db",
+        resume_run_id: Optional[str] = None
+    ) -> RunManager:
     """Helper function to set up run tracking for an agent"""
-    run_id = str(uuid4())
-    run_manager = RunManager(run_id, user_id, db_path)
+    run_id = str(uuid4()) if resume_run_id is None else resume_run_id
+    run_manager = RunManager(
+        initial_run_id=run_id,
+        current_run_id=resume_run_id,
+        user_id=user_id,
+        db_path=db_path
+    )
     agent._agent.set_callback.remote('handle_event', run_manager.handle_event)
     return run_id
 

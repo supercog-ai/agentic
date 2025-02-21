@@ -1,6 +1,6 @@
 from datetime import datetime, UTC
 from typing import Dict, Optional
-from sqlmodel import Session, SQLModel, create_engine, select
+from sqlmodel import Session, SQLModel, create_engine, select, asc, desc
 from pathlib import Path
 from copy import deepcopy
 
@@ -123,12 +123,12 @@ class DatabaseManager:
 
     def get_run_logs(self, run_id: int) -> list[RunLog]:
         with self.get_session() as session:
-            return session.exec(select(RunLog).where(RunLog.run_id == run_id)).all()
+            return session.exec(select(RunLog).where(RunLog.run_id == run_id).order_by(asc(RunLog.created_at))).all()
 
     def get_runs_by_user(self, user_id: str) -> list[Run]:
         with self.get_session() as session:
-            return session.exec(select(Run).where(Run.user_id == user_id)).all()
+            return session.exec(select(Run).where(Run.user_id == user_id).order_by(desc(Run.updated_at))).all()
 
     def get_runs_by_agent(self, agent_id: str) -> list[Run]:
         with self.get_session() as session:
-            return session.exec(select(Run).where(Run.agent_id == agent_id)).all()
+            return session.exec(select(Run).where(Run.agent_id == agent_id).order_by(desc(Run.updated_at))).all()

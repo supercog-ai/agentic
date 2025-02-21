@@ -15,3 +15,6 @@ runtime/
 venv/
 env/
 .DS_Store
+
+node_modules/
+.next/
