@@ -6,6 +6,7 @@ import RunsTable from '@/components/RunsTable';
 import { agenticApi, AgentInfo, RunLog } from '@/lib/api';
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { 
   Menu, 
   Plus, 
@@ -18,6 +19,15 @@ import {
   AlertDescription,
   AlertTitle,
 } from "@/components/ui/alert";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default function Home() {
   const [agents, setAgents] = useState<{
@@ -173,7 +183,7 @@ function AgentSidebar({
 }: AgentSidebarProps) {
   return (
     <div className="flex flex-col h-full">
-      <div className="p-4">
+      <div className="p-4 border-b space-y-4">
         <Button 
           variant="secondary" 
           className="w-full justify-start gap-2"
@@ -182,22 +192,32 @@ function AgentSidebar({
           <Plus className="h-4 w-4" />
           New Chat
         </Button>
+        <Select value={selectedAgent} onValueChange={onSelectAgent}>
+          <SelectTrigger className="w-full">
+            <SelectValue>
+              <div className="flex items-center gap-2">
+                <Bot className="h-4 w-4" />
+                <span className="truncate">
+                  {agents.find(a => a.path === selectedAgent)?.info.name || "Select Agent"}
+                </span>
+              </div>
+            </SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              <SelectLabel>Available Agents</SelectLabel>
+              {agents.map(({ path, info }) => (
+                <SelectItem key={path} value={path}>
+                  <div className="flex items-center gap-2">
+                    <Bot className="h-4 w-4" />
+                    <span className="truncate">{info.name}</span>
+                  </div>
+                </SelectItem>
+              ))}
+            </SelectGroup>
+          </SelectContent>
+        </Select>
       </div>
-      
-      <div className="flex-none p-4">
-        {agents.map(({ path, info }) => (
-          <Button
-            key={path}
-            variant={selectedAgent === path ? "secondary" : "ghost"}
-            className="w-full justify-start gap-2"
-            onClick={() => onSelectAgent(path)}
-          >
-            <Bot className="h-4 w-4" />
-            <span className="truncate">{info.name}</span>
-          </Button>
-        ))}
-      </div>
-
       {selectedAgent && (
         <RunsTable 
           agentPath={selectedAgent}
