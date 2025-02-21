@@ -2,12 +2,12 @@
 
 import { useEffect, useState } from 'react';
 import AgentChat from '@/components/AgentChat';
-import { agenticApi, AgentInfo } from '@/lib/api';
+import RunsTable from '@/components/RunsTable';
+import { agenticApi, AgentInfo, RunLog } from '@/lib/api';
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { 
-  MenuIcon, 
+  Menu, 
   Plus, 
   Bot,
   RefreshCw,
@@ -28,11 +28,13 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [selectedRunLogs, setSelectedRunLogs] = useState<RunLog[] | undefined>();
 
   const loadAgents = async () => {
     try {
       setIsLoading(true);
       setError(null);
+      setSelectedRunLogs(undefined);
       
       const agentPaths = await agenticApi.getAvailableAgents();
       const agentDetails = await Promise.all(
@@ -52,6 +54,15 @@ export default function Home() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleAgentSelect = (path: string) => {
+    setSelectedAgent(path);
+    setSelectedRunLogs(undefined); // Clear run logs when switching agents
+  };
+
+  const handleRunSelect = (logs: RunLog[]) => {
+    setSelectedRunLogs(logs);
   };
 
   useEffect(() => {
@@ -103,7 +114,7 @@ export default function Home() {
             size="icon"
             className="md:hidden absolute top-4 left-4 z-50"
           >
-            <MenuIcon className="h-6 w-6" />
+            <Menu className="h-6 w-6" />
           </Button>
         </SheetTrigger>
         <SheetContent side="left" className="p-0 w-64">
@@ -111,10 +122,11 @@ export default function Home() {
             agents={agents}
             selectedAgent={selectedAgent}
             onSelectAgent={(path) => {
-              setSelectedAgent(path);
+              handleAgentSelect(path);
               setIsSidebarOpen(false);
             }}
             onNewChat={loadAgents}
+            onRunSelected={handleRunSelect}
           />
         </SheetContent>
       </Sheet>
@@ -124,8 +136,9 @@ export default function Home() {
         <AgentSidebar 
           agents={agents}
           selectedAgent={selectedAgent}
-          onSelectAgent={setSelectedAgent}
+          onSelectAgent={handleAgentSelect}
           onNewChat={loadAgents}
+          onRunSelected={handleRunSelect}
         />
       </div>
 
@@ -135,6 +148,7 @@ export default function Home() {
           <AgentChat 
             agentPath={selectedAgent} 
             agentInfo={selectedAgentInfo}
+            runLogs={selectedRunLogs}
           />
         )}
       </div>
@@ -147,9 +161,16 @@ interface AgentSidebarProps {
   selectedAgent: string;
   onSelectAgent: (path: string) => void;
   onNewChat: () => void;
+  onRunSelected: (logs: RunLog[]) => void;
 }
 
-function AgentSidebar({ agents, selectedAgent, onSelectAgent, onNewChat }: AgentSidebarProps) {
+function AgentSidebar({ 
+  agents, 
+  selectedAgent, 
+  onSelectAgent, 
+  onNewChat,
+  onRunSelected 
+}: AgentSidebarProps) {
   return (
     <div className="flex flex-col h-full">
       <div className="p-4 border-b">
@@ -163,7 +184,7 @@ function AgentSidebar({ agents, selectedAgent, onSelectAgent, onNewChat }: Agent
         </Button>
       </div>
       
-      <ScrollArea className="flex-1 p-2">
+      <div className="flex-none p-2">
         {agents.map(({ path, info }) => (
           <Button
             key={path}
@@ -175,7 +196,15 @@ function AgentSidebar({ agents, selectedAgent, onSelectAgent, onNewChat }: Agent
             <span className="truncate">{info.name}</span>
           </Button>
         ))}
-      </ScrollArea>
+      </div>
+
+      {selectedAgent && (
+        <RunsTable 
+          agentPath={selectedAgent}
+          className="flex-1 border-t pt-4"
+          onRunSelected={onRunSelected}
+        />
+      )}
     </div>
   );
 }

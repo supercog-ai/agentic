@@ -82,6 +82,7 @@ from .events import (
     ToolError,
     AgentDescriptor,
 )
+from agentic.db.models import Run, RunLog
 from agentic.utils.json import make_json_serializable
 from agentic.tools.registry import tool_registry
 from agentic.db.db_manager import DatabaseManager
@@ -757,6 +758,16 @@ class DynamicFastAPIHandler:
             for event in self.next_turn(prompt.prompt):
                 yield (str(event))
         return EventSourceResponse(render_events())
+    
+    @app.get('/runs')
+    async def get_runs(self) -> list[dict]:
+        runs = self.agent_facade.get_runs()
+        return [run.model_dump() for run in runs]
+    
+    @app.get('/runs/{run_id}/logs')
+    async def get_run_logs(self, run_id=str) -> list[dict]:
+        run_logs = self.agent_facade.get_run_logs(run_id)
+        return [run_log.model_dump() for run_log in run_logs]
 
     def next_turn(
         self,
@@ -855,9 +866,11 @@ class RayFacadeAgent:
         self._init_base_actor(instructions or "")
 
         # Initialize adding runs to the agent
+        self.db_path = None
         if enable_run_logs:
             from .run_manager import init_run_tracking
             if db_path:
+                self.db_path = db_path
                 self.run_manager = init_run_tracking(self, db_path=db_path)
             else:
                 self.run_manager = init_run_tracking(self)
@@ -1069,7 +1082,31 @@ class RayFacadeAgent:
                 break
             yield event
             time.sleep(0.01)
+    
+    def get_db_manager(self) -> DatabaseManager:
+        if self.db_path:
+            db_manager = DatabaseManager(self.db_path)
+        else:
+            db_manager = DatabaseManager()
+        return db_manager
 
+    def get_runs(self) -> list[Run]:
+        db_manager = self.get_db_manager()
+        
+        try:
+            return db_manager.get_runs_by_agent(self.name)
+        except Exception as e:
+            print(f"Error getting runs: {e}")
+            return []
+        
+    def get_run_logs(self, run_id: str) -> list[RunLog]:
+        db_manager = self.get_db_manager()
+        
+        try:
+            return db_manager.get_run_logs(run_id)
+        except Exception as e:
+            print(f"Error getting run logs: {e}")
+            return []
    
     def next_turn(
         self,

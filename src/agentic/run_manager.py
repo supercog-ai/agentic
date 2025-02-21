@@ -11,7 +11,7 @@ from .events import (
     ToolResult
 )
 from .common import Agent, RunContext
-from agentic.utils.sqlite import make_json_serializable
+from agentic.utils.json import make_json_serializable
 from agentic.db.db_manager import DatabaseManager
 
 class RunManager:

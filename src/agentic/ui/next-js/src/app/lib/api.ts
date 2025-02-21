@@ -13,6 +13,38 @@ export interface AgentInfo {
   tools: string[];
 }
 
+export interface Run {
+  id: string;
+  agent_id: string;
+  user_id: string;
+  created_at: string;
+  updated_at: string;
+  initial_prompt: string;
+  description: string | null;
+  usage_data: {
+    [model: string]: {
+      input_tokens: number;
+      output_tokens: number;
+      cost: number;
+    };
+  };
+}
+
+export interface RunLog {
+  id: string;
+  run_id: string;
+  agent_id: string;
+  user_id: string;
+  role: string;
+  created_at: string;
+  event_name: string;
+  event: {
+    type: string;
+    payload: any;
+    content?: string;
+  };
+}
+
 export const agenticApi = {
   // Send a prompt to an agent
   sendPrompt: async (agentPath: string, prompt: string): Promise<string> => {
@@ -91,5 +123,35 @@ export const agenticApi = {
     }
 
     return response.json();
+  },
+
+  // Get run history for an agent
+  getRuns: async (agentPath: string): Promise<Run[]> => {
+    const response = await fetch(`/api${agentPath}/runs`, {
+      headers: {
+        'Accept': 'application/json',
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return response.json();
+  },
+
+  // Get logs for a specific run
+  getRunLogs: async (agentPath: string, runId: string): Promise<RunLog[]> => {
+    const response = await fetch(`/api${agentPath}/runs/${runId}/logs`, {
+      headers: {
+        'Accept': 'application/json',
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return response.json();
   }
-}
+};

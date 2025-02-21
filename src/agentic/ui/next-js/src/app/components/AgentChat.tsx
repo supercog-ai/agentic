@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { agenticApi, AgentEvent, AgentInfo } from '@/lib/api';
+import { agenticApi, AgentEvent, AgentInfo, RunLog } from '@/lib/api';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -17,15 +17,67 @@ interface Message {
 interface AgentChatProps {
   agentPath: string;
   agentInfo: AgentInfo;
+  runLogs?: RunLog[];
 }
 
-export default function AgentChat({ agentPath, agentInfo }: AgentChatProps) {
+export default function AgentChat({ agentPath, agentInfo, runLogs }: AgentChatProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const latestContent = useRef('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    if (runLogs) {
+      // Convert run logs to chat messages, coalescing consecutive chat_outputs
+      const newMessages = [];
+      let currentMessage = null;
+      
+      for (const log of runLogs) {
+        if (log.event_name === 'prompt_started') {
+          // Always create a new user message
+          if (currentMessage) {
+            newMessages.push(currentMessage);
+            currentMessage = null;
+          }
+          newMessages.push({
+            role: 'user' as const,
+            content: log.event.content || log.event.payload
+          });
+        } else if (log.event_name === 'chat_output') {
+          const content = log.event.content || log.event.payload?.content;
+          if (!content) continue;
+
+          if (currentMessage && currentMessage.role === 'agent') {
+            // Append to existing agent message
+            currentMessage.content += content;
+          } else {
+            // Start new agent message
+            if (currentMessage) {
+              newMessages.push(currentMessage);
+            }
+            currentMessage = {
+              role: 'agent' as const,
+              content: content
+            };
+          }
+        } else if (currentMessage) {
+          // If we hit any other type of log, push the current message
+          newMessages.push(currentMessage);
+          currentMessage = null;
+        }
+      }
+
+      // Don't forget to push the last message if exists
+      if (currentMessage) {
+        newMessages.push(currentMessage);
+      }
+
+      // Filter out any empty messages and set state
+      setMessages(newMessages.filter(msg => msg.content));
+    }
+  }, [runLogs]);
 
   useEffect(() => {
     if (textareaRef.current) {

@@ -1,4 +1,5 @@
 from litellm.types.utils import Message
+from datetime import datetime
 
 def make_json_serializable(obj):
     """Recursively convert dictionary values to JSON-serializable types."""
@@ -23,6 +24,8 @@ def make_json_serializable(obj):
             ] if obj.tool_calls else None,
             "function_call": obj.function_call
         }
+    elif isinstance(obj, datetime):
+        return obj.isoformat()
     elif hasattr(obj, '__dict__'):  # For objects like RunContext
         return str(obj)
     return obj
