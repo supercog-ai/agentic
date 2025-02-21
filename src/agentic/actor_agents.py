@@ -681,6 +681,60 @@ class ActorBaseAgent:
     def handle_request(self, method: str, data: dict):
         return f"Actor {self.name} processed {method} request with data: {data}"
 
+    async def webhook(self, run_id: str, callback_name: str, args: dict) -> Any:
+        """Handle webhook callbacks by executing the specified tool function
+        
+        Args:
+            run_id: ID of the agent run this webhook is for
+            callback_name: Name of the tool function to call
+            args: Arguments to pass to the tool function
+        """
+        # Get the run context from the database
+        db_manager = DatabaseManager()
+        run = db_manager.get_run(run_id)
+        if not run:
+            raise ValueError(f"No run found with ID {run_id}")
+
+        # Recreate run context
+        self.run_context = RunContext(
+            agent=self,
+            agent_name=self.name, 
+            debug_level=self.debug,
+            run_id=run_id
+        )
+
+        # Find the tool function
+        function_map = {f.__name__: f for f in self.functions}
+        if callback_name not in function_map:
+            raise ValueError(f"No tool function found named {callback_name}")
+
+        # Execute the tool call
+        try:
+            # Create tool call object
+            tool_call = ChatCompletionMessageToolCall(
+                id=str(uuid.uuid4()),
+                type="function",
+                function=Function(
+                    name=callback_name,
+                    arguments=json.dumps(args)
+                )
+            )
+
+            # Execute the tool call
+            response, events = self._execute_tool_calls(
+                [tool_call],
+                self.functions,
+                self.run_context
+            )
+
+            # Return the tool result
+            if response.last_tool_result:
+                return response.last_tool_result.value
+            return None
+
+        except Exception as e:
+            raise RuntimeError(f"Error executing webhook {callback_name}: {str(e)}")
+
 class HandoffAgentWrapper:
     def __init__(self, agent):
         self.agent = agent
@@ -747,7 +801,50 @@ class DynamicFastAPIHandler:
             for event in self.next_turn(prompt.prompt):
                 yield (str(event))
         return EventSourceResponse(render_events())
+    
+    @app.post("/webhook/{agent_name}/{run_id}/{callback_name}")
+    async def handle_webhook(
+        self, 
+        agent_name: str,
+        run_id: str, 
+        callback_name: str,
+        request: Request
+    ) -> dict:
+        """Handle incoming webhook requests by executing the specified callback
+        
+        Args:
+            agent_name: Name of the agent to handle the webhook
+            run_id: ID of the agent run this webhook is for 
+            callback_name: Name of the callback function to invoke
+            request: FastAPI request object containing query params and body
+        """
+        # Verify agent name matches
+        if agent_name != self.agent_facade.safe_name:
+            return {
+                "status": "error", 
+                "message": f"Agent {agent_name} not found"
+            }
+            
+        # Get query parameters
+        params = dict(request.query_params)
+        
+        # Get request body if any
+        try:
+            body = await request.json()
+            params.update(body)
+        except:
+            pass
 
+        # Call the remote webhook handler
+        result = await ray.get(
+            self._agent.webhook.remote(
+                run_id=run_id,
+                callback_name=callback_name, 
+                args=params
+            )
+        )
+        return {"status": "success", "result": result}
+        
     def next_turn(
         self,
         request: str,
