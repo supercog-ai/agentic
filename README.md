@@ -132,5 +132,15 @@ implemented by another agent.
 building a UI for your agents. "Agent contracts" for testing.
 - Automatic context management keeps your agent within context length limits.
 
+# Contributing
+
+We would love you to contribute! We especially welcome:
+
+- New tools
+- Example agents
+- New UI apps
+
+but obviously we appreciate bug reports, bug fixes, etc... We encourage **tests** with all contributions,
+but especially if you want to modify the core framework please submit tests in the PR.
 
 
