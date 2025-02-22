@@ -1,47 +1,23 @@
 import typer
 import os
 import requests
-from bs4 import BeautifulSoup
 from rich.markdown import Markdown
 from rich.console import Console
 from typing import Optional, List, Dict
-
 from .file_cache import file_cache
 from .colors import Colors
-
 from agentic.agentic_secrets import agentic_secrets as secrets
 from agentic.settings import settings
-from agentic.common import AgentRunner
 
 import shutil
 from pathlib import Path
 from importlib import resources
 from rich.status import Status
 
-from weaviate.classes.config import (
-    VectorDistances
-)
-from weaviate.classes.query import Filter
-
-from agentic.utils.file_reader import read_file
-
-from agentic.utils.summarizer import generate_document_summary
-from agentic.utils.rag_helper import (
-    init_weaviate,
-    create_collection,
-    prepare_document_metadata,
-    check_document_exists,
-    init_embedding_model,
-    init_chunker,
-    delete_document_from_index,
-    check_document_in_index,
-    get_document_id_from_path,
-    list_collections,
-    rename_collection,
-    list_documents_in_collection,
-    get_document_metadata,
-    search_collection
-)
+### WARNING: DO NOT ADD MORE IMPORTS HERE
+# Everything imported at module level runs every time you run ANY cli command.
+# So its much preferred to defer imports until the specific command that needs them.
+##############
 
 GPT_DEFAULT_MODEL = "openai/gpt-4o-mini"
 
@@ -138,6 +114,7 @@ def delete_secret(name: str):
 def ollama():
     """List the latest popular models from Ollama. Use "ollama pull <model> to download."""
     from .llm import llm_generate, LLMUsage, CLAUDE_DEFAULT_MODEL, GPT_DEFAULT_MODEL
+    from bs4 import BeautifulSoup
 
     # Download the web page from ollama.com/library
 
@@ -236,6 +213,7 @@ import time
 @app.command()
 def serve(filename: str = typer.Argument(default="", show_default=False)):
     """Runs the FastAPI server for an agent"""
+    from agentic.common import AgentRunner
 
     def find_agent_instances(file_path):
         # Load the module from file path
@@ -364,12 +342,26 @@ def index_file(
         ". ,! ,? ,\n",
         help="Comma-separated delimiters for fallback chunk splitting"
     ),
-    distance_metric: VectorDistances = typer.Option(
-        VectorDistances.COSINE,
-        help="Distance metric for vector comparison"
-    )
 ):
+    from weaviate.classes.config import (
+        VectorDistances
+    )
+    from weaviate.classes.query import Filter
+    from agentic.utils.summarizer import generate_document_summary
+    from agentic.utils.rag_helper import (
+        init_weaviate,
+        create_collection,
+        prepare_document_metadata,
+        check_document_exists,
+        init_embedding_model,
+        init_chunker,
+    )
+
+    distance_metric = VectorDistances.COSINE
+
     """Index a file using configurable Weaviate Embedded and chunking parameters"""
+    from agentic.utils.file_reader import read_file
+
     console = Console()
     client = None
     
@@ -451,6 +443,14 @@ def delete_document(
     document_identifier: str,  # Changed from file_path to accept both
     confirm: bool = typer.Option(False, "--yes", "-y", help="Skip confirmation prompt")
 ):
+    from agentic.utils.rag_helper import (
+        init_weaviate,
+        delete_document_from_index,
+        check_document_in_index,
+        get_document_id_from_path,
+        get_document_metadata,
+    )
+
     """Delete a document using its ID or filename/path"""
     console = Console()
     
@@ -534,6 +534,11 @@ def delete_index(
 @app.command()
 def list_indexes():
     """List all available Weaviate indexes"""
+    from agentic.utils.rag_helper import (
+        init_weaviate,
+        list_collections,
+    )
+
     console = Console()
     try:
         with Status("[bold green]Initializing Weaviate...", console=console):
@@ -556,6 +561,10 @@ def rename_index(
     overwrite: bool = typer.Option(False, "--overwrite", help="Overwrite existing target index")
 ):
     """Rename a Weaviate index/collection"""
+    from agentic.utils.rag_helper import (
+        init_weaviate,
+        rename_collection,
+    )
     console = Console()
     client = None
     try:
@@ -588,6 +597,10 @@ def rename_index(
 @app.command()
 def list_documents(index_name: str):
     """List all documents in an index with basic info"""
+    from agentic.utils.rag_helper import (
+        init_weaviate,
+        list_documents_in_collection,
+    )
     console = Console()
     try:
         with Status("[bold green]Initializing Weaviate...", console=console):
@@ -618,6 +631,12 @@ def show_document(
     document_identifier: str 
 ):
     """Show detailed metadata for a specific document using its ID or filename/path"""
+    from agentic.utils.rag_helper import (
+        init_weaviate,
+        get_document_id_from_path,
+        get_document_metadata,
+    )
+
     console = Console()
     try:
         with Status("[bold green]Initializing Weaviate...", console=console):
@@ -669,6 +688,11 @@ def search(
     alpha: float = typer.Option(0.5, min=0.0, max=1.0, help="Weight between vector (1.0) and keyword (0.0) search")
 ):
     """Search documents with hybrid search support"""
+    from agentic.utils.rag_helper import (
+        init_weaviate,
+        init_embedding_model,
+        search_collection
+    )
     console = Console()
     try:
         with Status("[bold green]Initializing Weaviate...", console=console):

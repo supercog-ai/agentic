@@ -51,7 +51,7 @@ An agent team which auto-produces and publishes a daily podcast. Customize for y
 
 The easiest thing is to install the package from pypi:
 
-`pip install agents-kit`
+`pip install agentic-framework`
 
 For the latest and greatest you can install directly from the repo:
 
