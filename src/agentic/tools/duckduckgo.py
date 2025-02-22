@@ -1,4 +1,6 @@
 # "Borrrowed" from https://github.com/langchain-ai/langchain/blob/master/libs/langchain_community/tools/duckduckgo_search.py
+# FWIW I don't think this tool works. You get like a single result back. Maybe I'm doing something wrong, 
+# but there are other more reliable search tools.
 """Util that calls DuckDuckGo Search.
 
 No setup required. Free.
