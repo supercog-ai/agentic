@@ -64,12 +64,14 @@ class RunContext:
         agent_name: str = "",
         debug_level: DebugLevel = DebugLevel(DebugLevel.OFF),
         run_id: str = None,
+        api_endpoint: str = None,
     ):
         self._context = context
         self.agent_name = agent_name
         self.agent = agent
         self.debug_level = debug_level
         self.run_id = run_id
+        self.api_endpoint = api_endpoint
 
     def __getitem__(self, key):
         return self._context.get(key, None)
@@ -123,35 +125,25 @@ class RunContext:
         print("WARNING:", *args)
 
     def get_webhook_endpoint(self, callback_name: str, args: dict = None) -> str:
-        """Generate a webhook endpoint URL for this agent and run.
-        
-        Args:
-            callback_name: Name of the callback function to invoke 
-            args: Optional query parameters to include
-            host: Host address (default: localhost)
-            port: Port number (default: 8086)
-
-        Returns:
-            str: Complete webhook URL with run_id and query parameters
-        """
-        host: str = "localhost" 
-        port: int = 8086
-        
         if not self.run_id:
             raise ValueError("No active run_id. Webhook endpoints require an active agent run.")
-            
-        # Use agent's safe_name (convert spaces/special chars to underscores)
-        safe_name = "".join(c if c.isalnum() else "_" for c in self.agent_name).lower()
         
-        # Build base URL
-        base_url = f"http://{host}:{port}/{safe_name}/webhook/{self.run_id}/{callback_name}"
+        if not self.api_endpoint:
+            # Fallback to default if not set
+            host = "localhost"
+            port = 8086
+            base_url = f"http://{host}:{port}/{self.agent_name}" 
+        else:
+            base_url = self.api_endpoint
+
+        # Build webhook URL
+        webhook_url = f"{base_url}/webhook/{self.run_id}/{callback_name}"
         
-        # Add query parameters if provided
         if args:
             query_params = "&".join(f"{k}={v}" for k, v in args.items())
-            return f"{base_url}?{query_params}"
+            return f"{webhook_url}?{query_params}"
         
-        return base_url
+        return webhook_url
 
     def __repr__(self):
         return f"RunContext({self._context})"

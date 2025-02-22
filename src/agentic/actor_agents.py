@@ -131,6 +131,7 @@ class ActorBaseAgent:
     run_context: RunContext = None
     _prompter = None
     _callbacks: dict[CallbackType, CallbackFunc] = {}
+    api_endpoint: str = None
     class Config:
         arbitrary_types_allowed = True
 
@@ -639,6 +640,7 @@ class ActorBaseAgent:
             "model",
             "max_tokens",
             "memories",
+            "api_endpoint",  # Add api_endpoint to state keys
         ]:
             if key in state:
                 setattr(self, remap.get(key, key), state[key])
@@ -685,7 +687,7 @@ class ActorBaseAgent:
     def handle_request(self, method: str, data: dict):
         return f"Actor {self.name} processed {method} request with data: {data}"
 
-    async def webhook(self, run_id: str, callback_name: str, args: dict) -> Any:
+    def webhook(self, run_id: str, callback_name: str, args: dict) -> Any:
         """Handle webhook callbacks by executing the specified tool function
         
         Args:
@@ -698,15 +700,14 @@ class ActorBaseAgent:
         run = db_manager.get_run(run_id)
         if not run:
             raise ValueError(f"No run found with ID {run_id}")
-
         # Recreate run context
         self.run_context = RunContext(
             agent=self,
             agent_name=self.name, 
             debug_level=self.debug,
-            run_id=run_id
+            run_id=run_id,
+            api_endpoint=self.api_endpoint
         )
-
         # Find the tool function
         function_map = {f.__name__: f for f in self.functions}
         if callback_name not in function_map:
@@ -716,7 +717,7 @@ class ActorBaseAgent:
         try:
             # Create tool call object
             tool_call = ChatCompletionMessageToolCall(
-                id=str(uuid.uuid4()),
+                id="",
                 type="function",
                 function=Function(
                     name=callback_name,
@@ -730,11 +731,7 @@ class ActorBaseAgent:
                 self.functions,
                 self.run_context
             )
-
-            # Return the tool result
-            if response.last_tool_result:
-                return response.last_tool_result.value
-            return None
+            return response
 
         except Exception as e:
             raise RuntimeError(f"Error executing webhook {callback_name}: {str(e)}")
@@ -770,6 +767,7 @@ class ProcessRequest(BaseModel):
     run_id: Optional[str] = None
 
 from sse_starlette.sse import EventSourceResponse
+from starlette.requests import Request
 
 @serve.deployment
 @serve.ingress(app)
@@ -835,6 +833,16 @@ class DynamicFastAPIHandler:
             for event in self.next_turn(prompt.prompt):
                 yield (str(event))
         return EventSourceResponse(render_events())
+        
+    @app.get('/runs')
+    async def get_runs(self) -> list[dict]:
+        runs = self.agent_facade.get_runs()
+        return [run.model_dump() for run in runs]
+    
+    @app.get('/runs/{run_id}/logs')
+    async def get_run_logs(self, run_id=str) -> list[dict]:
+        run_logs = self.agent_facade.get_run_logs(run_id)
+        return [run_log.model_dump() for run_log in run_logs]
     
     @app.post("/webhook/{run_id}/{callback_name}")
     async def handle_webhook(
@@ -852,14 +860,12 @@ class DynamicFastAPIHandler:
         """
         # Get query parameters
         params = dict(request.query_params)
-        
         # Get request body if any
         try:
             body = await request.json()
             params.update(body)
         except:
             pass
-
         # Call the remote webhook handler
         result = ray.get(
             self._agent.webhook.remote(
@@ -869,16 +875,6 @@ class DynamicFastAPIHandler:
             )
         )
         return {"status": "success", "result": result}
-        
-    @app.get('/runs')
-    async def get_runs(self) -> list[dict]:
-        runs = self.agent_facade.get_runs()
-        return [run.model_dump() for run in runs]
-    
-    @app.get('/runs/{run_id}/logs')
-    async def get_run_logs(self, run_id=str) -> list[dict]:
-        run_logs = self.agent_facade.get_run_logs(run_id)
-        return [run_log.model_dump() for run_log in run_logs]
     
     def next_turn(
         self,
@@ -1049,6 +1045,10 @@ class RayFacadeAgent:
             name=f"{self.safe_name}_api",
             route_prefix=f"/{self.safe_name}",
         )
+
+        # Add API endpoint to actor state
+        api_endpoint = f"http://0.0.0.0:{port}/{self.safe_name}"
+        self._update_state({"api_endpoint": api_endpoint})
 
         if base_serve_app is None:
             base_serve_app = BaseServeDeployment.bind()

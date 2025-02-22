@@ -40,6 +40,7 @@ class RunManager:
                 initial_prompt=event.payload,
             )
             self.current_run_id = run.id
+            run_context.run_id = run.id 
             
         # Skip if we haven't initialized a run yet
         if not self.current_run_id:
