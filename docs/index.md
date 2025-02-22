@@ -1,31 +1,53 @@
 Agentic makes it easy to create AI agents - autonomous software programs that understand natural language
 and can use tools to do work on your behalf.
 
-In the tradition of _opinionated frameworks_, we've tried to encode lots of sensible
+Agentic is in the tradition of _opinionated_ frameworks_. We've tried to encode lots of sensisible
 defaults and best practices into the design, testing and deployment of agents. 
 
-Agentic is composed of multiple parts:
+Agentic is a few different things:
 
-- A code framework for implementing AI agents
-- A runtime for deploying your agents
-- A reference implementation of the [Agent Protocol](https://github.com/supercog-ai/agent-protocol) which defines
-interoperability between agents using different stacks
+- A lightweight agent framework. Same part of the stack as SmolAgents or PydanticAI.
+- A reference implementation of the [agent protocol](https://github.com/supercog-ai/agent-protocol).
+- An agent runtime built on [Ray](https://github.com/ray-project/ray)
+- An optional "batteries included" set of features to help you get running quickly:
+  * Built in FastAPI [API](./REST_API.md) for your agent
+  * Basic RAG features
+  * A set of production-ready [tools](https://github.com/supercog-ai/agentic/tree/main/src/agentic/tools) (extracted from our Supercog product)
+  * Agentic Chat UI examples in [NextJS](https://github.com/supercog-ai/agentic/tree/main/src/agentic/ui/next-js) and [Streamlit](https://github.com/supercog-ai/agentic/tree/main/src/agentic/ui)
+  * A growing set of working [examples](https://github.com/supercog-ai/agentic/tree/main/examples)
 
+You can pretty much use any of these features and leave the others. There are lots of framework choices but we think we have
+embedded some good ideas into ours.
 
-Some key features:
+Some of the _framework_ features:
 
 - Approachable and simple to use, but flexible enough to support the most complex agents
 - Supports teams of cooperating agents
 - Supports Human-in-the-loop
-- Thin, readable abstractions.
-- Built in library of production-tested tools
+- Easy definition and use of tools (functions, class methods, import LangChain tools, ...)
+- Built alongside a set of production-tested tools
 
-But there is much more. The rest of this guide will go over getting started with the framework. You can find some more background
-info in these docs:
+## Pre-built agents you can run today
 
+### [Agent Operator](https://github.com/supercog-ai/agentic/blob/main/examples/operator_agent.py)
 
+...full browser automation, including using authenticated sessions...
+
+### [Podcast Producer](https://github.com/supercog-ai/agentic/blob/main/examples/podcast.py)
+
+An agent team which auto-produces and publishes a daily podcast. Customize for your news interests.
+
+### [Meeting Notetaker](https://github.com/supercog-ai/agentic/blob/main/examples/meeting_notetaker.py)
+
+[Coming soon] Your own meeting bot agent with meeting summaries stored into RAG.
+
+### Personal Data Analyst
+
+[Coming soon]
 
 ## Install
+
+The easiest thing is to install the package from pypi:
 
 `pip install agentic-framework`
 

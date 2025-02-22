@@ -10,6 +10,7 @@ nav:
  - Building_Agents.md
  - Debugging.md
  - Tools.md
+ - Rag.md
  - REST_API.md 
  - PROJECT_STRUCTURE.md
  - Events.md

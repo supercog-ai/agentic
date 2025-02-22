@@ -132,7 +132,7 @@ that your tool needs some credentials, and the framework will check that they ar
 prompt the user to supply them.
 
 Once your tool function is called (like 'query_for_news') then you can retrieve the
-secrets from the RunContext. Look at Agentic's [secrets](./Secrets.md) system for a description
+secrets from the RunContext. Look at Agentic's [secrets](./Building_Agents.md#settings-and-secrets) system for a description
 of how secrets are managed.
 
 ### Using environment configuration
