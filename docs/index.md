@@ -50,9 +50,9 @@ An agent team which auto-produces and publishes a daily podcast. Customize for y
 At this stage it's probably easiest to run this repo from source. We use `uv` for package managment:
 
 ```
-git clone https://github.com/supercog-ai/agentic.git
+git clone git@github.com:supercog-ai/agentic.git
 cd agentic
-uv pip install -e .
+uv pip install -e ".[all,dev]"
 ```
 
 these commands will install the `agentic` package locally so that you can use the `agentic` cli command

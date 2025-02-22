@@ -778,7 +778,6 @@ class DynamicFastAPIHandler:
         self._agent = actor_ref
         self.agent_facade = agent_facade
         self.debug = DebugLevel(os.environ.get("AGENTIC_DEBUG") or DebugLevel.OFF)
-        print("!!! In DynamicFastAPIHandler, debug level is: ", self.debug)
         self.name = self.agent_facade.name
         self.prompt: ProcessRequest = None
 
@@ -787,11 +786,10 @@ class DynamicFastAPIHandler:
     
     @app.post("/process")
     async def handle_post(self, prompt: ProcessRequest) -> str:
+        print(">> PROMPT request: ", prompt)
         self.prompt = prompt
         if prompt.debug and self.debug.is_off():
             self.debug = DebugLevel(prompt.debug)
-            print("!!! RESET DEBUG LEVEL TO: ", self.debug) 
-        print(f"Received run_id: {prompt.run_id}")
         return self.agent_facade.start_request(prompt.prompt, debug=self.debug, run_id=prompt.run_id)
 
     @app.get("/getevents", response_model=None)
@@ -925,7 +923,7 @@ class DynamicFastAPIHandler:
     def _should_print(self, event: Event) -> bool:
         if self.debug.debug_all():
             return True
-        if event.is_output and event.depth == 0:
+        if not self.debug.is_off() and event.is_output and event.depth == 0:
             return True
         elif isinstance(event, ToolError):
             return self.debug != ""
@@ -1044,8 +1042,10 @@ class RayFacadeAgent:
         global base_serve_app
 
         serve.start(http_options={"host": "0.0.0.0", "port": port})
+        dep = DynamicFastAPIHandler.bind(self._agent, self)
+        dep.name = f"{self.safe_name}_api"
         deployment = serve.run(
-            DynamicFastAPIHandler.bind(self._agent, self),
+            dep,
             name=f"{self.safe_name}_api",
             route_prefix=f"/{self.safe_name}",
         )

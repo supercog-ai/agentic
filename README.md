@@ -49,27 +49,28 @@ An agent team which auto-produces and publishes a daily podcast. Customize for y
 
 ## Install
 
-The easiest thing is to install the package from pypi:
+At this stage it's probably easiest to run this repo from source. We use `uv` for package managment:
+
+```
+git clone git@github.com:supercog-ai/agentic.git
+cd agentic
+uv pip install -e ".[all,dev]"
+```
+
+these commands will install the `agentic` package locally so that you can use the `agentic` cli command
+and so your pythonpath is set correctly.
+
+### Install the package
+
+You can also try installing just the package:
 
 `pip install agentic-framework`
 
-For the latest and greatest you can install directly from the repo:
+Now setup your folder to hold your agents:
 
-`pip install git+ssh://git@github.com/supercog-ai/agentic.git`
-
-We recommend installing into a virtual env.
-
-After you install, setup a folder to hold your agents, like "myagents", and then run:
-
-`agentic init .`
-
-This will initialize the directory that you are in and create these folders:
-
-    examples/   - The example agents from this repo
-    agents/     - A folder to put your own agents
-    runtime/    - Agents execute in here by default, and will store files here
-
-The CLI will setup the current directory to contain your agents.
+```sh
+agentic init .
+```
 
 The install will copy examples and a basic file structure into the directory `myagents`. You can name
 or rename this folder however you like.

@@ -56,7 +56,7 @@ export const agenticApi = {
       },
       body: JSON.stringify({
         prompt,
-        debug: "off",
+        //debug: "off",
         run_id: runId
       }),
     });
