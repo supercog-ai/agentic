@@ -9,6 +9,8 @@ from pathlib import Path
 from queue import Queue
 import threading
 
+from starlette.requests import Request
+
 import inspect
 import json
 import os
@@ -775,22 +777,31 @@ class DynamicFastAPIHandler:
     def __init__(self, actor_ref: ray.actor.ActorHandle, agent_facade: "RayFacadeAgent"):
         self._agent = actor_ref
         self.agent_facade = agent_facade
-        self.debug = DebugLevel.OFF
+        self.debug = DebugLevel(os.environ.get("AGENTIC_DEBUG") or DebugLevel.OFF)
+        print("!!! In DynamicFastAPIHandler, debug level is: ", self.debug)
         self.name = self.agent_facade.name
         self.prompt: ProcessRequest = None
+
+    def __repr__(self):
+        return f"API: {self._agent.name}"
     
     @app.post("/process")
     async def handle_post(self, prompt: ProcessRequest) -> str:
         self.prompt = prompt
-        level = DebugLevel(prompt.debug) if prompt.debug else DebugLevel(DebugLevel.OFF)
+        if prompt.debug and self.debug.is_off():
+            self.debug = DebugLevel(prompt.debug)
+            print("!!! RESET DEBUG LEVEL TO: ", self.debug) 
         print(f"Received run_id: {prompt.run_id}")
-        return self.agent_facade.start_request(prompt.prompt, debug=level, run_id=prompt.run_id)
+        return self.agent_facade.start_request(prompt.prompt, debug=self.debug, run_id=prompt.run_id)
 
     @app.get("/getevents", response_model=None)
     async def get_events(self, request_id: str, stream: bool = False) -> list[str]|EventSourceResponse:
         if not stream:
             results = []
             for event in self.agent_facade.get_events(request_id):
+                if self._should_print(event):
+                    print(str(event), end="")
+
                 # Create a serializable version of the event
                 event_data = {
                     "type": event.type,
@@ -804,6 +815,8 @@ class DynamicFastAPIHandler:
         else:
             def render_events():
                 for event in self.agent_facade.get_events(request_id):
+                    if self._should_print(event):
+                        print(str(event), end="")
                     # Create a serializable version of the event
                     event_data = {
                         "type": event.type,
@@ -907,8 +920,27 @@ class DynamicFastAPIHandler:
             endpoints=["/process", "/getevents", "/describe"],
             operations=["chat"],
         )
-    
-from starlette.requests import Request
+
+    # FIXME: DRY this with Runner
+    def _should_print(self, event: Event) -> bool:
+        if self.debug.debug_all():
+            return True
+        if event.is_output and event.depth == 0:
+            return True
+        elif isinstance(event, ToolError):
+            return self.debug != ""
+        elif isinstance(event, (ToolCall, ToolResult)):
+            return self.debug.debug_tools()
+        elif isinstance(event, PromptStarted):
+            return self.debug.debug_llm() or self.debug.debug_agents()
+        elif isinstance(event, TurnEnd):
+            return self.debug.debug_agents()
+        elif isinstance(event, (StartCompletion, FinishCompletion)):
+            return self.debug.debug_llm()
+        else:
+            return False
+
+
 @serve.deployment
 class BaseServeDeployment:
     def __call__(self, request: Request) -> list[str]:

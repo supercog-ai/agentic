@@ -63,7 +63,7 @@ github = [
 ]
 
 all = [
-    "agents-kit[google-news,database,image-generator,github]",
+    "agentic-framework[google-news,database,image-generator,github]",
 ]
 
 dev = [

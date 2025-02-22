@@ -20,10 +20,10 @@ from agentic.tools.registry import tool_registry
 # Try running this agent and then requesting something that requires a tool to be enabled.
 # Or for simple use just say "please enable <tool name>".
 #
-# You can alway use the system command `.tools` to see which tools are currently active.
+# In the REPL you can alway use the system command `.tools` to see which tools are currently active.
 
 agent = Agent(
-    name="Dynamic Agent",
+    name="Dynamic Tools Agent",
     welcome="I have a list of tools which I can enable and use on-demand. Query the list of tools to start.",
     instructions="You are a helpful assistant. You can list tools or enable a tool for different purposes.",
     model="openai/gpt-4o-mini",
@@ -40,15 +40,11 @@ agent = Agent(
                 DuckDuckGoSearchAPIWrapper,
             ],
         ),
-        #BrowserUseTool(chrome_instance_path="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"),
-        # tool_registry.load_tool(
-        #     "langchain_community.tools.DuckDuckGoSearchRun",
-        #     requires=["duckduckgo-search", "langchain-community"]
-        # ),
-        # tool_registry.load_tool(
-        #     "langchain_community.tools.shell.tool.ShellTool",
-        #     requires=["langchain-community", "langchain-experimental"]
-        # ),
+        # The tool registry has some support for installing/loading LangChain tools.
+        tool_registry.load_tool(
+            "langchain_community.tools.shell.tool.ShellTool",
+            requires=["langchain-community", "langchain-experimental"]
+        ),
     ],
 )
 

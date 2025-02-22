@@ -159,6 +159,12 @@ def ui():
     """Runs the agentic UI"""
     os.execvp("streamlit", ["streamlit", "run", "src/agentic/ui/chat.py"])
 
+@app.command()
+def webui():
+    """Runs the agentic NextJS web UI"""
+    # FIXME: get the right path when installed from the package
+    os.chdir("./src/agentic/ui/next-js")
+    os.execvp("npm", ["npm", "run", "dev"])
 
 @app.command()
 def claude(prompt: str):

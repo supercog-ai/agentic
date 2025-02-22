@@ -68,7 +68,7 @@ class RayAgentRunner:
             self.debug = DebugLevel(os.environ.get("AGENTIC_DEBUG") or "")
         if not os.getcwd().endswith("runtime"):
             os.makedirs("runtime", exist_ok=True)
-            os.chdir("runtime")
+        os.chdir("runtime")
 
     def turn(self, request: str) -> str:
         """Runs the agent and waits for the turn to finish, then returns the results

@@ -49,6 +49,9 @@ class DebugLevel:
     def debug_all(self):
         return self.level == "all"
 
+    def is_off(self):
+        return self.level == ""
+
     def __str__(self) -> str:
         return str(self.level)
 

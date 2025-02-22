@@ -29,7 +29,7 @@ Some of the _framework_ features:
 
 ## Pre-built agents you can run today
 
-### [Agent Operator](https://github.com/supercog-ai/agentic/blob/main/examples/operator_agent.py)
+### [OSS Operator](https://github.com/supercog-ai/agentic/blob/main/examples/oss_operator.py)
 
 ...full browser automation, including using authenticated sessions...
 
@@ -47,20 +47,22 @@ An agent team which auto-produces and publishes a daily podcast. Customize for y
 
 ## Install
 
-The easiest thing is to install the package from pypi:
+At this stage it's probably easiest to run this repo from source. We use `uv` for package managment:
+
+```
+git clone https://github.com/supercog-ai/agentic.git
+cd agentic
+uv pip install -e .
+```
+
+these commands will install the `agentic` package locally so that you can use the `agentic` cli command
+and so your pythonpath is set correctly.
+
+### Install the package
+
+You can also try installing just the package:
 
 `pip install agentic-framework`
-
-Or using a virtual environmment:
-
-```sh
-mkdir myagents
-cd myagents
-python -m venv .venv
-source .venv/bin/activate
-
-pip install agentic-framework
-```
 
 Now setup your folder to hold your agents:
 
