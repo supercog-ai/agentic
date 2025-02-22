@@ -13,6 +13,11 @@ export interface AgentInfo {
   tools: string[];
 }
 
+export interface BackgroundTask {
+  id: string;
+  content: string;
+}
+
 export interface Run {
   id: string;
   agent_id: string;
@@ -155,5 +160,61 @@ export const agenticApi = {
     }
 
     return response.json();
+  },
+
+  // Background task management
+  backgroundTasks: {
+    // Move task to background
+    moveToBackground: async (agentPath: string, requestId: string): Promise<void> => {
+      const response = await fetch(`/api${agentPath}/background/${requestId}`, {
+        method: 'POST'
+      });
+      if (!response.ok) {
+        throw new Error('Failed to move task to background');
+      }
+    },
+
+    // Stop a background task
+    stopTask: async (agentPath: string, requestId: string): Promise<void> => {
+      const response = await fetch(`/api${agentPath}/background/${requestId}`, {
+        method: 'DELETE'
+      });
+      if (!response.ok) {
+        throw new Error('Failed to stop background task');
+      }
+    },
+
+    // List active background tasks
+    listTasks: async (agentPath: string): Promise<string[]> => {
+      const response = await fetch(`/api${agentPath}/background`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch background tasks');
+      }
+      const data = await response.json();
+      return data.tasks;
+    },
+
+    // Stream events from a background task
+    streamEvents: (agentPath: string, requestId: string, onEvent: (event: AgentEvent) => void) => {
+      const eventSource = new EventSource(
+        `/api${agentPath}/background/${requestId}/events`
+      );
+
+      eventSource.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          onEvent(data);
+        } catch (error) {
+          console.error('Error parsing background event:', error);
+        }
+      };
+
+      eventSource.onerror = (error) => {
+        console.error('Background EventSource error:', error);
+        eventSource.close();
+      };
+
+      return () => eventSource.close();
+    }
   }
 };
