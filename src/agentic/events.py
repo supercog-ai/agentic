@@ -7,7 +7,6 @@ warnings.filterwarnings("ignore", message="Valid config keys have changed in V2:
 
 from dataclasses import dataclass
 from typing import Any
-from typing_extensions import override
 from pydantic import BaseModel
 from .swarm.types import Result, DebugLevel, RunContext
 import json
