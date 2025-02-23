@@ -27,7 +27,9 @@ def init_weaviate() -> WeaviateClient:
     client = WeaviateClient(
         embedded_options=EmbeddedOptions(
             persistence_data_path=str(Path.home() / ".cache/weaviate"),
-            additional_env_vars={"LOG_LEVEL": "error"}
+            additional_env_vars={
+                "LOG_LEVEL": "fatal" # or "panic"
+            }
         )
     )
     client.connect()
@@ -83,7 +85,7 @@ def prepare_document_metadata(
         "filename": Path(file_path).name if not is_url else get_last_path_component(file_path),
         "timestamp": datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"),
         "mime_type": mime_type,
-        "source_url": file_path if is_url else "None",
+        "source_url": file_path if is_url else str(Path(file_path).absolute()),
         "fingerprint": fingerprint
     }
     
@@ -227,8 +229,9 @@ def rag_index_file(
                 
         console.print(f"[bold green]✅ Indexed {len(chunks)} chunks in {index_name}")
     finally:
-        pass
-    return client
+        if client:
+            client.close()
+    return "indexed"
         
 
 def delete_document_from_index(
