@@ -1,6 +1,8 @@
 import streamlit as st
 import requests
 
+from agentic.events import SSEDecoder
+
 BASE_URL = "http://localhost:8086"
 
 st.title("Agentic")
@@ -25,6 +27,21 @@ selected_agent = st.selectbox(
     "Select an agent", all_agents, format_func=format_endpoint
 )
 
+def generate_agentic_response(prompt):
+    sse_decoder = SSEDecoder()
+
+    byte_stream_iterator = requests.post(
+        f"{BASE_URL}/{selected_agent}/stream_request",
+        json={"prompt": prompt},
+        stream=True,
+        headers={'Accept': 'text/event-stream'}
+    )
+
+    for sse in sse_decoder.iter_bytes(byte_stream_iterator):
+        yield sse.data
+
+
+
 #======================
 # Create Session      #
 #======================
@@ -41,14 +58,10 @@ if prompt := st.chat_input("Type your message here"):
         st.markdown(prompt)
     
     with st.chat_message("assistant"):
-        stream = requests.post(
-            f"{BASE_URL}/{selected_agent}/stream_request",
-            json={"prompt": prompt},
-            stream=True,
-            headers={'Accept': 'text/event-stream'}
-        )
-        response = st.write_stream(stream)
+        response = generate_agentic_response(prompt)
+        full_response = st.write_stream(response)
 
             
     
-    st.session_state.messages.append({"role": "assistant", "content": response})
+    message = {"role": "assistant", "content": full_response}
+    st.session_state.messages.append(message)
