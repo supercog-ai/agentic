@@ -1,13 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { agenticApi, AgentEvent, AgentInfo, RunLog } from '@/lib/api';
+import { agenticApi, AgentInfo, RunLog } from '@/lib/api';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Bot, User, Send } from "lucide-react";
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
+import { Send } from "lucide-react";
+import BackgroundTasks from "@/components/BackgroundTasks";
+import ChatMessage from '@/components/ChatMessage';
 
 interface Message {
   role: 'user' | 'agent';
@@ -25,9 +24,45 @@ export default function AgentChat({ agentPath, agentInfo, runLogs }: AgentChatPr
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [currentRunId, setCurrentRunId] = useState<string | undefined>();
+  const [showBackgroundTasks, setShowBackgroundTasks] = useState(false);
+  const [newBackgroundTaskId, setNewBackgroundTaskId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const latestContent = useRef('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const currentRequestId = useRef<string | null>(null);
+  const eventCleanupRef = useRef<(() => void) | null>(null);
+
+  const moveToBackground = async (requestId: string) => {
+    try {
+      await agenticApi.backgroundTasks.moveToBackground(agentPath, requestId);
+      
+      // Clean up existing event listener
+      if (eventCleanupRef.current) {
+        eventCleanupRef.current();
+        eventCleanupRef.current = null;
+      }
+
+      // Reset states to enable new chat
+      setIsLoading(false);
+      setInput('');
+      latestContent.current = '';
+      currentRequestId.current = null;
+
+      // Add backgrounded message and show background tasks
+      setMessages(prev => [
+        ...prev, 
+        { 
+          role: 'agent', 
+          content: '_Task moved to background processing..._'
+        }
+      ]);
+      setShowBackgroundTasks(true);
+      setNewBackgroundTaskId(requestId);
+      
+    } catch (error) {
+      console.error('Error moving task to background:', error);
+    }
+  };
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -38,17 +73,14 @@ export default function AgentChat({ agentPath, agentInfo, runLogs }: AgentChatPr
 
   useEffect(() => {
     if (runLogs) {
-      // Find the run ID from the logs
       const runId = runLogs[0]?.run_id;
       setCurrentRunId(runId);
 
-      // Convert run logs to chat messages, coalescing consecutive chat_outputs
       const newMessages = [];
       let currentMessage = null;
       
       for (const log of runLogs) {
         if (log.event_name === 'prompt_started') {
-          // Always create a new user message
           if (currentMessage) {
             newMessages.push(currentMessage);
             currentMessage = null;
@@ -62,10 +94,8 @@ export default function AgentChat({ agentPath, agentInfo, runLogs }: AgentChatPr
           if (!content) continue;
 
           if (currentMessage && currentMessage.role === 'agent') {
-            // Append to existing agent message
             currentMessage.content += content;
           } else {
-            // Start new agent message
             if (currentMessage) {
               newMessages.push(currentMessage);
             }
@@ -75,31 +105,21 @@ export default function AgentChat({ agentPath, agentInfo, runLogs }: AgentChatPr
             };
           }
         } else if (currentMessage) {
-          // If we hit any other type of log, push the current message
           newMessages.push(currentMessage);
           currentMessage = null;
         }
       }
 
-      // Don't forget to push the last message if exists
       if (currentMessage) {
         newMessages.push(currentMessage);
       }
 
-      // Filter out any empty messages and set state
       setMessages(newMessages.filter(msg => msg.content));
     } else {
       setCurrentRunId(undefined);
       setMessages([]);
     }
   }, [runLogs]);
-
-  useEffect(() => {
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'inherit';
-      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
-    }
-  }, [input]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -122,6 +142,7 @@ export default function AgentChat({ agentPath, agentInfo, runLogs }: AgentChatPr
 
     try {
       const requestId = await agenticApi.sendPrompt(agentPath, userInput, currentRunId);
+      currentRequestId.current = requestId;
 
       if (!requestId) {
         throw new Error('No request ID received from server');
@@ -129,7 +150,12 @@ export default function AgentChat({ agentPath, agentInfo, runLogs }: AgentChatPr
       
       setMessages(prev => [...prev, { role: 'agent', content: '' }]);
       
-      const cleanup = agenticApi.streamEvents(agentPath, requestId, (event: AgentEvent) => {
+      // Clean up any existing event listener
+      if (eventCleanupRef.current) {
+        eventCleanupRef.current();
+      }
+
+      const cleanup = agenticApi.streamEvents(agentPath, requestId, (event) => {
         if (event.type === 'chat_output') {
           const newContent = event.payload.content || '';
           latestContent.current += newContent;
@@ -142,10 +168,17 @@ export default function AgentChat({ agentPath, agentInfo, runLogs }: AgentChatPr
             }
             return newMessages;
           });
+        } else if (event.type === 'turn_end') {
+          setIsLoading(false);
+          currentRequestId.current = null;
+          if (eventCleanupRef.current) {
+            eventCleanupRef.current();
+            eventCleanupRef.current = null;
+          }
         }
       });
 
-      return () => cleanup();
+      eventCleanupRef.current = cleanup;
 
     } catch (error) {
       console.error('Error:', error);
@@ -153,7 +186,7 @@ export default function AgentChat({ agentPath, agentInfo, runLogs }: AgentChatPr
         role: 'agent', 
         content: 'Error: Failed to get response from agent'
       }]);
-    } finally {
+      currentRequestId.current = null;
       setIsLoading(false);
     }
   };
@@ -165,121 +198,59 @@ export default function AgentChat({ agentPath, agentInfo, runLogs }: AgentChatPr
     }
   };
 
-  // Custom components for ReactMarkdown
-  const MarkdownComponents = {
-    // Style code blocks
-    code(props: any) {
-      const {children, className, node, ...rest} = props;
-      const match = /language-(\w+)/.exec(className || '');
-      return (
-        <pre className="bg-muted/50 p-4 rounded-lg overflow-auto">
-          <code className={className} {...rest}>
-            {children}
-          </code>
-        </pre>
-      );
-    },
-    // Style inline code
-    inlineCode(props: any) {
-      return (
-        <code className="bg-muted/50 px-1.5 py-0.5 rounded-md text-sm" {...props} />
-      );
-    },
-    // Style links
-    a(props: any) {
-      return (
-        <a className="text-blue-500 hover:underline" target="_blank" {...props} />
-      );
-    },
-    // Style lists
-    ul(props: any) {
-      return <ul className="list-disc list-inside my-4" {...props} />;
-    },
-    ol(props: any) {
-      return <ol className="list-decimal list-inside my-4" {...props} />;
-    },
-    // Style headings
-    h1(props: any) {
-      return <h1 className="text-2xl font-bold my-4" {...props} />;
-    },
-    h2(props: any) {
-      return <h2 className="text-xl font-bold my-3" {...props} />;
-    },
-    h3(props: any) {
-      return <h3 className="text-lg font-bold my-2" {...props} />;
-    },
-  };
-
   return (
-    <Card className="flex flex-col h-full border-0 rounded-none bg-background">
-      <ScrollArea className="flex-1 p-4 h-[calc(100vh-180px)]">
-        <div className="space-y-4 mb-4">
-          {messages.map((msg, idx) => (
-            <div
-              key={idx}
-              className={`flex gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+    <div className="flex gap-4 h-full">
+      <Card className="flex-1 flex flex-col h-full border-0 rounded-none bg-background">
+        <ScrollArea className="flex-1 p-4 h-[calc(100vh-180px)]">
+          <div className="space-y-4 mb-4">
+            {messages.map((message, idx) => (
+              <ChatMessage
+                key={idx}
+                message={message}
+                isLast={idx === messages.length - 1}
+                isLoading={isLoading}
+                requestId={currentRequestId.current}
+                onMoveToBackground={moveToBackground}
+              />
+            ))}
+            <div ref={messagesEndRef} />
+          </div>
+        </ScrollArea>
+
+        <CardContent className="p-4 border-t">
+          <form onSubmit={handleSubmit} className="flex gap-2">
+            <Textarea
+              ref={textareaRef}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="Send a message..."
+              className="min-h-[60px] flex-1 resize-none"
+              disabled={isLoading}
+            />
+            <Button 
+              type="submit" 
+              size="icon"
+              disabled={isLoading || !input.trim()}
             >
-              {msg.role === 'agent' && (
-                <Avatar className="h-8 w-8">
-                  <AvatarFallback className="bg-primary/10">
-                    <Bot className="h-4 w-4" />
-                  </AvatarFallback>
-                </Avatar>
-              )}
-              
-              <div className={`rounded-lg p-4 max-w-[80%] ${
-                msg.role === 'user' 
-                  ? 'bg-primary text-primary-foreground'
-                  : 'bg-muted'
-              }`}>
-                {msg.role === 'user' ? (
-                  <p className="whitespace-pre-wrap">{msg.content}</p>
-                ) : (
-                  <ReactMarkdown
-                    remarkPlugins={[remarkGfm]}
-                    components={MarkdownComponents}
-                  >
-                    {msg.content || (isLoading && idx === messages.length - 1 ? '█' : '')}
-                  </ReactMarkdown>
-                )}
-              </div>
+              <Send className="h-4 w-4" />
+            </Button>
+          </form>
+          <p className="text-xs text-muted-foreground text-center mt-2">
+            Press Enter to send, Shift+Enter for new line
+          </p>
+        </CardContent>
+      </Card>
 
-              {msg.role === 'user' && (
-                <Avatar className="h-8 w-8">
-                  <AvatarFallback className="bg-primary/10">
-                    <User className="h-4 w-4" />
-                  </AvatarFallback>
-                </Avatar>
-              )}
-            </div>
-          ))}
-          <div ref={messagesEndRef} />
-        </div>
-      </ScrollArea>
-
-      <CardContent className="p-4 border-t">
-        <form onSubmit={handleSubmit} className="flex gap-2">
-          <Textarea
-            ref={textareaRef}
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="Send a message..."
-            className="min-h-[60px] flex-1 resize-none"
-            disabled={isLoading}
-          />
-          <Button 
-            type="submit" 
-            size="icon"
-            disabled={isLoading || !input.trim()}
-          >
-            <Send className="h-4 w-4" />
-          </Button>
-        </form>
-        <p className="text-xs text-muted-foreground text-center mt-2">
-          {isLoading ? 'Agent is thinking...' : 'Press Enter to send, Shift+Enter for new line'}
-        </p>
-      </CardContent>
-    </Card>
+      <BackgroundTasks 
+        agentPath={agentPath}
+        show={showBackgroundTasks}
+        onHide={() => setShowBackgroundTasks(false)}
+        newTaskId={newBackgroundTaskId}
+      />
+      <Button className="absolute" onClick={() => setShowBackgroundTasks(!showBackgroundTasks)}>
+        Show Background Tasks
+      </Button>
+    </div>
   );
 }

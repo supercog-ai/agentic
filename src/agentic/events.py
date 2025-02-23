@@ -51,7 +51,7 @@ class Prompt(Event):
     # back to the top. Note that in Thespian, we don't have this address until the first receiveMessage
     # is called, so we set it then.
     debug: DebugLevel
-    request_id: str = uuid.uuid4().hex
+    request_id: str
     
     def __init__(
         self,
@@ -70,8 +70,7 @@ class Prompt(Event):
             "debug": debug,
             "ignore_result": ignore_result,
         }
-        if request_id:
-            data["request_id"] = request_id
+        data["request_id"] = request_id if request_id else uuid.uuid4().hex
         # Use Pydantic's model initialization directly
         BaseModel.__init__(self, **data)
 
