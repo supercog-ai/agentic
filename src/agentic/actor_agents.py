@@ -3,8 +3,6 @@ import time
 from typing import Any, Optional, Generator, Literal
 from pydantic import BaseModel, ConfigDict
 from dataclasses import dataclass
-from functools import partial
-from collections import defaultdict
 from pathlib import Path
 from queue import Queue
 import threading
@@ -14,8 +12,6 @@ from starlette.requests import Request
 import inspect
 import json
 import os
-from copy import deepcopy
-from pprint import pprint, pformat
 from pathlib import Path
 import os
 import yaml
@@ -29,7 +25,6 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import yaml
 from typing import Callable, Any, List
-from pydantic import Field
 from .swarm.types import (
     AgentFunction,
     Response,
@@ -41,7 +36,6 @@ from .swarm.types import (
 from .swarm.util import (
     debug_print,
     debug_completion_start,
-    debug_completion_end,
     function_to_json,
     looks_like_langchain_tool,
     langchain_function_to_json,
@@ -50,10 +44,7 @@ from .swarm.util import (
 
 from jinja2 import Template
 import litellm
-from litellm.types.utils import ModelResponse, Message
-from litellm import completion_cost
-from litellm import token_counter
-
+from litellm.types.utils import Message
 
 from .swarm.types import (
     AgentFunction,
@@ -132,6 +123,8 @@ class ActorBaseAgent:
     api_endpoint: str = None
     _prompter = None
     _callbacks: dict[CallbackType, CallbackFunc] = {}
+
+    request_states: dict[str, dict[str, Any]] = {}
 
     model_config = ConfigDict(
         arbitrary_types_allowed=True
@@ -327,48 +320,145 @@ class ActorBaseAgent:
 
         return partial_response, events
 
-    def _yield_completion_steps(self, run_context: RunContext):
-        llm_message = {
-            "content": "",
-            "sender": self.name,
-            "role": "assistant",
-            "function_call": None,
-            "tool_calls": defaultdict(
-                lambda: {
-                    "function": {"arguments": "", "name": ""},
-                    "id": "",
-                    "type": "",
-                }
-            ),
+    def _init_request_state(self, request_id: str) -> dict[str, Any]:
+        """Initialize state for a new request"""
+        state = {
+            'paused_context': None,
+            'debug': DebugLevel(False),
+            'depth': 0,
+            'run_context': None,
+            'init_history_len': len(self.history)  # Track where this request started
         }
-        yield StartCompletion(self.name, self.depth)
+        self.request_states[request_id] = state
+        return state
+
+    def _get_request_state(self, request_id: str) -> dict[str, Any]:
+        """Get state for a request, initializing if needed"""
+        return self.request_states.get(request_id) or self._init_request_state(request_id)
+
+    def handlePromptOrResume(self, actor_message: Prompt | ResumeWithInput):
+        request_id = getattr(actor_message, 'request_id', None)
+        if not request_id:
+            raise ValueError("Request ID is required")
+                    
+        try:
+            for event in self._handlePromptOrResume(actor_message, request_id):
+                if self._callbacks.get('handle_event'):
+                    state = self._get_request_state(request_id)
+                    self._callbacks['handle_event'](event, state['run_context'])
+                yield event
+        finally:
+            # Only clean up transient state
+            if request_id in self.request_states:
+                del self.request_states[request_id]
+
+    def _handlePromptOrResume(self, actor_message: Prompt | ResumeWithInput, request_id: str):
+        state = self._get_request_state(request_id)
+        
+        if isinstance(actor_message, Prompt):
+            # Initialize context for this conversation
+            state['run_context'] = RunContext(
+                agent_name=self.name,
+                agent=self,
+                debug_level=actor_message.debug,
+                api_endpoint=self.api_endpoint
+            )
+            
+            if self._callbacks.get('handle_turn_start'):
+                self._callbacks['handle_turn_start'](actor_message, state['run_context'])
+                
+            state['debug'] = actor_message.debug
+            state['depth'] = actor_message.depth
+            self.history.append({"role": "user", "content": actor_message.payload})
+            yield PromptStarted(self.name, actor_message.payload, state['depth'])
+
+        elif isinstance(actor_message, ResumeWithInput):
+            if not state['paused_context']:
+                state['run_context'].debug(
+                    "Ignoring ResumeWithInput event, parent not paused: ",
+                    actor_message,
+                )
+                return
+                
+            init_len = state['paused_context'].orig_history_length
+            state['run_context'].update(actor_message.request_keys.copy())
+            
+            tool_function = state['paused_context'].tool_function
+            if tool_function is None:
+                raise RuntimeError("Tool function not found on AgentResume event")
+                
+            partial_response, events = self._execute_tool_calls(
+                [ChatCompletionMessageToolCall(
+                    id=(tool_function._request_id or ""),
+                    function=tool_function,
+                    type="function")],
+                self.functions,
+                state['run_context']
+            )
+            yield from events
+            self.history.extend(partial_response.messages)
+
+        # Main conversation loop
+        init_len = state['init_history_len']
+        while len(self.history) - init_len < 10:
+            for event in self._yield_completion_steps(state, request_id):
+                yield event
+
+            assert isinstance(event, FinishCompletion)
+            response: Message = event.response
+            
+            self.history.append(response)
+            if not response.tool_calls:
+                break
+
+            partial_response, events = self._execute_tool_calls(
+                response.tool_calls,
+                self.functions,
+                state['run_context']
+            )
+            yield from events
+
+            if partial_response.last_tool_result:
+                if isinstance(partial_response.last_tool_result, PauseForInputResult):
+                    state['paused_context'] = AgentPauseContext(
+                        orig_history_length=init_len,
+                        tool_partial_response=partial_response,
+                        tool_function=partial_response.last_tool_result.tool_function
+                    )
+                    yield WaitForInput(self.name, partial_response.last_tool_result.request_keys)
+                    return
+                elif FinishAgentResult.matches_sentinel(partial_response.messages[-1]["content"]):
+                    self.history.extend(partial_response.messages)
+                    break
+
+            self.history.extend(partial_response.messages)
+
+        yield TurnEnd(
+            self.name,
+            self.history[init_len:],
+            state['run_context'],
+            state['depth']
+        )
+        state['paused_context'] = None
+
+    def _yield_completion_steps(self, state: dict[str, Any], request_id: str):
+        yield StartCompletion(self.name, state['depth'])
 
         self._callback_params = {}
 
-        def custom_callback(
-            kwargs,  # kwargs to completion
-            completion_response,  # response from completion
-            start_time,
-            end_time,  # start/end time
-        ):
+        def custom_callback(kwargs, completion_response, start_time, end_time):
             try:
-                response_cost = kwargs[
-                    "response_cost"
-                ]  # litellm calculates response cost for you
-                self._callback_params["cost"] = response_cost
+                self._callback_params["cost"] = kwargs["response_cost"]
             except:
                 pass
             self._callback_params["elapsed"] = end_time - start_time
 
-        # Assign the custom callback function
         litellm.success_callback = [custom_callback]
 
-        # litellm._turn_on_debug()
-        completion = None
         try:
             completion = self._get_llm_completion(
                 history=self.history,
-                run_context=run_context,
+                run_context=state['run_context'],
                 model_override=None,
                 stream=True,
             )
@@ -380,14 +470,9 @@ class ActorBaseAgent:
                 0,
                 0,
                 timedelta(0),
-                self.depth,
+                state['depth']
             )
             return
-
-        # With 'streaming' we get the response back in chunks. For the output text
-        # we want to emit events progressively with that output, but for tool calls
-        # we just want to detect the single tool call and describe it in the final 'llm_result'
-        # that we return at the end.
 
         chunks = []
         for chunk in completion:
@@ -396,7 +481,7 @@ class ActorBaseAgent:
             if delta["role"] == "assistant":
                 delta["sender"] = self.name
             if not delta.get("tool_calls") and delta.get("content"):
-                yield ChatOutput(self.name, delta, self.depth)
+                yield ChatOutput(self.name, delta, state['depth'])
             delta.pop("role", None)
             delta.pop("sender", None)
 
@@ -405,11 +490,11 @@ class ActorBaseAgent:
         output = llm_message.choices[0].message
 
         if len(input) > 0:
-            self._callback_params["input_tokens"] = token_counter(
+            self._callback_params["input_tokens"] = litellm.token_counter(
                 self.model, messages=self.history[-1:]
             )
         if output.content:
-            self._callback_params["output_tokens"] = token_counter(
+            self._callback_params["output_tokens"] = litellm.token_counter(
                 self.model, text=llm_message.choices[0].message.content
             )
 
@@ -421,134 +506,8 @@ class ActorBaseAgent:
             self._callback_params.get("input_tokens"),
             self._callback_params.get("output_tokens"),
             self._callback_params.get("elapsed"),
-            self.depth,
+            state['depth']
         )
-
-    def handlePromptOrResume(self, actor_message: Prompt | ResumeWithInput):            
-        for event in self._handlePromptOrResume(actor_message):
-            if self._callbacks.get('handle_event'):
-                self._callbacks['handle_event'](event, self.run_context)
-            yield event
-
-    def _handlePromptOrResume(self, actor_message: Prompt | ResumeWithInput):
-        if isinstance(actor_message, Prompt):
-            # Middleware to modify the input prompt (or change agent context)
-            self.run_context = (
-                RunContext(
-                    agent_name=self.name, 
-                    agent=self, 
-                    debug_level=actor_message.debug,
-                    api_endpoint=self.api_endpoint
-                )
-                if self.run_context is None
-                else self.run_context
-            )
-            if self._callbacks.get('handle_turn_start') is not None:
-                self._callbacks['handle_turn_start'](actor_message, self.run_context)
-            self.debug = actor_message.debug
-            self.depth = actor_message.depth
-            init_len = len(self.history)
-            self.history.append({"role": "user", "content": actor_message.payload})
-            yield PromptStarted(self.name, actor_message.payload, self.depth)
-
-        elif isinstance(actor_message, ResumeWithInput):
-            # Call resuming us with user input after wait. We re-call our tool function after merging the human results
-            if not self.paused_context:
-                self.run_context.debug(
-                    "Ignoring ResumeWithInput event, parent not paused: ",
-                    actor_message,
-                )
-                return
-            init_len = self.paused_context.orig_history_length
-            # Copy human input into our context
-            self.run_context.update(actor_message.request_keys.copy())
-            # Re-call our tool function
-            tool_function = self.paused_context.tool_function
-            if tool_function is None:
-                raise RuntimeError("Tool function not found on AgentResume event")
-            # FIXME: Would be nice to DRY up the tool call handling
-            partial_response, events = self._execute_tool_calls(
-                [
-                    ChatCompletionMessageToolCall(
-                        id=(tool_function._request_id or ""),
-                        function=tool_function,
-                        type="function",
-                    )
-                ],
-                self.functions,
-                self.run_context,
-            )
-            yield from events
-            self.history.extend(partial_response.messages)
-
-        # MAIN TURN LOOP
-        # Critically, if a "wait_for_human" tool is requested, then we save our
-        # 'turn' state, send a 'gather_input' event, and then we return. The caller
-        # should call send ResumeEvent when they have it and we will resume the turn.
-
-        while len(self.history) - init_len < 10:
-            for event in self._yield_completion_steps(self.run_context):
-                # event] ", event.__dict__)
-                yield event
-
-            assert isinstance(event, FinishCompletion)
-
-            response: Message = event.response
-
-            debug_completion_end(self.debug, response)
-            # debug_print(
-            #    self.debug.debug_llm(), f"Completion finished:\n", response
-            # )
-
-            self.history.append(response)
-            if not response.tool_calls:
-                # No more tool calls, so assume this turn is done
-                break
-
-            # handle function calls
-            partial_response, events = self._execute_tool_calls(
-                response.tool_calls,
-                self.functions,
-                self.run_context,
-            )
-            yield from events
-
-            # FIXME: handle this better, and handle the case of multiple tool calls
-
-            last_tool_result: Result | None = partial_response.last_tool_result
-            if last_tool_result:
-                if isinstance(last_tool_result, PauseForInputResult):
-                    # tool function has request user input. We save the tool function so we can re-call it when
-                    # we get the response back
-                    self.paused_context = AgentPauseContext(
-                        orig_history_length=init_len,
-                        tool_partial_response=partial_response,
-                        tool_function=last_tool_result.tool_function,
-                    )
-                    yield WaitForInput(self.name, last_tool_result.request_keys)
-                    return
-                elif FinishAgentResult.matches_sentinel(
-                    partial_response.messages[-1]["content"]
-                ):
-                    # short-circuit any further agent execution. But for chat history we need to
-                    # record a result from the tool call
-                    msg = deepcopy(partial_response.messages[-1])
-                    msg["content"] = ""
-                    self.history.extend(partial_response.messages)
-                    break
-
-            self.history.extend(partial_response.messages)
-            # end of turn loop
-
-        # Altough we emit interim events, we also publish all the messages from this 'turn'
-        # in the final event. This lets a caller process our "function result" with a single event
-        yield TurnEnd(
-            self.name,
-            self.history[init_len:],
-            self.run_context,
-            self.depth,
-        )
-        self.paused_context = None
 
     def call_child(
         self,
@@ -783,53 +742,58 @@ class DynamicFastAPIHandler:
         self.name = self.agent_facade.name
         self.prompt: ProcessRequest = None
 
-    def __repr__(self):
-        return f"API: {self._agent.name}"
-    
     @app.post("/process")
     async def handle_post(self, prompt: ProcessRequest) -> str:
-        print(">> PROMPT request: ", prompt)
-        self.prompt = prompt
+        """Start a new request via the agent facade"""
         if prompt.debug and self.debug.is_off():
             self.debug = DebugLevel(prompt.debug)
-        return self.agent_facade.start_request(prompt.prompt, debug=self.debug, run_id=prompt.run_id)
+        
+        return self.agent_facade.start_request(
+            request=prompt.prompt,
+            run_id=prompt.run_id,
+            debug=self.debug
+        )
 
-    @app.get("/getevents", response_model=None)
-    async def get_events(self, request_id: str, stream: bool = False) -> list[str]|EventSourceResponse:
+    @app.get("/getevents")
+    async def get_events(self, request_id: str, stream: bool = False):
+        """Get events for a specific request using the agent facade"""
         if not stream:
+            # Non-streaming response - collect all events
             results = []
             for event in self.agent_facade.get_events(request_id):
                 if self._should_print(event):
                     print(str(event), end="")
-
-                # Create a serializable version of the event
+                    
                 event_data = {
                     "type": event.type,
                     "agent": event.agent,
                     "depth": event.depth,
-                    "payload": make_json_serializable(event.payload),
+                    "payload": make_json_serializable(event.payload)
                 }
-
                 results.append(event_data)
             return results
+            
         else:
-            def render_events():
+            # Streaming response
+            async def event_generator():
                 for event in self.agent_facade.get_events(request_id):
                     if self._should_print(event):
                         print(str(event), end="")
-                    # Create a serializable version of the event
+                        
                     event_data = {
                         "type": event.type,
                         "agent": event.agent,
                         "depth": event.depth,
-                        "payload": make_json_serializable(event.payload),
+                        "payload": make_json_serializable(event.payload)
                     }
-
                     yield {
                         "data": json.dumps(event_data),
-                        "event": "message",
+                        "event": "message"
                     }
-            return EventSourceResponse(render_events())
+                    
+                    # Small delay to prevent flooding
+                    await asyncio.sleep(0.01)
+            return EventSourceResponse(event_generator())
 
     @app.post('/stream_request')
     async def stream_request(self, prompt: ProcessRequest) -> EventSourceResponse:
