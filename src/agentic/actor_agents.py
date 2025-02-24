@@ -764,7 +764,7 @@ class DynamicFastAPIHandler:
             for event in self.agent_facade.get_events(request_id):
                 if self._should_print(event):
                     print(str(event), end="")
-                    
+                
                 event_data = {
                     "type": event.type,
                     "agent": event.agent,
@@ -780,6 +780,19 @@ class DynamicFastAPIHandler:
                 for event in self.agent_facade.get_events(request_id):
                     if self._should_print(event):
                         print(str(event), end="")
+
+                    # Quick hack to return tool_result and tool_call events
+                    if isinstance(event, ToolCall):
+                        event.payload = {
+                            "name": event.payload,
+                            "arguments": make_json_serializable(event.args)
+                        }
+
+                    if isinstance(event, ToolResult):
+                        event.payload = {
+                            "name": event.payload,
+                            "result": make_json_serializable(event.result)
+                        }
                         
                     event_data = {
                         "type": event.type,

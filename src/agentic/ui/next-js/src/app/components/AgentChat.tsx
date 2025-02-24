@@ -345,7 +345,7 @@ const AgentChat: React.FC<AgentChatProps> = ({ agentPath, agentInfo, runLogs, on
               size="sm"
             >
               <History className="h-4 w-4" />
-              <span className="hidden md:inline">Events ({eventLogs.length})</span>
+              <span className="hidden md:inline">Event Logs</span>
             </Button>
           </div>
         </CardHeader>
