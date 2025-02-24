@@ -477,6 +477,7 @@ def list_indexes():
     )
 
     console = Console()
+    client = None
     try:
         with Status("[bold green]Initializing Weaviate...", console=console):
             client = init_weaviate()
