@@ -6,12 +6,11 @@ import RunsTable from '@/components/RunsTable';
 import { agenticApi, AgentInfo, RunLog } from '@/lib/api';
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { 
   Menu, 
   Plus, 
   Bot,
-  RefreshCw,
+  CircleDashed,
   AlertCircle
 } from "lucide-react";
 import {
@@ -84,7 +83,7 @@ export default function Home() {
   if (isLoading) {
     return (
       <div className="flex h-screen items-center justify-center">
-        <RefreshCw className="h-6 w-6 animate-spin text-muted-foreground" />
+        <CircleDashed className="h-6 w-6 animate-spin text-muted-foreground" />
       </div>
     );
   }

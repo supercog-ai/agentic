@@ -13,6 +13,11 @@ export interface AgentInfo {
   tools: string[];
 }
 
+export interface SendPromptResponse {
+  request_id: string;
+  run_id: string;
+}
+
 export interface Run {
   id: string;
   agent_id: string;
@@ -47,7 +52,7 @@ export interface RunLog {
 
 export const agenticApi = {
   // Send a prompt to an agent, optionally continuing from a run
-  sendPrompt: async (agentPath: string, prompt: string, runId?: string): Promise<string> => {
+  sendPrompt: async (agentPath: string, prompt: string, runId?: string): Promise<SendPromptResponse> => {
     const response = await fetch(`/api${agentPath}/process`, {
       method: 'POST',
       headers: {

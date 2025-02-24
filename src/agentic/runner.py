@@ -150,7 +150,7 @@ class RayAgentRunner:
 
                 if background_request.is_set():
                     break
-                request_id = self.facade.start_request(line, debug=self.debug)
+                request_id = self.facade.start_request(line, debug=self.debug).request_id
                 background_request.clear()
 
                 for event in self.facade.get_events(request_id):

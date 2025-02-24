@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Bot, User, Send, PlayCircle, ListTodo, History } from "lucide-react";
+import { Bot, User, Send, PlayCircle, ListTodo, History, CircleDashed } from "lucide-react";
 import BackgroundTasks from '@/components/BackgroundTasks';
 import EventLogs from '@/components/EventLogs';
 
@@ -130,18 +130,20 @@ const AgentChat: React.FC<AgentChatProps> = ({ agentPath, agentInfo, runLogs }) 
     const agentMessage = { role: 'agent' as const, content: '' };
   
     try {
-      const requestId = await agenticApi.sendPrompt(agentPath, userInput, currentRunId);
-      if (!requestId) throw new Error('No request ID received');
+      const sendPromptResponse = await agenticApi.sendPrompt(agentPath, userInput, currentRunId);
+      if (!sendPromptResponse.request_id) throw new Error('No request ID received');
+      const requestId = sendPromptResponse.request_id;
+      const runId = sendPromptResponse.run_id;
   
       // Only clear events if we're starting a new conversation (not continuing an existing run)
       if (!isBackground && !currentRunId) {
         setEventLogs([]); // Clear event logs for a completely new conversation
-        setCurrentRunId(requestId); // Set the current run ID for future continuations
+        setCurrentRunId(sendPromptResponse.run_id); // Set the current run ID for future continuations
       }
   
       if (isBackground) {
         const newTask: BackgroundTask = {
-          id: requestId,
+          id: sendPromptResponse.request_id,
           completed: false,
           messages: [userMessage, agentMessage],
           currentStreamContent: ''
@@ -154,7 +156,7 @@ const AgentChat: React.FC<AgentChatProps> = ({ agentPath, agentInfo, runLogs }) 
         setMessages(prev => [...prev, userMessage, agentMessage]);
       }
   
-      await processStream(requestId, isBackground);
+      await processStream(requestId, runId, isBackground);
   
     } catch (error) {
       console.error('Error:', error);
@@ -173,7 +175,7 @@ const AgentChat: React.FC<AgentChatProps> = ({ agentPath, agentInfo, runLogs }) 
   };
   
   // Updated processStream function to properly handle event accumulation
-  const processStream = async (requestId: string, isBackground: boolean) => {
+  const processStream = async (requestId: string, runId: string, isBackground: boolean) => {
     try {
       const newEvents: AgentEvent[] = [];
       
@@ -269,7 +271,7 @@ const AgentChat: React.FC<AgentChatProps> = ({ agentPath, agentInfo, runLogs }) 
           } else if (event.type === 'turn_end') {
             // When a turn ends, make sure the current run ID is set for future continuations
             if (!currentRunId) {
-              setCurrentRunId(requestId);
+              setCurrentRunId(runId);
             }
             cleanup();
             resolve();
@@ -366,7 +368,11 @@ const AgentChat: React.FC<AgentChatProps> = ({ agentPath, agentInfo, runLogs }) 
                   {msg.role === 'user' ? (
                     <p className="whitespace-pre-wrap">{msg.content}</p>
                   ) : (
-                    <MarkdownRenderer content={msg.content || (isForegroundLoading && idx === messages.length - 1 ? '█' : '')} />
+                    !msg.content && isForegroundLoading && idx === messages.length - 1 ? (
+                      <CircleDashed className="h-4 w-4 animate-spin flex-shrink-0" />
+                    ) : (
+                      <MarkdownRenderer content={msg.content} />
+                    )
                   )}
                 </div>
 

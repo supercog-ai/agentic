@@ -75,6 +75,7 @@ from .events import (
     DebugLevel,
     ToolError,
     AgentDescriptor,
+    StartRequestResponse,
 )
 from agentic.db.models import Run, RunLog
 from agentic.utils.json import make_json_serializable
@@ -743,7 +744,7 @@ class DynamicFastAPIHandler:
         self.prompt: ProcessRequest = None
 
     @app.post("/process")
-    async def handle_post(self, prompt: ProcessRequest) -> str:
+    async def handle_post(self, prompt: ProcessRequest) -> StartRequestResponse:
         """Start a new request via the agent facade"""
         if prompt.debug and self.debug.is_off():
             self.debug = DebugLevel(prompt.debug)
@@ -964,7 +965,7 @@ class RayFacadeAgent:
         if enable_run_logs:
             self.init_run_tracking(db_path)
         else:
-            self.run_manager = None
+            self.run_id = None
 
         # Ensure API key is set
         self.ensure_api_key_for_model(self.model)
@@ -1144,7 +1145,7 @@ class RayFacadeAgent:
         request: str, 
         run_id: Optional[str] = None,
         debug: DebugLevel = DebugLevel(DebugLevel.OFF),
-    ) -> str: # returns the request_id
+    ) -> StartRequestResponse: # returns the request_id and run_id
         self.debug = debug
         self.queue_done_sentinel = "QUEUE_DONE"
 
@@ -1157,7 +1158,7 @@ class RayFacadeAgent:
         )
 
         # Re-initialize run tracking if continuing a run
-        if run_id and self.run_manager:
+        if run_id and self.run_id:
             self.init_run_tracking(self.db_path, run_id)
 
         remote_gen = self._agent.handlePromptOrResume.remote(
@@ -1173,7 +1174,7 @@ class RayFacadeAgent:
 
         t = threading.Thread(target=producer, args=(queue, remote_gen))
         t.start()
-        return request_obj.request_id
+        return StartRequestResponse(request_id=request_obj.request_id, run_id=self.run_id)
 
     def get_events(self, request_id: str) -> Generator[Event, Any, Any]:
         queue = self.request_queues[request_id]
@@ -1188,9 +1189,9 @@ class RayFacadeAgent:
         from .run_manager import init_run_tracking
         if db_path:
             self.db_path = db_path
-            self.run_manager = init_run_tracking(self, db_path=db_path, resume_run_id=run_id)
+            self.run_id = init_run_tracking(self, db_path=db_path, resume_run_id=run_id)
         else:
-            self.run_manager = init_run_tracking(self, resume_run_id=run_id)
+            self.run_id = init_run_tracking(self, resume_run_id=run_id)
 
     def get_db_manager(self) -> DatabaseManager:
         if self.db_path:
@@ -1259,10 +1260,10 @@ class RayFacadeAgent:
         
     def set_run_tracking(self, enabled: bool, user_id: str = "default") -> None: #TODO: create a real user_id
         """Enable or disable run tracking for this agent"""
-        if enabled and not self.run_manager:
+        if enabled and not self.run_id:
             from .run_manager import init_run_tracking
-            self.run_manager = init_run_tracking(self, user_id)
-        elif not enabled and self.run_manager:
+            self.run_id = init_run_tracking(self, user_id)
+        elif not enabled and self.run_id:
             from .run_manager import disable_run_tracking
             disable_run_tracking(self)
-            self.run_manager = None
+            self.run_id = None

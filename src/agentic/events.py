@@ -6,7 +6,7 @@ import uuid
 warnings.filterwarnings("ignore", message="Valid config keys have changed in V2:*")
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Optional
 from pydantic import BaseModel, ConfigDict
 from .swarm.types import Result, DebugLevel, RunContext
 
@@ -71,7 +71,7 @@ class Prompt(Event):
             "ignore_result": ignore_result,
         }
         data["request_id"] = request_id if request_id else uuid.uuid4().hex
-        
+
         # Use Pydantic's model initialization directly
         BaseModel.__init__(self, **data)
 
@@ -314,3 +314,7 @@ class AgentDescriptor(BaseModel):
     endpoints: list[str]
     operations: list[str] = ["chat"]
     tools: list[str] = []
+
+class StartRequestResponse(BaseModel):
+    request_id: str
+    run_id: Optional[str] = None
