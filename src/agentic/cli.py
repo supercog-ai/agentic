@@ -163,7 +163,7 @@ Get the names and descriptions from the top 20 models in this list:
 @app.command()
 def ui():
     """Runs the agentic UI"""
-    os.execvp("streamlit", ["streamlit", "run", "src/agentic/ui/chat.py"])
+    os.execvp("streamlit", ["streamlit", "run", "src/agentic/ui/app.py"])
 
 @app.command()
 def webui():
