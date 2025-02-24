@@ -1,39 +1,51 @@
 import React, { useEffect, useState } from 'react';
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Bot, Calendar, MessagesSquare, Wallet } from "lucide-react";
+import { Bot, Calendar, MessagesSquare, Wallet, RefreshCw } from "lucide-react";
 import { agenticApi, type Run, type RunLog } from '@/lib/api';
+import { Button } from "@/components/ui/button";
 
 interface RunsTableProps {
   agentPath: string;
   className?: string;
   onRunSelected?: (logs: RunLog[]) => void;
+  refreshKey: number;
 }
 
-export default function RunsTable({ agentPath, className = "", onRunSelected }: RunsTableProps) {
+export default function RunsTable({ agentPath, className = "", onRunSelected, refreshKey }: RunsTableProps) {
   const [runs, setRuns] = useState<Run[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedRunId, setSelectedRunId] = useState<string | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const fetchRuns = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      const data = await agenticApi.getRuns(agentPath);
+      setRuns(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch runs');
+      console.error('Error fetching runs:', err);
+    } finally {
+      setIsLoading(false);
+      setIsRefreshing(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchRuns = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
-        setSelectedRunId(null);
-        
-        const data = await agenticApi.getRuns(agentPath);
-        setRuns(data);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to fetch runs');
-        console.error('Error fetching runs:', err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
+    // Only clear selected run when agent changes, not on refresh
+    if (!isRefreshing) {
+      setSelectedRunId(null);
+    }
     fetchRuns();
   }, [agentPath]);
+
+  useEffect(() => {
+    setIsRefreshing(true);
+    fetchRuns();
+  }, [refreshKey]);
 
   const handleRunClick = async (runId: string) => {
     try {
@@ -46,6 +58,11 @@ export default function RunsTable({ agentPath, className = "", onRunSelected }: 
       console.error('Error fetching run logs:', err);
       // You might want to show an error toast here
     }
+  };
+
+  const handleRefresh = () => {
+    setIsRefreshing(true);
+    fetchRuns();
   };
 
   const formatDate = (dateString: string) => {
@@ -80,10 +97,20 @@ export default function RunsTable({ agentPath, className = "", onRunSelected }: 
       total + model.input_tokens + model.output_tokens, 0);
   };
 
-  if (isLoading) {
+  if (isLoading && !isRefreshing) {
     return (
       <div className={className}>
-        <h3 className="mb-2 px-2 text-sm font-semibold">Run History</h3>
+        <div className="flex justify-between items-center mb-2 px-2">
+          <h3 className="text-sm font-semibold">Run History</h3>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleRefresh}
+            disabled={isLoading}
+          >
+            <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+          </Button>
+        </div>
         <p className="text-center text-sm text-muted-foreground">Loading runs...</p>
       </div>
     );
@@ -92,7 +119,16 @@ export default function RunsTable({ agentPath, className = "", onRunSelected }: 
   if (error) {
     return (
       <div className={className}>
-        <h3 className="mb-2 px-2 text-sm font-semibold">Run History</h3>
+        <div className="flex justify-between items-center mb-2 px-2">
+          <h3 className="text-sm font-semibold">Run History</h3>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleRefresh}
+          >
+            <RefreshCw className="h-4 w-4" />
+          </Button>
+        </div>
         <p className="text-center text-sm text-destructive">{error}</p>
       </div>
     );
@@ -100,7 +136,17 @@ export default function RunsTable({ agentPath, className = "", onRunSelected }: 
 
   return (
     <div className={className}>
-      <h3 className="mb-2 px-2 text-sm font-semibold">Run History</h3>
+      <div className="flex justify-between items-center mb-2 px-2">
+        <h3 className="text-sm font-semibold">Run History</h3>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleRefresh}
+          disabled={isRefreshing}
+        >
+          <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+        </Button>
+      </div>
       <ScrollArea className="h-[calc(100vh-200px)]">
         <div className="space-y-2 px-2">
           {runs.length === 0 ? (
@@ -124,7 +170,8 @@ export default function RunsTable({ agentPath, className = "", onRunSelected }: 
                       <Calendar className="h-3 w-3" />
                       {formatDate(run.created_at)}
                     </div>
-                    {/* <div className="flex items-center gap-2">
+                    {/* Uncomment if you want to show token/cost info
+                    <div className="flex items-center gap-2">
                       <span className="flex items-center gap-1">
                         <MessagesSquare className="h-3 w-3" />
                         {calculateTotalTokens(run.usage_data)}

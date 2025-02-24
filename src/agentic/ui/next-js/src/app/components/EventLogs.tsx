@@ -47,6 +47,14 @@ const EventLogs: React.FC<EventLogsProps> = ({ events, onClose, className = "" }
     OTHER: true
   });
   const logsEndRef = useRef<HTMLDivElement>(null);
+
+  const scrollToBottom = () => {
+    logsEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [events]);
   
   // Process events to combine consecutive chat_output events
   const processedEvents = useMemo(() => {
@@ -162,14 +170,6 @@ const EventLogs: React.FC<EventLogsProps> = ({ events, onClose, className = "" }
   };
 
   const filteredEvents = processedEvents.filter(event => isEventTypeEnabled(event.type));
-
-  const scrollToBottom = () => {
-    logsEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  useEffect(() => {
-      scrollToBottom();
-    }, [filteredEvents]);
 
   return (
     <Card className={`${className} bg-muted/30`}>

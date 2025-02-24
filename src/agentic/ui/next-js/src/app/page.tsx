@@ -2,14 +2,12 @@
 
 import { useEffect, useState } from 'react';
 import AgentChat from '@/components/AgentChat';
-import RunsTable from '@/components/RunsTable';
+import AgentSidebar from '@/components/AgentSidebar';
 import { agenticApi, AgentInfo, RunLog } from '@/lib/api';
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { 
-  Menu, 
-  Plus, 
-  Bot,
+  Menu,
   CircleDashed,
   AlertCircle
 } from "lucide-react";
@@ -18,15 +16,6 @@ import {
   AlertDescription,
   AlertTitle,
 } from "@/components/ui/alert";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 export default function Home() {
   const [agents, setAgents] = useState<{
@@ -38,6 +27,8 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [selectedRunLogs, setSelectedRunLogs] = useState<RunLog[] | undefined>();
+  const [refreshRunsKey, setRefreshRunsKey] = useState(0);
+
 
   const loadAgents = async () => {
     try {
@@ -68,10 +59,16 @@ export default function Home() {
   const handleAgentSelect = (path: string) => {
     setSelectedAgent(path);
     setSelectedRunLogs(undefined); // Clear run logs when switching agents
+    refreshRuns(); // Refresh runs when switching agents
   };
 
   const handleRunSelect = (logs: RunLog[]) => {
     setSelectedRunLogs(logs);
+  };
+  
+  // Add a function to refresh the runs table
+  const refreshRuns = () => {
+    setRefreshRunsKey(prevKey => prevKey + 1);
   };
 
   useEffect(() => {
@@ -136,6 +133,7 @@ export default function Home() {
             }}
             onNewChat={loadAgents}
             onRunSelected={handleRunSelect}
+            refreshKey={refreshRunsKey}
           />
         </SheetContent>
       </Sheet>
@@ -148,6 +146,7 @@ export default function Home() {
           onSelectAgent={handleAgentSelect}
           onNewChat={loadAgents}
           onRunSelected={handleRunSelect}
+          refreshKey={refreshRunsKey}
         />
       </div>
 
@@ -158,72 +157,10 @@ export default function Home() {
             agentPath={selectedAgent} 
             agentInfo={selectedAgentInfo}
             runLogs={selectedRunLogs}
+            onRunComplete={refreshRuns}
           />
         )}
       </div>
-    </div>
-  );
-}
-
-interface AgentSidebarProps {
-  agents: { path: string; info: AgentInfo; }[];
-  selectedAgent: string;
-  onSelectAgent: (path: string) => void;
-  onNewChat: () => void;
-  onRunSelected: (logs: RunLog[]) => void;
-}
-
-function AgentSidebar({ 
-  agents, 
-  selectedAgent, 
-  onSelectAgent, 
-  onNewChat,
-  onRunSelected 
-}: AgentSidebarProps) {
-  return (
-    <div className="flex flex-col h-full">
-      <div className="p-4 border-b space-y-4">
-        <Button 
-          variant="secondary" 
-          className="w-full justify-start gap-2"
-          onClick={onNewChat}
-        >
-          <Plus className="h-4 w-4" />
-          New Chat
-        </Button>
-        <Select value={selectedAgent} onValueChange={onSelectAgent}>
-          <SelectTrigger className="w-full">
-            <SelectValue>
-              <div className="flex items-center gap-2">
-                <Bot className="h-4 w-4" />
-                <span className="truncate">
-                  {agents.find(a => a.path === selectedAgent)?.info.name || "Select Agent"}
-                </span>
-              </div>
-            </SelectValue>
-          </SelectTrigger>
-          <SelectContent>
-            <SelectGroup>
-              <SelectLabel>Available Agents</SelectLabel>
-              {agents.map(({ path, info }) => (
-                <SelectItem key={path} value={path}>
-                  <div className="flex items-center gap-2">
-                    <Bot className="h-4 w-4" />
-                    <span className="truncate">{info.name}</span>
-                  </div>
-                </SelectItem>
-              ))}
-            </SelectGroup>
-          </SelectContent>
-        </Select>
-      </div>
-      {selectedAgent && (
-        <RunsTable 
-          agentPath={selectedAgent}
-          className="flex-1 border-t pt-4"
-          onRunSelected={onRunSelected}
-        />
-      )}
     </div>
   );
 }

@@ -1157,9 +1157,8 @@ class RayFacadeAgent:
             depth=0,
         )
 
-        # Re-initialize run tracking if continuing a run
-        if run_id and self.run_id:
-            self.init_run_tracking(self.db_path, run_id)
+        # Re-initialize run tracking
+        self.init_run_tracking(self.db_path, run_id)
 
         remote_gen = self._agent.handlePromptOrResume.remote(
             request_obj,

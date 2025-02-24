@@ -26,9 +26,10 @@ interface AgentChatProps {
   agentPath: string;
   agentInfo: AgentInfo;
   runLogs?: RunLog[];
+  onRunComplete?: () => void;
 }
 
-const AgentChat: React.FC<AgentChatProps> = ({ agentPath, agentInfo, runLogs }) => {
+const AgentChat: React.FC<AgentChatProps> = ({ agentPath, agentInfo, runLogs, onRunComplete }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState<string>('');
   const [isForegroundLoading, setIsForegroundLoading] = useState<boolean>(false);
@@ -171,6 +172,10 @@ const AgentChat: React.FC<AgentChatProps> = ({ agentPath, agentInfo, runLogs }) 
       } else {
         setMessages(prev => [...prev, { role: 'agent', content: errorMessage }]);
       }
+    }
+
+    if (onRunComplete && !isBackground) {
+      onRunComplete();
     }
   };
   
