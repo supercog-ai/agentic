@@ -48,7 +48,6 @@ export interface RunLog {
 export const agenticApi = {
   // Send a prompt to an agent, optionally continuing from a run
   sendPrompt: async (agentPath: string, prompt: string, runId?: string): Promise<string> => {
-    console.log(runId)
     const response = await fetch(`/api${agentPath}/process`, {
       method: 'POST',
       headers: {
