@@ -30,7 +30,10 @@ interface AgentChatProps {
 }
 
 const AgentChat: React.FC<AgentChatProps> = ({ agentPath, agentInfo, runLogs, onRunComplete }) => {
-  const [messages, setMessages] = useState<Message[]>([]);
+  const defaultMessages: Message[] = agentInfo.purpose ? [
+    { role: 'agent', content: agentInfo.purpose }
+  ] : [];
+  const [messages, setMessages] = useState<Message[]>(defaultMessages);
   const [input, setInput] = useState<string>('');
   const [isForegroundLoading, setIsForegroundLoading] = useState<boolean>(false);
   const [currentRunId, setCurrentRunId] = useState<string | undefined>();
@@ -67,7 +70,7 @@ const AgentChat: React.FC<AgentChatProps> = ({ agentPath, agentInfo, runLogs, on
       setEventLogs(convertedEvents);
       
       // Process messages for chat display
-      const newMessages: Message[] = [];
+      const newMessages: Message[] = defaultMessages;
       let currentMessage: Message | null = null;
       
       for (const log of runLogs) {
@@ -100,7 +103,7 @@ const AgentChat: React.FC<AgentChatProps> = ({ agentPath, agentInfo, runLogs, on
       setMessages(newMessages.filter(msg => msg.content));
     } else {
       setCurrentRunId(undefined);
-      setMessages([]);
+      setMessages(defaultMessages);
       setEventLogs([]); // Clear event logs when no run is selected
     }
   }, [runLogs]);

@@ -18,7 +18,8 @@ def parent():
             Agent(
                 name="TheChild",
                 model=CLAUDE,
-                tools=[UnitTestingTool(child_story_log)]
+                tools=[UnitTestingTool(child_story_log)],
+                enable_run_logs=False,
             )
         ]
     )
