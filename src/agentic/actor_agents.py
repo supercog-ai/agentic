@@ -497,15 +497,22 @@ class ActorBaseAgent:
         llm_message = litellm.stream_chunk_builder(chunks, messages=self.history)
         input = self.history[-1:]
         output = llm_message.choices[0].message
-
-        if len(input) > 0:
-            self._callback_params["input_tokens"] = litellm.token_counter(
-                self.model, messages=self.history[-1:]
-            )
-        if output.content:
-            self._callback_params["output_tokens"] = litellm.token_counter(
-                self.model, text=llm_message.choices[0].message.content
-            )
+        
+        # Get usage directly from response
+        usage = getattr(llm_message, "usage", None)
+        if usage:
+            self._callback_params["input_tokens"] = usage.prompt_tokens
+            self._callback_params["output_tokens"] = usage.completion_tokens
+        else:
+            # Fallback to manual calculation if usage not in response
+            if len(input) > 0:
+                self._callback_params["input_tokens"] = litellm.token_counter(
+                    self.model, messages=self.history[-1:]
+                )
+            if output.content:
+                self._callback_params["output_tokens"] = litellm.token_counter(
+                    self.model, text=output.content
+                )
 
         yield FinishCompletion.create(
             self.name,
