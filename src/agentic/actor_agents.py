@@ -701,7 +701,7 @@ class ActorBaseAgent:
                 type="function",
                 function=Function(
                     name=callback_name,
-                    arguments=json.dumps(args)
+                    arguments=json.dumps({"webhook_data":args})
                 )
             )
 
