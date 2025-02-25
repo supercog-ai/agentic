@@ -44,6 +44,8 @@ class GithubTool:
             self.get_github_issue_comments,
             self.create_pull_request,
             self.get_pull_requests,
+            self.get_pr_reviews,
+            self.get_pr_comments,
             self.add_comment_to_issue,
             self.get_repository_contents,
             self.create_repository,
@@ -533,6 +535,32 @@ class GithubTool:
         """
         owner, name = self._get_repo_info(run_context, repo_owner, repo_name)
         return await self._github_request('GET', f'/repos/{owner}/{name}/pulls?state={state}', run_context)
+
+    async def get_pr_reviews(self, run_context: RunContext, pr_number: int, state: str = 'open',
+                        repo_owner: Optional[str] = None, repo_name: Optional[str] = None) -> List[Dict[str, Any]]:
+        """
+        Get a list of reviews for a pull request.
+        :param pr_number: The number of the pr
+        :param state: State of pull requests to return. Can be either 'open', 'closed', or 'all'
+        :param repo_owner: Repository owner (if None, uses default_repo owner)
+        :param repo_name: Repository name (if None, uses default_repo name)
+        :return: List of PR reviews
+        """
+        owner, name = self._get_repo_info(run_context, repo_owner, repo_name)
+        return await self._github_request('GET', f'/repos/{owner}/{name}/pulls/{pr_number}/reviews', run_context)
+
+    async def get_pr_comments(self, run_context: RunContext, pr_number: int, state: str = 'open',
+                        repo_owner: Optional[str] = None, repo_name: Optional[str] = None) -> List[Dict[str, Any]]:
+        """
+        Get a list of comments for a pull request.
+        :param pr_number: The number of the pr
+        :param state: State of pull requests to return. Can be either 'open', 'closed', or 'all'
+        :param repo_owner: Repository owner (if None, uses default_repo owner)
+        :param repo_name: Repository name (if None, uses default_repo name)
+        :return: List of PR comments
+        """
+        owner, name = self._get_repo_info(run_context, repo_owner, repo_name)
+        return await self._github_request('GET', f'/repos/{owner}/{name}/pulls/{pr_number}/comments', run_context)
 
     async def add_comment_to_issue(self, run_context: RunContext, issue_number: int, body: str,
                             repo_owner: Optional[str] = None, repo_name: Optional[str] = None) -> Dict[str, Any]:
