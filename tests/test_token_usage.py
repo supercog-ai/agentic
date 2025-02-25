@@ -167,37 +167,35 @@ def test_token_counter_error_handling():
             assert str(e) == "Token counting failed"
 
 
-def test_with_ray_cluster():
-    """Test token usage with an actual Ray cluster and actor"""
-    import ray
-    from agentic.actor_agents import ActorBaseAgent
-    import os
+def test_real_llm_usage_tracking():
+    """Test token usage tracking with actual LLM API call"""
+    from agentic.llm import llm_generate, LLMUsage
     
-    # Initialize Ray for the test
-    if not ray.is_initialized():
-        ray.init(num_cpus=1, include_dashboard=False)
+    usage = LLMUsage()
+    prompt = "Respond only with the word 'test' in lowercase"
+    model = "gpt-3.5-turbo"
     
-    try:
-        # Create mock objects for the test
-        mock_completion = MockCompletion(with_usage=True, prompt_tokens=150, completion_tokens=75)
-        
-        with patch('litellm.stream_chunk_builder', return_value=mock_completion), \
-             patch('litellm.token_counter', return_value=60), \
-             patch.object(ActorBaseAgent, '_get_llm_completion', create=True):
-            
-            # Create the actual Ray actor
-            actor = ActorBaseAgent.remote("TestAgent")
-            
-            # We can't directly test the internal _yield_completion_steps method,
-            # but we can verify the behavior with our implementation test
-            # which exactly mirrors the logic in actor_agents.py
-            callback_params = extract_token_usage(mock_completion, "gpt-4o", 
-                                                [{"role": "user", "content": "Test prompt"}])
-            
-            # Verify the extracted values
-            assert callback_params["input_tokens"] == 150
-            assert callback_params["output_tokens"] == 75
-            
-    finally:
-        # Clean up Ray
-        ray.shutdown()
+    response = llm_generate(prompt, model=model, usage=usage)
+    
+    # Basic response validation
+    assert response.strip().lower() == "test"
+    
+    # Verify token counts were tracked
+    assert usage.input_tokens > 0, "Input tokens should be tracked"
+    assert usage.output_tokens == 1, "Output tokens should be 1"
+    assert usage.model == model, "Model should be recorded"
+    
+    # Verify usage flows through to FinishCompletion
+    finish_event = FinishCompletion.create(
+        "TestAgent",
+        Message(content=response, role="assistant"),
+        model,
+        0,  # cost
+        usage.input_tokens,
+        usage.output_tokens,
+        0,  # elapsed time
+        0  # depth
+    )
+    
+    assert finish_event.metadata[FinishCompletion.INPUT_TOKENS_KEY] == usage.input_tokens
+    assert finish_event.metadata[FinishCompletion.OUTPUT_TOKENS_KEY] == usage.output_tokens
