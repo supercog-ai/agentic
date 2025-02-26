@@ -43,6 +43,29 @@ SPECIAL_MODEL_CONFIGS = {
     # Add other special cases here only when needed
 }
 
+# Import dependencies
+from .custom_models.mock_provider import MockModelProvider
+import litellm
+
+# Initialize global mock provider instance that will be used across the application
+mock_provider = MockModelProvider()  # Initialize with default instance
+
+def set_mock_default_response(response: str) -> None:
+    """
+    Sets the default mock response for the MockModelProvider globally.
+    Updates the environment variable that stores the mock response.
+    """
+    import os
+    from .custom_models.mock_provider import MOCK_RESPONSE_ENV_VAR
+    os.environ[MOCK_RESPONSE_ENV_VAR] = response
+
+# Register mock provider with litellm
+litellm.custom_provider_map = [
+    {"provider": "mock", "custom_handler": mock_provider}
+]
+# Register "mock" in CHAT_MODELS so the Agent can call it
+CHAT_MODELS["mock"] = "mock/default"
+
 def get_special_model_params(model_id: str) -> dict:
     """Get special parameters for models that need them"""
     for prefix, config in SPECIAL_MODEL_CONFIGS.items():
