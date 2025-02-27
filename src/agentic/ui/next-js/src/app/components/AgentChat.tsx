@@ -1,50 +1,55 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { agenticApi, AgentEvent, AgentInfo, RunLog } from '@/lib/api';
-import { MarkdownRenderer } from '@/components/MarkdownRenderer';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Bot, User, Send, PlayCircle, ListTodo, History, CircleDashed } from "lucide-react";
+
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Textarea } from "@/components/ui/textarea";
 import BackgroundTasks from '@/components/BackgroundTasks';
 import EventLogs from '@/components/EventLogs';
-
-interface Message {
-  role: 'user' | 'agent';
-  content: string;
-}
-
-interface BackgroundTask {
-  id: string;
-  completed: boolean;
-  messages: Message[];
-  currentStreamContent: string;
-}
+import MarkdownRenderer from '@/components/MarkdownRenderer';
+import { useChat } from '@/hooks/useChat';
 
 interface AgentChatProps {
   agentPath: string;
-  agentInfo: AgentInfo;
-  runLogs?: RunLog[];
+  agentInfo: Api.AgentInfo;
+  runId?: string;
+  runLogs?: Api.RunLog[];
   onRunComplete?: () => void;
 }
 
-const AgentChat: React.FC<AgentChatProps> = ({ agentPath, agentInfo, runLogs, onRunComplete }) => {
-  const defaultMessages: Message[] = agentInfo.purpose ? [
+const AgentChat: React.FC<AgentChatProps> = ({ agentPath, agentInfo, runId, runLogs, onRunComplete }) => {
+  const defaultMessages: Ui.Message[] = agentInfo.purpose ? [
     { role: 'agent', content: agentInfo.purpose }
   ] : [];
-  const [messages, setMessages] = useState<Message[]>(defaultMessages);
+  
+  const [messages, setMessages] = useState<Ui.Message[]>(defaultMessages);
   const [input, setInput] = useState<string>('');
-  const [isForegroundLoading, setIsForegroundLoading] = useState<boolean>(false);
-  const [currentRunId, setCurrentRunId] = useState<string | undefined>();
-  const [backgroundTasks, setBackgroundTasks] = useState<BackgroundTask[]>([]);
+  const [backgroundTasks, setBackgroundTasks] = useState<Ui.BackgroundTask[]>([]);
   const [showBackgroundPanel, setShowBackgroundPanel] = useState<boolean>(false);
   const [showEventLogs, setShowEventLogs] = useState<boolean>(false);
-  const [eventLogs, setEventLogs] = useState<AgentEvent[]>([]);
+  
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const mainStreamContentRef = useRef<string>('');
+  
+  // Use our custom chat API hook
+  const { 
+    sendPrompt, 
+    sendBackgroundPrompt, 
+    events, 
+    isSending,
+    cancelStream
+  } = useChat(agentPath, agentInfo.name);
 
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      cancelStream();
+    };
+  }, [cancelStream]);
+
+  // Auto-resize textarea based on content
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'inherit';
@@ -55,23 +60,9 @@ const AgentChat: React.FC<AgentChatProps> = ({ agentPath, agentInfo, runLogs, on
   // Initialize from run logs if provided
   useEffect(() => {
     if (runLogs) {
-      // Clear previous events and set new run ID
-      const runId = runLogs[0]?.run_id;
-      setCurrentRunId(runId);
-      setEventLogs([]); // Clear event logs when loading a new run
-      
-      // Convert run logs to events
-      const convertedEvents = runLogs.map(log => ({
-        type: log.event_name,
-        agent: log.agent_id,
-        depth: 0, // Default depth is 0 for historical logs
-        payload: log.event
-      }));
-      setEventLogs(convertedEvents);
-      
       // Process messages for chat display
-      const newMessages: Message[] = defaultMessages;
-      let currentMessage: Message | null = null;
+      const newMessages: Ui.Message[] = defaultMessages;
+      let currentMessage: Ui.Message | null = null;
       
       for (const log of runLogs) {
         if (log.event_name === 'prompt_started') {
@@ -102,200 +93,113 @@ const AgentChat: React.FC<AgentChatProps> = ({ agentPath, agentInfo, runLogs, on
       if (currentMessage) newMessages.push(currentMessage);
       setMessages(newMessages.filter(msg => msg.content));
     } else {
-      setCurrentRunId(undefined);
       setMessages(defaultMessages);
-      setEventLogs([]); // Clear event logs when no run is selected
     }
   }, [runLogs]);
+
+  // Scroll to bottom when messages change
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
+  // Handle form submission
   const handleSubmit = async (e: React.FormEvent, isBackground: boolean = false) => {
     e.preventDefault();
     if (!input.trim()) return;
-  
-    if (!isBackground) {
-      setIsForegroundLoading(true);
-    }
+    
     const userInput = input;
     setInput('');
     
-    if (!isBackground) {
-      mainStreamContentRef.current = '';
-    }
-  
     const userMessage = { role: 'user' as const, content: userInput };
     const agentMessage = { role: 'agent' as const, content: '' };
-  
-    try {
-      const sendPromptResponse = await agenticApi.sendPrompt(agentPath, userInput, currentRunId);
-      if (!sendPromptResponse.request_id) throw new Error('No request ID received');
-      const requestId = sendPromptResponse.request_id;
-      const runId = sendPromptResponse.run_id;
-  
-      // Only clear events if we're starting a new conversation (not continuing an existing run)
-      if (!isBackground && !currentRunId) {
-        setEventLogs([]); // Clear event logs for a completely new conversation
-        setCurrentRunId(sendPromptResponse.run_id); // Set the current run ID for future continuations
-      }
-  
-      if (isBackground) {
-        const newTask: BackgroundTask = {
-          id: sendPromptResponse.request_id,
-          completed: false,
-          messages: [userMessage, agentMessage],
-          currentStreamContent: ''
-        };
-        setBackgroundTasks(prev => [...prev, newTask]);
-        setShowBackgroundPanel(true);
-        if (showEventLogs) setShowEventLogs(false);
-      } else {
-        mainStreamContentRef.current = '';
-        setMessages(prev => [...prev, userMessage, agentMessage]);
-      }
-  
-      await processStream(requestId, runId, isBackground);
-  
-    } catch (error) {
-      console.error('Error:', error);
-      const errorMessage = 'Error: Failed to get response from agent';
+    
+    if (isBackground) {
+      // Handle background task
+      const newTask: Ui.BackgroundTask = {
+        id: `task-${Date.now()}`,
+        completed: false,
+        messages: [userMessage, agentMessage],
+        currentStreamContent: ''
+      };
       
-      if (isBackground) {
+      setBackgroundTasks(prev => [...prev, newTask]);
+      setShowBackgroundPanel(true);
+      if (showEventLogs) setShowEventLogs(false);
+      console.log(runId)
+      const response = await sendBackgroundPrompt(
+        userInput,
+        runId,
+        // Update message content as it streams in
+        (requestId, content) => {
+          setBackgroundTasks(prev => prev.map(task => {
+            if (task.id === newTask.id || task.id === requestId) {
+              return {
+                ...task,
+                id: requestId, // Update with real ID
+                currentStreamContent: content,
+                messages: [
+                  task.messages[0],
+                  { role: 'agent', content }
+                ]
+              };
+            }
+            return task;
+          }));
+        },
+        // Mark as completed when done
+        (requestId) => {
+          setBackgroundTasks(prev => prev.map(task => 
+            task.id === requestId 
+              ? { ...task, completed: true }
+              : task
+          ));
+        }
+      );
+      
+      // If response failed, show error
+      if (!response) {
         setBackgroundTasks(prev => prev.map(task => 
-          task.messages[0].content === userInput
-            ? { ...task, completed: true, messages: [...task.messages, { role: 'agent', content: errorMessage }] }
+          task.id === newTask.id
+            ? { ...task, completed: true, messages: [...task.messages.slice(0, 1), { role: 'agent', content: 'Error: Failed to get response from agent' }] }
             : task
         ));
-      } else {
-        setMessages(prev => [...prev, { role: 'agent', content: errorMessage }]);
       }
-    }
-
-    if (onRunComplete && !isBackground) {
-      onRunComplete();
-    }
-  };
-  
-  // Updated processStream function to properly handle event accumulation
-  const processStream = async (requestId: string, runId: string, isBackground: boolean) => {
-    try {
-      const newEvents: AgentEvent[] = [];
+    } else {
+      // Handle foreground task
+      setMessages(prev => [...prev, userMessage, agentMessage]);
+      console.log(runId)
+      const response = await sendPrompt(
+        userInput,
+        runId,
+        // Update message content as it streams in
+        (content) => {
+          setMessages(prev => {
+            const newMessages = [...prev];
+            const lastMessage = newMessages[newMessages.length - 1];
+            if (lastMessage?.role === 'agent') {
+              lastMessage.content = content;
+            }
+            return newMessages;
+          });
+        },
+        // Callback when complete
+        onRunComplete
+      );
       
-      await new Promise<void>((resolve, reject) => {
-        const cleanup = agenticApi.streamEvents(agentPath, agentInfo.name, requestId, (event: AgentEvent) => {
-          // Create a deep copy of the event to prevent reference issues
-          const eventCopy = {
-            type: event.type,
-            agent: event.agent,
-            depth: event.depth,
-            payload: JSON.parse(JSON.stringify(event.payload)) // Deep copy payload
-          };
-          
-          // Add event to logs in real-time, always appending to existing events
-          if (!isBackground) {
-            // For foreground tasks, update event logs
-            setEventLogs(prev => {
-              // Don't add duplicate chat_output events - we'll handle these separately
-              if (eventCopy.type === 'chat_output') {
-                return prev; // Don't add chat_output events to the log directly
-              }
-              return [...prev, eventCopy];
-            });
-          } else {
-            // For background tasks, collect events but don't display them
-            if (eventCopy.type !== 'chat_output') {
-              newEvents.push(eventCopy);
-            }
+      // If response failed, show error
+      if (!response) {
+        setMessages(prev => {
+          const newMessages = [...prev];
+          const lastMessage = newMessages[newMessages.length - 1];
+          if (lastMessage?.role === 'agent') {
+            lastMessage.content = 'Error: Failed to get response from agent';
           }
-          
-          if (event.type === 'chat_output') {
-            const newContent = event.payload.content || '';
-            
-            if (isBackground) {
-              setBackgroundTasks(prev => prev.map(task => {
-                if (task.id !== requestId) return task;
-                const updatedContent = task.currentStreamContent + newContent;
-                return {
-                  ...task,
-                  currentStreamContent: updatedContent,
-                  messages: [
-                    task.messages[0],
-                    { role: 'agent', content: updatedContent }
-                  ]
-                };
-              }));
-            } else {
-              // For foreground tasks, maintain a single accumulated chat output event
-              mainStreamContentRef.current += newContent;
-              
-              // Update the UI with the accumulated text
-              setMessages(prev => {
-                const newMessages = [...prev];
-                const lastMessage = newMessages[newMessages.length - 1];
-                if (lastMessage?.role === 'agent') {
-                  lastMessage.content = mainStreamContentRef.current;
-                }
-                return newMessages;
-              });
-              
-              // Update the event logs with the accumulated chat output
-              setEventLogs(prev => {
-                // Look for an existing chat_output event from this agent in the current turn
-                const chatOutputIndex = prev.findIndex(e => 
-                  e.type === 'chat_output' && 
-                  e.agent === event.agent && 
-                  // Only consider recent events (from the current turn)
-                  prev.indexOf(e) > prev.findLastIndex(e => e.type === 'prompt_started')
-                );
-                
-                if (chatOutputIndex >= 0) {
-                  // Update existing chat_output event
-                  const newEvents = [...prev];
-                  newEvents[chatOutputIndex] = {
-                    ...newEvents[chatOutputIndex],
-                    payload: {
-                      ...newEvents[chatOutputIndex].payload,
-                      content: mainStreamContentRef.current
-                    }
-                  };
-                  return newEvents;
-                } else {
-                  // Add new chat_output event with accumulated content
-                  return [...prev, {
-                    type: 'chat_output',
-                    agent: event.agent,
-                    depth: event.depth,
-                    payload: { content: mainStreamContentRef.current }
-                  }];
-                }
-              });
-            }
-          } else if (event.type === 'turn_end' && event.agent === agentInfo.name) {
-            // When a turn ends, make sure the current run ID is set for future continuations
-            if (!currentRunId) {
-              setCurrentRunId(runId);
-            }
-            cleanup();
-            resolve();
-          }
+          return newMessages;
         });
-      });
-      
-    } finally {
-      if (isBackground) {
-        setBackgroundTasks(prev => prev.map(task => 
-          task.id === requestId 
-            ? { ...task, completed: true }
-            : task
-        ));
-      } else {
-        setIsForegroundLoading(false);
       }
     }
   };
@@ -376,7 +280,7 @@ const AgentChat: React.FC<AgentChatProps> = ({ agentPath, agentInfo, runLogs, on
                   {msg.role === 'user' ? (
                     <p className="whitespace-pre-wrap">{msg.content}</p>
                   ) : (
-                    !msg.content && isForegroundLoading && idx === messages.length - 1 ? (
+                    !msg.content && isSending && idx === messages.length - 1 ? (
                       <CircleDashed className="h-4 w-4 animate-spin flex-shrink-0" />
                     ) : (
                       <MarkdownRenderer content={msg.content} />
@@ -406,17 +310,17 @@ const AgentChat: React.FC<AgentChatProps> = ({ agentPath, agentInfo, runLogs, on
               onKeyDown={handleKeyDown}
               placeholder="Send a message..."
               className="min-h-[60px] flex-1 resize-none"
-              disabled={isForegroundLoading}
+              disabled={isSending}
             />
             <div className="flex flex-col gap-2">
-              <Button type="submit" size="icon" disabled={isForegroundLoading || !input.trim()}>
+              <Button type="submit" size="icon" disabled={isSending || !input.trim()}>
                 <Send className="h-4 w-4" />
               </Button>
               <Button
                 type="button"
                 size="icon"
                 variant="secondary"
-                disabled={isForegroundLoading || !input.trim()}
+                disabled={isSending || !input.trim()}
                 onClick={(e) => handleSubmit(e, true)}
               >
                 <PlayCircle className="h-4 w-4" />
@@ -436,7 +340,7 @@ const AgentChat: React.FC<AgentChatProps> = ({ agentPath, agentInfo, runLogs, on
 
       {showEventLogs && (
         <EventLogs
-          events={eventLogs}
+          events={events}
           onClose={() => setShowEventLogs(false)}
           className="w-1/2 ml-4 mr-4"
         />

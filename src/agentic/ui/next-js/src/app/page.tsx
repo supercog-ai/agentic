@@ -1,83 +1,51 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import AgentChat from '@/components/AgentChat';
-import AgentSidebar from '@/components/AgentSidebar';
-import { agenticApi, AgentInfo, RunLog } from '@/lib/api';
+import { useState } from 'react';
+import { AlertCircle, CircleDashed, Menu } from "lucide-react";
+import { mutate } from 'swr';
+
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { 
-  Menu,
-  CircleDashed,
-  AlertCircle
-} from "lucide-react";
-import {
-  Alert,
-  AlertDescription,
-  AlertTitle,
-} from "@/components/ui/alert";
+import AgentChat from '@/components/AgentChat';
+import AgentSidebar from '@/components/AgentSidebar';
+import { useAgentsWithDetails, useRunLogs } from '@/hooks/useAgentData';
+import { useChat } from '@/hooks/useChat';
 
 export default function Home() {
-  const [agents, setAgents] = useState<{
-    path: string;
-    info: AgentInfo;
-  }[]>([]);
   const [selectedAgent, setSelectedAgent] = useState<string>('');
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [selectedRunLogs, setSelectedRunLogs] = useState<RunLog[] | undefined>();
-  const [refreshRunsKey, setRefreshRunsKey] = useState(0);
 
+  const {
+    currentRunId,
+    setCurrentRunId
+  } = useChat(selectedAgent, selectedAgent);
 
-  const loadAgents = async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
-      setSelectedRunLogs(undefined);
-      
-      // TODO: Handle multiple agents
-      const availAgents = await agenticApi.getAvailableAgents();
-      const agentPaths = [availAgents[0]];
-      const agentDetails = await Promise.all(
-        agentPaths.map(async (path) => {
-          const info = await agenticApi.getAgentInfo(path);
-          return { path, info };
-        })
-      );
-      
-      setAgents(agentDetails);
-      if (agentDetails.length > 0) {
-        setSelectedAgent(agentDetails[0].path);
-      }
-    } catch (err) {
-      setError('Failed to load agents. Is the Agentic server running?');
-      console.error('Error loading agents:', err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  // Use our custom hook to fetch agent data
+  const { agents, error, isLoading } = useAgentsWithDetails();
+  
+  // Fetch run logs for the selected run
+  const { data: runLogs } = useRunLogs(selectedAgent, currentRunId ?? null);
+
+  // Set initial selected agent when data loads
+  if (agents && agents.length > 0 && !selectedAgent) {
+    setSelectedAgent(agents[0].path);
+  }
 
   const handleAgentSelect = (path: string) => {
     setSelectedAgent(path);
-    setSelectedRunLogs(undefined); // Clear run logs when switching agents
-    refreshRuns(); // Refresh runs when switching agents
+    setCurrentRunId(undefined);
   };
 
-  const handleRunSelect = (logs: RunLog[]) => {
-    setSelectedRunLogs(logs);
+  const handleRunSelect = (runId: string) => {
+    console.log(`Selected run ID: ${runId}`);
+    setCurrentRunId(runId);
   };
   
-  // Add a function to refresh the runs table
+  // Function to refresh runs data
   const refreshRuns = () => {
-    setRefreshRunsKey(prevKey => prevKey + 1);
+    mutate(['agent-runs', selectedAgent]);
   };
-
-  useEffect(() => {
-    loadAgents();
-  }, []);
-
-  const selectedAgentInfo = agents.find(a => a.path === selectedAgent)?.info;
 
   if (isLoading) {
     return (
@@ -93,13 +61,15 @@ export default function Home() {
         <Alert variant="destructive" className="max-w-md">
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>Error</AlertTitle>
-          <AlertDescription>{error}</AlertDescription>
+          <AlertDescription>
+            Failed to load agents. Is the Agentic server running?
+          </AlertDescription>
         </Alert>
       </div>
     );
   }
 
-  if (agents.length === 0) {
+  if (!agents || agents.length === 0) {
     return (
       <div className="flex h-screen items-center justify-center p-4">
         <Alert className="max-w-md">
@@ -111,6 +81,8 @@ export default function Home() {
       </div>
     );
   }
+
+  const selectedAgentInfo = agents.find(a => a.path === selectedAgent)?.info;
 
   return (
     <div className="flex h-screen">
@@ -133,9 +105,11 @@ export default function Home() {
               handleAgentSelect(path);
               setIsSidebarOpen(false);
             }}
-            onNewChat={loadAgents}
+            onNewChat={() => {
+              setCurrentRunId(undefined);
+              refreshRuns();
+            }}
             onRunSelected={handleRunSelect}
-            refreshKey={refreshRunsKey}
           />
         </SheetContent>
       </Sheet>
@@ -146,9 +120,11 @@ export default function Home() {
           agents={agents}
           selectedAgent={selectedAgent}
           onSelectAgent={handleAgentSelect}
-          onNewChat={loadAgents}
+          onNewChat={() => {
+            setCurrentRunId(undefined);
+            refreshRuns();
+          }}
           onRunSelected={handleRunSelect}
-          refreshKey={refreshRunsKey}
         />
       </div>
 
@@ -158,7 +134,8 @@ export default function Home() {
           <AgentChat 
             agentPath={selectedAgent} 
             agentInfo={selectedAgentInfo}
-            runLogs={selectedRunLogs}
+            runId={currentRunId}
+            runLogs={runLogs}
             onRunComplete={refreshRuns}
           />
         )}

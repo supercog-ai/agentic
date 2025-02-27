@@ -1,3 +1,4 @@
+import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
@@ -49,7 +50,7 @@ interface MarkdownRendererProps {
   content: string;
 }
 
-export function MarkdownRenderer({ content }: MarkdownRendererProps) {
+const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) => {
   return (
     <ReactMarkdown
       remarkPlugins={[remarkGfm]}
@@ -59,3 +60,5 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
     </ReactMarkdown>
   );
 }
+
+export  default MarkdownRenderer;
