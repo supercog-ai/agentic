@@ -54,29 +54,8 @@ def get_special_model_params(model_id: str) -> dict:
     return {}  # Default to no special parameters
 
 
-from .custom_models.mock_provider import (
-    MockModelProvider
-)
-import litellm
+# Import the mock provider implementation
+from .custom_models.mock_provider import MockModelProvider
 
 # Initialize global mock provider instance that will be used across the application
 mock_provider = MockModelProvider()  # Initialize with default instance
-
-def set_mock_default_response(pattern_or_response: str, response: str = None) -> None:
-    """
-    Sets the default mock response and optionally a pattern for the MockModelProvider globally.
-    If two arguments are provided, first is pattern and second is response template.
-    If one argument is provided, it's treated as a direct response.
-    """
-    mock_provider.set_response(pattern_or_response, response)
-
-# Register mock provider with litellm
-litellm.custom_provider_map = [
-    {"provider": "mock", "custom_handler": mock_provider}
-]
-
-def register_mock_tool(tool_func):
-    """Register a function as a tool with the mock provider"""
-    if hasattr(tool_func, "__name__") and callable(tool_func):
-        mock_provider.register_tool(tool_func.__name__, tool_func)
-    return tool_func

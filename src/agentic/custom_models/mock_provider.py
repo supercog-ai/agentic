@@ -3,13 +3,10 @@ from litellm import CustomLLM
 from typing import Iterator, AsyncIterator, Dict, List, Any, Optional
 from litellm.types.utils import GenericStreamingChunk, ModelResponse
 import re
-import ray
 
 # Default response if not set
 DEFAULT_MOCK_RESPONSE = "This is a mock response."
 
-
-@ray.remote
 class MockSettings:
     def __init__(self):
         self.pattern = ""
@@ -17,10 +14,12 @@ class MockSettings:
         self.available_tools = {}
 
     def set(self, pattern: str, response: str):
+        """Set the pattern and response template"""
         self.pattern = pattern
         self.response = response
 
     def get(self) -> tuple[str, str]:
+        """Get the current pattern and response template"""
         return self.pattern, self.response
     
     def add_tool(self, name: str, function):
@@ -35,42 +34,35 @@ class MockSettings:
         """Get available tools"""
         return self.available_tools
 
-# Global settings actor with a fixed name
-try:
-    mock_settings = ray.get_actor("mock_settings")
-except:
-    mock_settings = MockSettings.options(name="mock_settings").remote()
+# Create a singleton instance
+mock_settings = MockSettings()
 
 class MockModelProvider(CustomLLM):
     """Mock LLM provider for testing purposes."""
     def __init__(self):
         super().__init__()
-        # Make sure the actor exists
-        try:
-            self.settings = ray.get_actor("mock_settings")
-        except:
-            self.settings = MockSettings.options(name="mock_settings").remote()
+        self.settings = mock_settings
 
     def set_response(self, pattern_or_response: str, response: str = None) -> None:
         """Set the response pattern and template"""
         if response is None:
             # Single argument case - direct response
-            ray.get(self.settings.set.remote("", pattern_or_response))
+            self.settings.set("", pattern_or_response)
         else:
             # Two argument case - pattern matching
-            ray.get(self.settings.set.remote(pattern_or_response, response))
+            self.settings.set(pattern_or_response, response)
     
     def register_tool(self, name: str, function) -> None:
         """Register a tool function for mock tool calls"""
-        ray.get(self.settings.add_tool.remote(name, function))
+        self.settings.add_tool(name, function)
         
     def clear_tools(self) -> None:
         """Clear registered tools"""
-        ray.get(self.settings.clear_tools.remote())
+        self.settings.clear_tools()
 
     def get_mock_response(self, input_text: str = "") -> str:
         """Get the current mock response, applying pattern matching if configured"""
-        pattern, response = ray.get(self.settings.get.remote())
+        pattern, response = self.settings.get()
         
         if pattern:
             try:
@@ -90,7 +82,7 @@ class MockModelProvider(CustomLLM):
             params_text = tool_call_match.group(2) or ""
             
             # Get available tools
-            available_tools = ray.get(self.settings.get_tools.remote())
+            available_tools = self.settings.get_tools()
             
             if function_name in available_tools:
                 # Parse parameters
@@ -135,7 +127,7 @@ class MockModelProvider(CustomLLM):
         return litellm.completion(
             model="openai/gpt-3.5-turbo",
             messages=messages,
-            mock_response=mock_response,
+            mock_response=mock_response
         )
     
     async def acompletion(self, messages: List[Dict[str, str]], *args, **kwargs) -> ModelResponse:

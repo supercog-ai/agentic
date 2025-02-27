@@ -1,17 +1,17 @@
 import pytest
 from agentic.common import Agent, AgentRunner
-from agentic.models import set_mock_default_response, register_mock_tool, mock_provider
 
 
 def test_mock_llm_response():
     """Test that an agent using a mock model returns the expected response"""
     
-    set_mock_default_response("That is a great question!")
-
     agent = Agent(
         name="MockAgent",
         instructions="You are a helpful assistant.",
-        model="mock/default"
+        model="mock/default",
+        mock_settings={
+            "response": "That is a great question!"
+        }
     )
     
     # Send a message to the agent
@@ -24,12 +24,14 @@ def test_mock_llm_response():
 def test_mock_llm_pattern_matching():
     """Test that pattern matching in mock responses works"""
     
-    set_mock_default_response("my name is (\w+)", "Hello, $1!")
-
     agent = Agent(
         name="MockAgent",
         instructions="You are a helpful assistant.",
-        model="mock/default"
+        model="mock/default",
+        mock_settings={
+            "pattern": "my name is (\w+)",
+            "response": "Hello, $1!"
+        }
     )
     
     # Send a message to the agent
@@ -47,16 +49,15 @@ def test_mock_llm_tool_calling():
         """Convert a file to PDF format"""
         return f"{filename} is converted to PDF."
     
-    # Explicitly register the tool with the mock provider
-    mock_provider.clear_tools()  # Clear any previous tools
-    register_mock_tool(convert_to_pdf)
-    
-    # Create an agent with our test function as a tool
+    # Pass the tool directly in mock_settings
     agent = Agent(
         name="MockAgent",
         instructions="You are a helpful assistant.",
         model="mock/default",
-        tools=[convert_to_pdf]
+        tools=[convert_to_pdf],
+        mock_settings={
+            "tools": {"convert_to_pdf": convert_to_pdf}
+        }
     )
     
     # Send a message requesting to call the function
