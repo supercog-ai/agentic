@@ -34,6 +34,8 @@ CHAT_MODELS = {
     **LMSTUDIO_MODELS,
 }
 
+CHAT_MODELS["mock"] = "mock/default"
+
 SPECIAL_MODEL_CONFIGS = {
     "lm_studio/": {
         "base_url": "http://localhost:1234/v1",
@@ -43,7 +45,15 @@ SPECIAL_MODEL_CONFIGS = {
     # Add other special cases here only when needed
 }
 
-# Import dependencies
+
+def get_special_model_params(model_id: str) -> dict:
+    """Get special parameters for models that need them"""
+    for prefix, config in SPECIAL_MODEL_CONFIGS.items():
+        if model_id.startswith(prefix):
+            return config
+    return {}  # Default to no special parameters
+
+
 from .custom_models.mock_provider import (
     MockModelProvider
 )
@@ -64,12 +74,9 @@ def set_mock_default_response(pattern_or_response: str, response: str = None) ->
 litellm.custom_provider_map = [
     {"provider": "mock", "custom_handler": mock_provider}
 ]
-# Register "mock" in CHAT_MODELS so the Agent can call it
-CHAT_MODELS["mock"] = "mock/default"
 
-def get_special_model_params(model_id: str) -> dict:
-    """Get special parameters for models that need them"""
-    for prefix, config in SPECIAL_MODEL_CONFIGS.items():
-        if model_id.startswith(prefix):
-            return config
-    return {}  # Default to no special parameters
+def register_mock_tool(tool_func):
+    """Register a function as a tool with the mock provider"""
+    if hasattr(tool_func, "__name__") and callable(tool_func):
+        mock_provider.register_tool(tool_func.__name__, tool_func)
+    return tool_func

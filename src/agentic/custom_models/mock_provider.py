@@ -14,6 +14,7 @@ class MockSettings:
     def __init__(self):
         self.pattern = ""
         self.response = DEFAULT_MOCK_RESPONSE
+        self.available_tools = {}
 
     def set(self, pattern: str, response: str):
         self.pattern = pattern
@@ -21,6 +22,18 @@ class MockSettings:
 
     def get(self) -> tuple[str, str]:
         return self.pattern, self.response
+    
+    def add_tool(self, name: str, function):
+        """Register a tool function"""
+        self.available_tools[name] = function
+        
+    def clear_tools(self):
+        """Clear registered tools"""
+        self.available_tools = {}
+        
+    def get_tools(self) -> Dict[str, Any]:
+        """Get available tools"""
+        return self.available_tools
 
 # Global settings actor with a fixed name
 try:
@@ -46,6 +59,14 @@ class MockModelProvider(CustomLLM):
         else:
             # Two argument case - pattern matching
             ray.get(self.settings.set.remote(pattern_or_response, response))
+    
+    def register_tool(self, name: str, function) -> None:
+        """Register a tool function for mock tool calls"""
+        ray.get(self.settings.add_tool.remote(name, function))
+        
+    def clear_tools(self) -> None:
+        """Clear registered tools"""
+        ray.get(self.settings.clear_tools.remote())
 
     def get_mock_response(self, input_text: str = "") -> str:
         """Get the current mock response, applying pattern matching if configured"""
@@ -62,6 +83,35 @@ class MockModelProvider(CustomLLM):
             except re.error:
                 pass
         
+        # Check for tool calling syntax: "call the function {name} with {params}"
+        tool_call_match = re.match(r"call\s+(?:the\s+)?function\s+(\w+)(?:\s+with\s+(.+))?", input_text, re.IGNORECASE)
+        if tool_call_match:
+            function_name = tool_call_match.group(1)
+            params_text = tool_call_match.group(2) or ""
+            
+            # Get available tools
+            available_tools = ray.get(self.settings.get_tools.remote())
+            
+            if function_name in available_tools:
+                # Parse parameters
+                params = {}
+                if params_text:
+                    # Match key=value pairs
+                    param_matches = re.findall(r'(\w+)\s*=\s*([^,]+)(?:,|$)', params_text)
+                    for key, value in param_matches:
+                        # Strip quotes and whitespace
+                        params[key] = value.strip().strip('"\'')
+                
+                try:
+                    # Call the function with parsed parameters
+                    function = available_tools[function_name]
+                    result = function(**params)
+                    return result
+                except Exception as e:
+                    return f"Error calling function {function_name}: {str(e)}"
+            else:
+                return f"Function {function_name} not found."
+        
         return response
 
     def completion(self, messages: List[Dict[str, str]], *args, **kwargs) -> ModelResponse:
@@ -69,7 +119,19 @@ class MockModelProvider(CustomLLM):
         last_message = next((m["content"] for m in reversed(messages) 
                            if m["role"] == "user"), "")
         
+        # Register tools
+        if "tools" in kwargs:
+            for tool in kwargs.get("tools", []):
+                if isinstance(tool, dict) and "function" in tool and "name" in tool["function"]:
+                    # This is the OpenAI/LiteLLM tool format
+                    self.register_tool(tool["function"]["name"], tool["function"])
+                elif hasattr(tool, "__name__") and callable(tool):
+                    # This is a function directly provided as a tool
+                    self.register_tool(tool.__name__, tool)
+        
+        # Process message to check for tool calls
         mock_response = self.get_mock_response(last_message)
+        
         return litellm.completion(
             model="openai/gpt-3.5-turbo",
             messages=messages,
@@ -81,6 +143,16 @@ class MockModelProvider(CustomLLM):
         last_message = next((m["content"] for m in reversed(messages) 
                            if m["role"] == "user"), "")
         
+        # Register tools from kwargs if present
+        if "tools" in kwargs:
+            for tool in kwargs.get("tools", []):
+                if isinstance(tool, dict) and "function" in tool and "name" in tool["function"]:
+                    # This is the OpenAI/LiteLLM tool format
+                    self.register_tool(tool["function"]["name"], tool["function"])
+                elif hasattr(tool, "__name__") and callable(tool):
+                    # This is a function directly provided as a tool
+                    self.register_tool(tool.__name__, tool)
+        
         return litellm.completion(
             model="gpt-3.5-turbo",
             messages=messages,
@@ -90,7 +162,7 @@ class MockModelProvider(CustomLLM):
     def streaming(self, model: str, messages: List[Dict[str, str]], *args, **kwargs) -> Iterator[GenericStreamingChunk]:
         """Return a mock streaming response"""
         last_message = next((m["content"] for m in reversed(messages) 
-                           if m["role"] == "user"), "")
+                         if m["role"] == "user"), "")
         
         generic_streaming_chunk: GenericStreamingChunk = {
             "finish_reason": "stop",
