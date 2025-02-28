@@ -9,24 +9,17 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import AgentChat from '@/components/AgentChat';
 import AgentSidebar from '@/components/AgentSidebar';
-import { useAgentsWithDetails, useRunLogs } from '@/hooks/useAgentData';
-import { useChat } from '@/hooks/useChat';
+import { useAgentsWithDetails } from '@/hooks/useAgentData';
 
+// TODO: Combine with hook, what state really needs to be here?
 export default function Home() {
   const [selectedAgent, setSelectedAgent] = useState<string>('');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-
-  const {
-    currentRunId,
-    setCurrentRunId
-  } = useChat(selectedAgent, selectedAgent);
+  const [currentRunId, setCurrentRunId] = useState<string | undefined>();
 
   // Use our custom hook to fetch agent data
   const { agents, error, isLoading } = useAgentsWithDetails();
   
-  // Fetch run logs for the selected run
-  const { data: runLogs } = useRunLogs(selectedAgent, currentRunId ?? null);
-
   // Set initial selected agent when data loads
   if (agents && agents.length > 0 && !selectedAgent) {
     setSelectedAgent(agents[0].path);
@@ -38,12 +31,15 @@ export default function Home() {
   };
 
   const handleRunSelect = (runId: string) => {
-    console.log(`Selected run ID: ${runId}`);
     setCurrentRunId(runId);
   };
   
   // Function to refresh runs data
-  const refreshRuns = () => {
+  const refreshRuns = (runId?: string) => {
+    if (runId && runId !== currentRunId) {
+      setCurrentRunId(runId);
+    }
+    
     mutate(['agent-runs', selectedAgent]);
   };
 
@@ -134,8 +130,7 @@ export default function Home() {
           <AgentChat 
             agentPath={selectedAgent} 
             agentInfo={selectedAgentInfo}
-            runId={currentRunId}
-            runLogs={runLogs}
+            currentRunId={currentRunId}
             onRunComplete={refreshRuns}
           />
         )}

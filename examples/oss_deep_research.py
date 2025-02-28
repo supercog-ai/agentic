@@ -44,7 +44,7 @@ from agentic.events import Prompt, TurnEnd
 
 from agentic.agentic_secrets import agentic_secrets
 from agentic.models import GPT_4O_MINI, CLAUDE, GPT_4O
-from agentic.events import Event, ChatOutput, WaitForInput
+from agentic.events import Event, ChatOutput, WaitForInput, PromptStarted, TurnEnd
 from agentic.tools.tavily_search_tool import TavilySearchTool
 
 # These can take any Litellm model path [see https://supercog-ai.github.io/agentic/Models/]
@@ -136,6 +136,9 @@ class WorkflowAgent(RayFacadeAgent):
         if request:
             self.topic = request.payload if isinstance(request, Prompt) else request
 
+        # Yield the initial prompt
+        yield PromptStarted(self.name, {"content": self.topic})
+
         # run_context = RunContext(
         #     agent=self.name,
         #     run_id=request_id,
@@ -203,6 +206,14 @@ class WorkflowAgent(RayFacadeAgent):
             )
             finals.append(report_section)
         
+        report = "\n".join(finals)
+        yield ChatOutput(
+            self.name, 
+            {
+                "content": "## Here is your completed report:\n\n" + report + "\n\n"
+            }
+        )
+
         report = "\n".join(finals)
         yield ChatOutput(
             self.name, 

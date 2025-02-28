@@ -1,58 +1,6 @@
-export interface AgentEvent {
-  type: string;
-  payload: any;
-  agent: string;
-  depth: number;
-}
-
-export interface AgentInfo {
-  name: string;
-  purpose: string;
-  endpoints: string[];
-  operations: string[];
-  tools: string[];
-}
-
-export interface SendPromptResponse {
-  request_id: string;
-  run_id: string;
-}
-
-export interface Run {
-  id: string;
-  agent_id: string;
-  user_id: string;
-  created_at: string;
-  updated_at: string;
-  initial_prompt: string;
-  description: string | null;
-  usage_data: {
-    [model: string]: {
-      input_tokens: number;
-      output_tokens: number;
-      cost: number;
-    };
-  };
-}
-
-export interface RunLog {
-  id: string;
-  run_id: string;
-  agent_id: string;
-  user_id: string;
-  role: string;
-  created_at: string;
-  event_name: string;
-  event: {
-    type: string;
-    payload: any;
-    content?: string;
-  };
-}
-
 export const agenticApi = {
   // Send a prompt to an agent, optionally continuing from a run
-  sendPrompt: async (agentPath: string, prompt: string, runId?: string): Promise<SendPromptResponse> => {
+  sendPrompt: async (agentPath: string, prompt: string, runId?: string): Promise<Api.SendPromptResponse> => {
     const response = await fetch(`/api${agentPath}/process`, {
       method: 'POST',
       headers: {
@@ -73,7 +21,7 @@ export const agenticApi = {
   },
 
   // Stream events from an agent
-  streamEvents: (agentPath: string, agentName: string, requestId: string, onEvent: (event: AgentEvent) => void) => {
+  streamEvents: (agentPath: string, agentName: string, requestId: string, onEvent: (event: Api.AgentEvent) => void) => {
     // Get the base URL dynamically
     const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8086';
     const eventSource = new EventSource(
@@ -87,7 +35,6 @@ export const agenticApi = {
         onEvent(data);
         // Close the event source when the agent's turn ends
         if (data.type === 'turn_end' && agentName === data.agent) {
-          console.log('Closing event source');
           eventSource.close();
         }
       } catch (error) {
@@ -104,7 +51,7 @@ export const agenticApi = {
   },
 
   // Get agent description
-  getAgentInfo: async (agentPath: string): Promise<AgentInfo> => {
+  getAgentInfo: async (agentPath: string): Promise<Api.AgentInfo> => {
     const response = await fetch(`/api${agentPath}/describe`, {
       headers: {
         'Accept': 'application/json',
@@ -134,7 +81,7 @@ export const agenticApi = {
   },
 
   // Get run history for an agent
-  getRuns: async (agentPath: string): Promise<Run[]> => {
+  getRuns: async (agentPath: string): Promise<Api.Run[]> => {
     const response = await fetch(`/api${agentPath}/runs`, {
       headers: {
         'Accept': 'application/json',
@@ -149,7 +96,7 @@ export const agenticApi = {
   },
 
   // Get logs for a specific run
-  getRunLogs: async (agentPath: string, runId: string): Promise<RunLog[]> => {
+  getRunLogs: async (agentPath: string, runId: string): Promise<Api.RunLog[]> => {
     const response = await fetch(`/api${agentPath}/runs/${runId}/logs`, {
       headers: {
         'Accept': 'application/json',

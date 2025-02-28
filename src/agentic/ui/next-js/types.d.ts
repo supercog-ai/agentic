@@ -57,6 +57,14 @@ declare namespace Ui {
     role: 'user' | 'agent';
     content: string;
   }
+
+  interface Event {
+    type: string;
+    payload: any;
+    agentName: string;
+    timestamp: Date;
+    isBackground?: boolean;
+  }
   
   interface BackgroundTask {
     id: string;

@@ -14,17 +14,15 @@ import { useChat } from '@/hooks/useChat';
 interface AgentChatProps {
   agentPath: string;
   agentInfo: Api.AgentInfo;
-  runId?: string;
-  runLogs?: Api.RunLog[];
-  onRunComplete?: () => void;
+  currentRunId?: string;
+  onRunComplete?: (runId: string) => void;
 }
 
-const AgentChat: React.FC<AgentChatProps> = ({ agentPath, agentInfo, runId, runLogs, onRunComplete }) => {
-  const defaultMessages: Ui.Message[] = agentInfo.purpose ? [
-    { role: 'agent', content: agentInfo.purpose }
+const AgentChat: React.FC<AgentChatProps> = ({ agentPath, agentInfo, currentRunId, onRunComplete }) => {
+  const defaultPurpose = agentInfo.purpose ? [
+    { role: 'agent' as const, content: agentInfo.purpose }
   ] : [];
   
-  const [messages, setMessages] = useState<Ui.Message[]>(defaultMessages);
   const [input, setInput] = useState<string>('');
   const [backgroundTasks, setBackgroundTasks] = useState<Ui.BackgroundTask[]>([]);
   const [showBackgroundPanel, setShowBackgroundPanel] = useState<boolean>(false);
@@ -33,14 +31,15 @@ const AgentChat: React.FC<AgentChatProps> = ({ agentPath, agentInfo, runId, runL
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   
-  // Use our custom chat API hook
+  // Use our custom chat API hook - now handling both events and messages
   const { 
-    sendPrompt, 
-    sendBackgroundPrompt, 
-    events, 
+    sendPrompt,
+    sendBackgroundPrompt,
+    events,
+    messages,
     isSending,
     cancelStream
-  } = useChat(agentPath, agentInfo.name);
+  } = useChat(agentPath, agentInfo.name, currentRunId);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -56,46 +55,6 @@ const AgentChat: React.FC<AgentChatProps> = ({ agentPath, agentInfo, runId, runL
       textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
     }
   }, [input]);
-
-  // Initialize from run logs if provided
-  useEffect(() => {
-    if (runLogs) {
-      // Process messages for chat display
-      const newMessages: Ui.Message[] = defaultMessages;
-      let currentMessage: Ui.Message | null = null;
-      
-      for (const log of runLogs) {
-        if (log.event_name === 'prompt_started') {
-          if (currentMessage) {
-            newMessages.push(currentMessage);
-            currentMessage = null;
-          }
-          newMessages.push({
-            role: 'user',
-            content: log.event.content || log.event.payload
-          });
-        } else if (log.event_name === 'chat_output') {
-          const content = log.event.content || log.event.payload?.content;
-          if (!content) continue;
-
-          if (currentMessage?.role === 'agent') {
-            currentMessage.content += content;
-          } else {
-            if (currentMessage) newMessages.push(currentMessage);
-            currentMessage = { role: 'agent', content };
-          }
-        } else if (currentMessage) {
-          newMessages.push(currentMessage);
-          currentMessage = null;
-        }
-      }
-      
-      if (currentMessage) newMessages.push(currentMessage);
-      setMessages(newMessages.filter(msg => msg.content));
-    } else {
-      setMessages(defaultMessages);
-    }
-  }, [runLogs]);
 
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -114,11 +73,11 @@ const AgentChat: React.FC<AgentChatProps> = ({ agentPath, agentInfo, runId, runL
     const userInput = input;
     setInput('');
     
-    const userMessage = { role: 'user' as const, content: userInput };
-    const agentMessage = { role: 'agent' as const, content: '' };
-    
     if (isBackground) {
       // Handle background task
+      const userMessage = { role: 'user' as const, content: userInput };
+      const agentMessage = { role: 'agent' as const, content: '' };
+      
       const newTask: Ui.BackgroundTask = {
         id: `task-${Date.now()}`,
         completed: false,
@@ -129,10 +88,10 @@ const AgentChat: React.FC<AgentChatProps> = ({ agentPath, agentInfo, runId, runL
       setBackgroundTasks(prev => [...prev, newTask]);
       setShowBackgroundPanel(true);
       if (showEventLogs) setShowEventLogs(false);
-      console.log(runId)
+      
       const response = await sendBackgroundPrompt(
         userInput,
-        runId,
+        currentRunId,
         // Update message content as it streams in
         (requestId, content) => {
           setBackgroundTasks(prev => prev.map(task => {
@@ -169,37 +128,20 @@ const AgentChat: React.FC<AgentChatProps> = ({ agentPath, agentInfo, runId, runL
         ));
       }
     } else {
-      // Handle foreground task
-      setMessages(prev => [...prev, userMessage, agentMessage]);
-      console.log(runId)
+      // Handle foreground task - we just need to send the prompt
+      // Messages will be derived from events in the useChat hook
       const response = await sendPrompt(
         userInput,
-        runId,
-        // Update message content as it streams in
-        (content) => {
-          setMessages(prev => {
-            const newMessages = [...prev];
-            const lastMessage = newMessages[newMessages.length - 1];
-            if (lastMessage?.role === 'agent') {
-              lastMessage.content = content;
-            }
-            return newMessages;
-          });
-        },
+        currentRunId,
+        // This callback is used for streaming updates
+        () => {},
         // Callback when complete
         onRunComplete
       );
       
-      // If response failed, show error
+      // If response failed, we could handle error here
       if (!response) {
-        setMessages(prev => {
-          const newMessages = [...prev];
-          const lastMessage = newMessages[newMessages.length - 1];
-          if (lastMessage?.role === 'agent') {
-            lastMessage.content = 'Error: Failed to get response from agent';
-          }
-          return newMessages;
-        });
+        console.error("Failed to get response from agent");
       }
     }
   };
@@ -223,6 +165,9 @@ const AgentChat: React.FC<AgentChatProps> = ({ agentPath, agentInfo, runId, runL
 
   const activeBackgroundTasks = backgroundTasks.filter(task => !task.completed).length;
   const totalBackgroundTasks = backgroundTasks.length;
+
+  // Combine purpose message with derived messages
+  const displayMessages = [...defaultPurpose, ...messages];
 
   return (
     <div className="flex h-full relative">
@@ -259,7 +204,7 @@ const AgentChat: React.FC<AgentChatProps> = ({ agentPath, agentInfo, runId, runL
         
         <ScrollArea className="flex-1 p-4 h-[calc(100vh-180px)]">
           <div className="space-y-4 mb-4">
-            {messages.map((msg, idx) => (
+            {displayMessages.map((msg, idx) => (
               <div
                 key={idx}
                 className={`flex gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
@@ -280,7 +225,7 @@ const AgentChat: React.FC<AgentChatProps> = ({ agentPath, agentInfo, runId, runL
                   {msg.role === 'user' ? (
                     <p className="whitespace-pre-wrap">{msg.content}</p>
                   ) : (
-                    !msg.content && isSending && idx === messages.length - 1 ? (
+                    !msg.content && idx === displayMessages.length - 1 ? (
                       <CircleDashed className="h-4 w-4 animate-spin flex-shrink-0" />
                     ) : (
                       <MarkdownRenderer content={msg.content} />

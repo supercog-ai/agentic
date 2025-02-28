@@ -5,6 +5,7 @@ import { mutate } from 'swr';
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAgentData } from '@/hooks/useAgentData';
+import { formatDate } from '@/lib/utils';
 
 interface RunsTableProps {
   agentPath: string;
@@ -16,9 +17,7 @@ export default function RunsTable({ agentPath, className = "", onRunSelected }: 
   const [selectedRunId, setSelectedRunId] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // Use SWR for runs with a 10-second refresh interval (10000ms)
-  // Adjust the interval as needed or set to 0 to disable auto-refresh
-  const { data: runs, error, isLoading, isValidating } = useAgentData(agentPath, 0);
+  const { data: runs, error, isLoading, isValidating } = useAgentData(agentPath);
 
   const handleRunClick = async (runId: string) => {
     setSelectedRunId(runId);
@@ -33,21 +32,6 @@ export default function RunsTable({ agentPath, className = "", onRunSelected }: 
     // Manually trigger revalidation
     mutate(['agent-runs', agentPath]);
     setIsRefreshing(false);
-  };
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    const localDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
-    const month = localDate.toLocaleString('en-US', { month: 'short' });
-    const day = localDate.getDate();
-    const suffix = ['th', 'st', 'nd', 'rd'][(day % 10 > 3 ? 0 : day % 10)] || 'th';
-    const time = localDate.toLocaleString('en-US', { 
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true
-    }).toLowerCase();
-    
-    return `${month} ${day}${suffix}, ${time}`;
   };
 
   const isCurrentlyLoading = isLoading || isValidating;
@@ -123,7 +107,7 @@ export default function RunsTable({ agentPath, className = "", onRunSelected }: 
                   <div className="flex items-center justify-between text-xs text-muted-foreground">
                     <div className="flex items-center gap-1">
                       <Calendar className="h-3 w-3" />
-                      {formatDate(run.created_at)}
+                      {formatDate(run.created_at, true)}
                     </div>
                   </div>
                 </div>

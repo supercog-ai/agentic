@@ -1,31 +1,27 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Button } from '@/components/ui/button';
 import { X, Filter } from 'lucide-react';
-import MarkdownRenderer from '@/components/MarkdownRenderer';
-import { 
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuCheckboxItem,
-  DropdownMenuTrigger
-} from "@/components/ui/dropdown-menu";
+
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuCheckboxItem,
+  DropdownMenuTrigger
+} from "@/components/ui/dropdown-menu";
+import { ScrollArea } from '@/components/ui/scroll-area';
+import MarkdownRenderer from '@/components/MarkdownRenderer';
+import { formatDate } from '@/lib/utils';
 
-interface AgentEvent {
-  type: string;
-  agent: string;
-  depth: number;
-  payload: any;
-}
 
 interface EventLogsProps {
-  events: AgentEvent[];
+  events: Ui.Event[];
   onClose: () => void;
   className?: string;
 }
@@ -60,7 +56,7 @@ const EventLogs: React.FC<EventLogsProps> = ({ events, onClose, className = "" }
   const processedEvents = useMemo(() => {
     if (!events || events.length === 0) return [];
     
-    const result: AgentEvent[] = [];
+    const result: Ui.Event[] = [];
     
     for (let i = 0; i < events.length; i++) {
       const event = structuredClone(events[i]);
@@ -70,7 +66,7 @@ const EventLogs: React.FC<EventLogsProps> = ({ events, onClose, className = "" }
         event.type === 'chat_output' && 
         i > 0 && 
         events[i-1].type === 'chat_output' &&
-        event.agent === events[i-1].agent
+        event.agentName === events[i-1].agentName
       ) {
         // Combine with the previous chat_output
         const prevEvent = result[result.length - 1];
@@ -102,12 +98,20 @@ const EventLogs: React.FC<EventLogsProps> = ({ events, onClose, className = "" }
     const group = getEventGroup(type);
     return enabledEventTypes[group];
   };
-
   
-  const formatPayload = (event: AgentEvent) => {
+  const formatPayload = (event: Ui.Event) => {
     if (event.type === 'chat_output' && typeof event.payload?.content === 'string') {
       return (
         <MarkdownRenderer content={event.payload.content} />
+      );
+    }
+    
+    if (event.type === 'prompt_started') {
+      const content = typeof event.payload === 'string' 
+        ? event.payload 
+        : event.payload?.content || '';
+      return (
+        <span className="whitespace-pre-wrap">{content}</span>
       );
     }
     
@@ -166,7 +170,7 @@ const EventLogs: React.FC<EventLogsProps> = ({ events, onClose, className = "" }
   };
 
   const filteredEvents = processedEvents.filter(event => isEventTypeEnabled(event.type));
-
+  
   return (
     <Card className={`${className} bg-muted/30`}>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -220,7 +224,8 @@ const EventLogs: React.FC<EventLogsProps> = ({ events, onClose, className = "" }
                         {event.type}
                       </div>
                       <div className="text-xs text-muted-foreground flex-1 truncate">
-                        {event.agent} {event.depth > 0 && `(depth: ${event.depth})`}
+                        {event.agentName}
+                        {event.timestamp && <span className="ml-2 opacity-60">{formatDate(event.timestamp, false, true)}</span>}
                       </div>
                     </div>
                   </AccordionTrigger>
