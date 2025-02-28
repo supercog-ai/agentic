@@ -84,6 +84,7 @@ from agentic.tools.registry import tool_registry
 from agentic.db.db_manager import DatabaseManager
 
 from .models import get_special_model_params 
+from agentic.models import mock_provider
 
 
 __CTX_VARS_NAME__ = "run_context"
@@ -136,6 +137,11 @@ class ActorBaseAgent:
         super().__init__()
         self.name = name
         self.history: list = []
+
+        # Always register mock provider with litellm
+        litellm.custom_provider_map = [
+            {"provider": "mock", "custom_handler": mock_provider}
+        ]
 
     def __repr__(self):
         return self.name
@@ -741,6 +747,23 @@ class ActorBaseAgent:
         except Exception as e:
             raise RuntimeError(f"Error executing webhook {callback_name}: {str(e)}")
 
+    # Add new methods to set mock configuration
+    def set_mock_params(self, pattern: str, response: str, tools: dict):
+        """Store mock parameters in the agent instance"""
+        # Import here to avoid circular imports
+        from agentic.models import mock_provider
+        
+        # Apply to the mock provider (happens in this worker process)
+        mock_provider.set_response(pattern, response)
+        mock_provider.clear_tools()
+        for name, tool in tools.items():
+            mock_provider.register_tool(name, tool)
+            
+        # Make sure custom provider is registered in litellm
+        litellm.custom_provider_map = [
+            {"provider": "mock", "custom_handler": mock_provider}
+        ]
+
 class HandoffAgentWrapper:
     def __init__(self, agent):
         self.agent = agent
@@ -985,6 +1008,7 @@ class RayFacadeAgent:
         handle_turn_start: Callable[[Prompt, RunContext], None] = None,
         result_model: Type[BaseModel]|None = None,
         debug: DebugLevel = DebugLevel(os.environ.get("AGENTIC_DEBUG") or ""),
+        mock_settings: dict = None,  # Add mock_settings parameter
     ):
         self.name = name
         self.welcome = welcome or f"Hello, I am {name}."
@@ -1026,6 +1050,27 @@ class RayFacadeAgent:
         # Ensure API key is set
         self.ensure_api_key_for_model(self.model)
         _AGENT_REGISTRY.append(self)
+
+        # Handle mock settings if provided
+        if mock_settings and self.model and "mock" in self.model:
+            from agentic.models import mock_provider
+            
+            pattern = mock_settings.get("pattern", "")
+            response = mock_settings.get("response", "This is a mock response.")
+            tools_dict = mock_settings.get("tools", {})
+            
+            # Set in the local mock_provider directly
+            mock_provider.set_response(pattern, response)
+            mock_provider.clear_tools()
+            for tool_name, tool_func in tools_dict.items():
+                mock_provider.register_tool(tool_name, tool_func)
+            
+            # Pass to the remote agent (if we have an actor reference)
+            if hasattr(self, '_agent'):
+                try:
+                    ray.get(self._agent.set_mock_params.remote(pattern, response, tools_dict))
+                except Exception as e:
+                    print(f"Warning: Failed to set mock params on remote agent: {e}")
 
     def _init_base_actor(self, instructions: str):
         # Process instructions if provided

@@ -34,6 +34,8 @@ CHAT_MODELS = {
     **LMSTUDIO_MODELS,
 }
 
+CHAT_MODELS["mock"] = "mock/default"
+
 SPECIAL_MODEL_CONFIGS = {
     "lm_studio/": {
         "base_url": "http://localhost:1234/v1",
@@ -43,9 +45,17 @@ SPECIAL_MODEL_CONFIGS = {
     # Add other special cases here only when needed
 }
 
+
 def get_special_model_params(model_id: str) -> dict:
     """Get special parameters for models that need them"""
     for prefix, config in SPECIAL_MODEL_CONFIGS.items():
         if model_id.startswith(prefix):
             return config
     return {}  # Default to no special parameters
+
+
+# Import the mock provider implementation
+from .custom_models.mock_provider import MockModelProvider
+
+# Initialize global mock provider instance that will be used across the application
+mock_provider = MockModelProvider()  # Initialize with default instance
