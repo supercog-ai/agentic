@@ -21,7 +21,7 @@ export const agenticApi = {
   },
 
   // Stream events from an agent
-  streamEvents: (agentPath: string, agentName: string, requestId: string, onEvent: (event: Api.AgentEvent) => void) => {
+  streamEvents: (agentPath: string, agentName: string, requestId: string, onEvent: (_event: Api.AgentEvent) => void) => {
     // Get the base URL dynamically
     const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8086';
     const eventSource = new EventSource(
@@ -67,7 +67,7 @@ export const agenticApi = {
 
   // Get list of available agents
   getAvailableAgents: async (): Promise<string[]> => {
-    const response = await fetch(`/api/_discovery`, {
+    const response = await fetch('/api/_discovery', {
       headers: {
         'Accept': 'application/json',
       }

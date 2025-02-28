@@ -1,7 +1,8 @@
+import { Bot,Plus } from 'lucide-react';
 import React from 'react';
-import { Plus, Bot } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
+import RunsTable from '@/components/RunsTable';
+import { Button } from '@/components/ui/button';
 import {
   Select,
   SelectContent,
@@ -10,15 +11,14 @@ import {
   SelectLabel,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import RunsTable from '@/components/RunsTable';
+} from '@/components/ui/select';
 
 interface AgentSidebarProps {
   agents: { path: string; info: Api.AgentInfo; }[];
   selectedAgent: string;
-  onSelectAgent: (path: string) => void;
+  onSelectAgent: (_path: string) => void;
   onNewChat: () => void;
-  onRunSelected: (runId: string) => void;
+  onRunSelected: (_runId: string) => void;
 }
 
 const AgentSidebar: React.FC<AgentSidebarProps> = ({ 
@@ -45,7 +45,7 @@ const AgentSidebar: React.FC<AgentSidebarProps> = ({
               <div className="flex items-center gap-2">
                 <Bot className="h-4 w-4" />
                 <span className="truncate">
-                  {agents.find(a => a.path === selectedAgent)?.info.name || "Select Agent"}
+                  {agents.find(a => a.path === selectedAgent)?.info.name || 'Select Agent'}
                 </span>
               </div>
             </SelectValue>

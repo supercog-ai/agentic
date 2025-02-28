@@ -1,19 +1,19 @@
+import { Calendar, RefreshCw } from 'lucide-react';
 import React, { useState } from 'react';
-import { Calendar, RefreshCw } from "lucide-react";
 import { mutate } from 'swr';
 
-import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { Button } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAgentData } from '@/hooks/useAgentData';
 import { formatDate } from '@/lib/utils';
 
 interface RunsTableProps {
   agentPath: string;
   className?: string;
-  onRunSelected?: (runId: string) => void;
+  onRunSelected?: (_runId: string) => void;
 }
 
-export default function RunsTable({ agentPath, className = "", onRunSelected }: RunsTableProps) {
+export default function RunsTable({ agentPath, className = '', onRunSelected }: RunsTableProps) {
   const [selectedRunId, setSelectedRunId] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
 

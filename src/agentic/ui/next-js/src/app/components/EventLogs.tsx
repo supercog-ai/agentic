@@ -1,22 +1,22 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { X, Filter } from 'lucide-react';
+import { Filter,X } from 'lucide-react';
+import React, { useEffect, useMemo,useRef, useState } from 'react';
 
+import MarkdownRenderer from '@/components/MarkdownRenderer';
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@/components/ui/accordion";
+} from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
   DropdownMenu,
-  DropdownMenuContent,
   DropdownMenuCheckboxItem,
+  DropdownMenuContent,
   DropdownMenuTrigger
-} from "@/components/ui/dropdown-menu";
+} from '@/components/ui/dropdown-menu';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import MarkdownRenderer from '@/components/MarkdownRenderer';
 import { formatDate } from '@/lib/utils';
 
 
@@ -34,7 +34,7 @@ const EVENT_TYPES = {
   OTHER: [] as string []
 };
 
-const EventLogs: React.FC<EventLogsProps> = ({ events, onClose, className = "" }) => {
+const EventLogs: React.FC<EventLogsProps> = ({ events, onClose, className = '' }) => {
   const [enabledEventTypes, setEnabledEventTypes] = useState<Record<string, boolean>>({
     PROMPT: true,
     LLM: true,
@@ -45,7 +45,7 @@ const EventLogs: React.FC<EventLogsProps> = ({ events, onClose, className = "" }
   const logsEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
-    logsEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    logsEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
   useEffect(() => {

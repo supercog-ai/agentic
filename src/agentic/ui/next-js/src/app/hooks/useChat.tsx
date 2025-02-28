@@ -1,9 +1,10 @@
 // src/app/hooks/useChat.ts
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useCallback, useEffect,useRef, useState } from 'react';
 import { mutate } from 'swr';
+
+import { useRunLogs } from '@/hooks/useAgentData';
 import { agenticApi } from '@/lib/api';
 import { convertFromUTC } from '@/lib/utils';
-import { useRunLogs } from '@/hooks/useAgentData';
 
 /**
  * Custom hook for handling agent prompt submission and event streaming
@@ -13,8 +14,6 @@ export function useChat(agentPath: string, agentName: string, currentRunId: stri
   const [events, setEvents] = useState<Ui.Event[]>([]);
   const streamContentRef = useRef<string>('');
   const cleanupRef = useRef<(() => void) | null>(null);
-
-  console.log(currentRunId)
   
   // Fetch run logs when runId changes
   // If running Deep Researcher or other custom next_turn agents uncomment this line and comment out the next one
@@ -90,101 +89,11 @@ export function useChat(agentPath: string, agentName: string, currentRunId: stri
     }
   }, []);
 
-  // Send a prompt to the agent (foreground mode)
-  const sendPrompt = useCallback(async (
-    promptText: string, 
-    existingRunId?: string,
-    onMessageUpdate?: (content: string) => void,
-    onComplete?: (runId: string) => void
-  ) => {
-    if (!promptText.trim()) return null;
-    
-    try {
-      setIsSending(true);
-      streamContentRef.current = '';
-      
-      // Send the prompt to the agent
-      const response = await agenticApi.sendPrompt(agentPath, promptText, existingRunId);
-      const requestId = response.request_id;
-      const runId = response.run_id;
-
-      // Set up event streaming
-      await processEventStream(
-        requestId, 
-        runId, 
-        (newContent) => {
-          streamContentRef.current += newContent;
-          onMessageUpdate?.(streamContentRef.current);
-        },
-        false
-      );
-
-      // Refresh runs data when complete
-      if (onComplete) {
-        onComplete(runId);
-        mutate(['agent-runs', agentPath]);
-      }
-
-      return {
-        requestId,
-        runId,
-        content: streamContentRef.current
-      };
-    } catch (error) {
-      console.error('Error sending prompt:', error);
-      return null;
-    } finally {
-      setIsSending(false);
-    }
-  }, [agentPath, agentName]);
-
-  // Send a prompt in background mode
-  const sendBackgroundPrompt = useCallback(async (
-    promptText: string,
-    existingRunId?: string,
-    onMessageUpdate?: (requestId: string, content: string) => void,
-    onComplete?: (requestId: string) => void
-  ) => {
-    if (!promptText.trim()) return null;
-    
-    try {
-      // Send the prompt to the agent
-      const response = await agenticApi.sendPrompt(agentPath, promptText, existingRunId);
-      const requestId = response.request_id;
-      const runId = response.run_id;
-      
-      let contentAccumulator = '';
-      
-      // Process the stream in the background
-      processEventStream(
-        requestId,
-        runId,
-        (newContent) => {
-          contentAccumulator += newContent;
-          onMessageUpdate?.(requestId, contentAccumulator);
-        },
-        true,
-        () => {
-          onComplete?.(requestId);
-          mutate(['agent-runs', agentPath]);
-        }
-      );
-
-      return {
-        requestId,
-        runId
-      };
-    } catch (error) {
-      console.error('Error sending background prompt:', error);
-      return null;
-    }
-  }, [agentPath, agentName]);
-
   // Process the event stream from the agent
   const processEventStream = useCallback(async (
     requestId: string,
     runId: string,
-    onStreamContent: (content: string) => void,
+    onStreamContent: (_content: string) => void,
     isBackground: boolean,
     onComplete?: () => void
   ) => {
@@ -261,6 +170,96 @@ export function useChat(agentPath: string, agentName: string, currentRunId: stri
       }
     });
   }, [agentPath, agentName, cleanupStream]);
+
+  // Send a prompt to the agent (foreground mode)
+  const sendPrompt = useCallback(async (
+    promptText: string, 
+    existingRunId?: string,
+    onMessageUpdate?: (_content: string) => void,
+    onComplete?: (_runId: string) => void
+  ) => {
+    if (!promptText.trim()) return null;
+    
+    try {
+      setIsSending(true);
+      streamContentRef.current = '';
+      
+      // Send the prompt to the agent
+      const response = await agenticApi.sendPrompt(agentPath, promptText, existingRunId);
+      const requestId = response.request_id;
+      const runId = response.run_id;
+
+      // Set up event streaming
+      await processEventStream(
+        requestId, 
+        runId, 
+        (newContent) => {
+          streamContentRef.current += newContent;
+          onMessageUpdate?.(streamContentRef.current);
+        },
+        false
+      );
+
+      // Refresh runs data when complete
+      if (onComplete) {
+        onComplete(runId);
+        mutate(['agent-runs', agentPath]);
+      }
+
+      return {
+        requestId,
+        runId,
+        content: streamContentRef.current
+      };
+    } catch (error) {
+      console.error('Error sending prompt:', error);
+      return null;
+    } finally {
+      setIsSending(false);
+    }
+  }, [agentPath, processEventStream]);
+
+  // Send a prompt in background mode
+  const sendBackgroundPrompt = useCallback(async (
+    promptText: string,
+    existingRunId?: string,
+    onMessageUpdate?: (_requestId: string, _content: string) => void,
+    onComplete?: (_requestId: string) => void
+  ) => {
+    if (!promptText.trim()) return null;
+    
+    try {
+      // Send the prompt to the agent
+      const response = await agenticApi.sendPrompt(agentPath, promptText, existingRunId);
+      const requestId = response.request_id;
+      const runId = response.run_id;
+      
+      let contentAccumulator = '';
+      
+      // Process the stream in the background
+      processEventStream(
+        requestId,
+        runId,
+        (newContent) => {
+          contentAccumulator += newContent;
+          onMessageUpdate?.(requestId, contentAccumulator);
+        },
+        true,
+        () => {
+          onComplete?.(requestId);
+          mutate(['agent-runs', agentPath]);
+        }
+      );
+
+      return {
+        requestId,
+        runId
+      };
+    } catch (error) {
+      console.error('Error sending background prompt:', error);
+      return null;
+    }
+  }, [agentPath, processEventStream]);
 
   // Cancel any ongoing stream when component unmounts
   const cancelStream = useCallback(() => {

@@ -1,21 +1,21 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Bot, User, Send, PlayCircle, ListTodo, History, CircleDashed } from "lucide-react";
+import { Bot, CircleDashed,History, ListTodo, PlayCircle, Send, User } from 'lucide-react';
+import React, { useEffect, useRef,useState } from 'react';
 
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Textarea } from "@/components/ui/textarea";
 import BackgroundTasks from '@/components/BackgroundTasks';
 import EventLogs from '@/components/EventLogs';
 import MarkdownRenderer from '@/components/MarkdownRenderer';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Textarea } from '@/components/ui/textarea';
 import { useChat } from '@/hooks/useChat';
 
 interface AgentChatProps {
   agentPath: string;
   agentInfo: Api.AgentInfo;
   currentRunId?: string;
-  onRunComplete?: (runId: string) => void;
+  onRunComplete?: (_runId: string) => void;
 }
 
 const AgentChat: React.FC<AgentChatProps> = ({ agentPath, agentInfo, currentRunId, onRunComplete }) => {
@@ -62,7 +62,7 @@ const AgentChat: React.FC<AgentChatProps> = ({ agentPath, agentInfo, currentRunI
   }, [messages]);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
   // Handle form submission
@@ -141,7 +141,7 @@ const AgentChat: React.FC<AgentChatProps> = ({ agentPath, agentInfo, currentRunI
       
       // If response failed, we could handle error here
       if (!response) {
-        console.error("Failed to get response from agent");
+        console.error('Failed to get response from agent');
       }
     }
   };
@@ -180,7 +180,7 @@ const AgentChat: React.FC<AgentChatProps> = ({ agentPath, agentInfo, currentRunI
             {totalBackgroundTasks > 0 && (
               <Button
                 onClick={toggleBackgroundPanel}
-                variant={showBackgroundPanel ? "default" : "outline"}
+                variant={showBackgroundPanel ? 'default' : 'outline'}
                 className="flex items-center gap-2"
                 size="sm"
               >
@@ -192,7 +192,7 @@ const AgentChat: React.FC<AgentChatProps> = ({ agentPath, agentInfo, currentRunI
             )}
             <Button
               onClick={toggleEventLogs}
-              variant={showEventLogs ? "default" : "outline"}
+              variant={showEventLogs ? 'default' : 'outline'}
               className="flex items-center gap-2"
               size="sm"
             >

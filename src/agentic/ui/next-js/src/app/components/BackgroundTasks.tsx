@@ -1,34 +1,19 @@
+import { AnimatePresence, motion } from 'framer-motion';
+import { ChevronDown, ChevronUp,CircleDashed, X } from 'lucide-react';
 import React, { useState } from 'react';
+
 import MarkdownRenderer from '@/components/MarkdownRenderer';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Button } from '@/components/ui/button';
-import { CircleDashed, X, ChevronDown, ChevronUp } from 'lucide-react';
-import { AnimatePresence, motion } from "framer-motion";
-
-interface Message {
-  role: 'user' | 'agent';
-  content: string;
-}
-
-interface BackgroundTask {
-  id: string;
-  completed: boolean;
-  messages: Message[];
-}
-
-interface MarkdownComponentProps {
-  children: React.ReactNode;
-  className?: string;
-}
 
 interface BackgroundTasksProps {
-  tasks: BackgroundTask[];
+  tasks: Ui.BackgroundTask[];
   onClose: () => void;
   className?: string;
 }
 
-const BackgroundTasks: React.FC<BackgroundTasksProps> = ({ tasks, onClose, className = "" }) => {
+const BackgroundTasks: React.FC<BackgroundTasksProps> = ({ tasks, onClose, className = '' }) => {
   const [collapsedTasks, setCollapsedTasks] = useState<Record<string, boolean>>({});
 
   if (!tasks || tasks.length === 0) return null;
@@ -92,7 +77,7 @@ const BackgroundTasks: React.FC<BackgroundTasksProps> = ({ tasks, onClose, class
                     {!isCollapsed && (
                       <motion.div
                         initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: "auto", opacity: 1 }}
+                        animate={{ height: 'auto', opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
                         transition={{ duration: 0.2 }}
                       >

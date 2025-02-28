@@ -1,17 +1,16 @@
 'use client';
 
+import { AlertCircle, CircleDashed, Menu } from 'lucide-react';
 import { useState } from 'react';
-import { AlertCircle, CircleDashed, Menu } from "lucide-react";
 import { mutate } from 'swr';
 
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import AgentChat from '@/components/AgentChat';
 import AgentSidebar from '@/components/AgentSidebar';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useAgentsWithDetails } from '@/hooks/useAgentData';
 
-// TODO: Combine with hook, what state really needs to be here?
 export default function Home() {
   const [selectedAgent, setSelectedAgent] = useState<string>('');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -71,7 +70,7 @@ export default function Home() {
         <Alert className="max-w-md">
           <AlertTitle>No Agents Available</AlertTitle>
           <AlertDescription>
-            Start some agents using 'agentic serve'
+            Start some agents using &apos;agentic serve&apos;
           </AlertDescription>
         </Alert>
       </div>
