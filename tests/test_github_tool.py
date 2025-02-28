@@ -157,5 +157,30 @@ async def test_create_and_get_pull_request(github_tool, run_context):
     assert prs['status'] == 'success'
     assert isinstance(prs['results'], list)
 
+@pytest.mark.asyncio
+async def test_get_pr_reviews(github_tool, run_context):
+    reviews_result = await github_tool.get_pr_reviews(
+        run_context,
+        pr_number=17
+    )
+    
+    assert reviews_result['status'] == 'success'
+    assert isinstance(reviews_result['results'], list)
+    assert reviews_result['results'][0]['body'] == 'THIS IS A BAD COMMIT. Do better'
+    assert reviews_result['results'][1]['body'] == 'Looks good!'
+
+@pytest.mark.asyncio
+async def test_get_pr_comments(github_tool, run_context):
+    comments_result = await github_tool.get_pr_comments(
+        run_context,
+        pr_number=17
+    )
+    
+    # Verify the result structure
+    print(comments_result)
+    assert comments_result['status'] == 'success'
+    assert isinstance(comments_result['results'], list)
+    # assert comments_result['results'][0]['body'] == 'Dummy comment 1'
+
 if __name__ == "__main__":
     pytest.main(["-v", __file__])
