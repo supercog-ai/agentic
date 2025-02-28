@@ -1,5 +1,6 @@
 import asyncio
 import time
+import binascii
 from pydantic import BaseModel, ConfigDict
 from typing import Any, Optional, Generator, Literal, Type
 from dataclasses import dataclass
@@ -21,7 +22,7 @@ import traceback
 from datetime import timedelta
 from .swarm.types import agent_secret_key, tool_name
 from ray import serve
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, Response as FastApiResponse
 from fastapi.middleware.cors import CORSMiddleware
 import yaml
 from typing import Callable, Any, List
@@ -77,6 +78,8 @@ from .events import (
     ToolError,
     AgentDescriptor,
     StartRequestResponse,
+    FileResult,
+    AssetGenerated,
 )
 from agentic.db.models import Run, RunLog
 from agentic.utils.json import make_json_serializable
@@ -306,6 +309,33 @@ class ActorBaseAgent:
                 else:
                     raw_result = ""
                 
+            if isinstance(raw_result, FileResult):
+                # Store file in Ray's object store
+                file_content = (raw_result.file_content, raw_result.mime_type)
+                file_ref = ray.put(file_content)
+                
+                # Convert the ObjectRef to a hex string for the URL
+                file_id = binascii.hexlify(file_ref.binary()).decode()
+
+                events.append(AssetGenerated(
+                    self.name,
+                    raw_result.file_name,
+                    raw_result.mime_type,
+                    file_id,
+                    self.depth
+                ))
+                
+                # Create a user-friendly message about the file
+                result = Result(
+                    value=f"Generated file {raw_result.file_name} ({raw_result.mime_type})"
+                )
+            else:
+                result = (
+                    raw_result
+                    if isinstance(raw_result, Result)
+                    else Result(value=str(raw_result))
+                )
+
             result: Result = (
                 raw_result
                 if isinstance(raw_result, Result)
@@ -897,6 +927,28 @@ class DynamicFastAPIHandler:
             )
         )
         return {"status": "success", "result": result}
+
+    @app.get("/asset/{run_id}/{file_id}")
+    async def get_asset(self, run_id: str, file_id: str) -> Response:
+        try:
+            # Get the file from Ray's object store using the provided ID
+            file_content = ray.get(ray.ObjectRef(binascii.unhexlify(file_id)))
+            
+            # Check if we have a FileResult with metadata
+            if isinstance(file_content, tuple):
+                content, mime_type = file_content
+                return FastApiResponse(
+                    content=content,
+                    media_type=mime_type
+                )
+            
+            # Default to binary file response
+            return FastApiResponse(
+                content=file_content,
+                media_type="application/octet-stream"
+            )
+        except Exception as e:
+            raise HTTPException(status_code=404, detail=f"Asset not found: {str(e)}")
 
     def next_turn(
         self,
