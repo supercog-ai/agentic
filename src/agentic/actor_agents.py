@@ -36,6 +36,7 @@ from .swarm.types import (
 from .swarm.util import (
     debug_print,
     debug_completion_start,
+    debug_completion_end,
     function_to_json,
     looks_like_langchain_tool,
     langchain_function_to_json,
@@ -108,8 +109,8 @@ class ActorBaseAgent:
     name: str = "Agent"
     model: str = "gpt-4o"  # Default model
     instructions_str: str = "You are a helpful agent."
-    tools: list[str] = []
-    functions: List[AgentFunction] = []
+    tools: list[str] = None
+    functions: List[AgentFunction] = None
     tool_choice: str = None
     parallel_tool_calls: bool = True
     paused_context: Optional[AgentPauseContext] = None
@@ -125,6 +126,7 @@ class ActorBaseAgent:
     api_endpoint: str = None
     _prompter = None
     _callbacks: dict[CallbackType, CallbackFunc] = {}
+    result_model: Type[BaseModel]|None = None,
 
     request_states: dict[str, dict[str, Any]] = {}
 
@@ -460,6 +462,9 @@ class ActorBaseAgent:
 
             self.history.extend(partial_response.messages)
 
+        # We have already emitted history for intervening events, and I think we just look at the
+        # last message from TurnEnd anyway. So probably we just want to publish a single result here.
+        # You can see it in TurnEnd.result which just returns the "content" part of the last message.
         yield TurnEnd(
             self.name,
             self.history[init_len:],
@@ -531,6 +536,8 @@ class ActorBaseAgent:
                 self._callback_params["output_tokens"] = litellm.token_counter(
                     self.model, text=output.content
                 )
+
+        debug_completion_end(self.debug, self.model, llm_message.choices[0].message)
 
         yield FinishCompletion.create(
             self.name,
@@ -908,7 +915,7 @@ class DynamicFastAPIHandler:
         emits events as it goes. If a WaitForInput event is emitted, then you should
         gather human input and call this function again with _continue_result_ to
         continue the turn."""
-        self.debug = debug
+        self.debug.raise_level(debug)
         event: Event
         if not continue_result:
             remote_gen = self._agent.handlePromptOrResume.remote(
@@ -963,7 +970,15 @@ class BaseServeDeployment:
         return [f"/{agent.safe_name}" for agent in _AGENT_REGISTRY]
 
 base_serve_app = None
+depthLocal = threading.local()
+depthLocal.depth = -1
 
+# The abstract agent interface
+# The core of the interface is 'start_request' and 'get_events'. Use these in
+# pairs to request operation runs from the agent.
+# It is deprecated to call 'next_turn' directly now.
+#
+# Subclasses can override next_turn to do their own orchestration logic.
 class RayFacadeAgent:
     """The facade agent is the object directly instantiated in code. It holds a reference to the remote
     Ray agent object and proxies calls to it. The intention is that we should be able to build
@@ -975,7 +990,7 @@ class RayFacadeAgent:
         name: str,
         instructions: str | None = "You are a helpful assistant.",
         welcome: str | None = None,
-        tools: list = [],
+        tools: list = None,
         model: str | None = None,
         template_path: str | Path = None,
         max_tokens: int = None,
@@ -1002,7 +1017,10 @@ class RayFacadeAgent:
 
         # Get the file where Agent() was called
         self.template_path = template_path
-        self._tools = tools
+        self._tools = []
+        if tools: #ack! If we take the default list shit goes bad!
+            self._tools.extend(tools)
+
         self.max_tokens = max_tokens
         self.memories = memories
         self.debug = debug
@@ -1045,6 +1063,7 @@ class RayFacadeAgent:
 
         # Set initial state. Small challenge is that a child agent might have been
         # provided in tools. But we need to initialize ourselve
+
         obj_ref = self._agent.set_state.remote(
             SetState(
                 self.name,
@@ -1115,6 +1134,12 @@ class RayFacadeAgent:
     def cancel(self):
         # Flag this agent to cancel whatever it is doing
         self.cancelled = True
+
+    def is_cancelled(self):
+        return self.cancelled
+    
+    def uncancel(self):
+        self.cancelled = False
 
     def list_tools(self) -> list[str]:
         """Gets the current tool list from the running agent"""
@@ -1197,37 +1222,46 @@ class RayFacadeAgent:
                     os.environ[key] = value
 
     # Start a new agent request. We spawn a thread to actually iterate the agent loop, and
-    # it queues events coming back from the agent. Then our caller can get calling "get_events"
+    # it queues events coming back from the agent. Then our caller can keep calling "get_events"
     # to retrieve from the queue. This lets them run multiple requests by making separate "get_events"                    
     # calls for separate requests.
     def start_request(
         self, 
         request: str, 
+        request_context: dict = {},
+        continue_result: dict = {},
         run_id: Optional[str] = None,
         debug: DebugLevel = DebugLevel(DebugLevel.OFF),
     ) -> StartRequestResponse: # returns the request_id and run_id
         self.debug.raise_level(debug)
         self.queue_done_sentinel = "QUEUE_DONE"
 
+        if not hasattr(depthLocal, 'depth'):
+            depthLocal.depth = 0
+        else:
+            depthLocal.depth += 1
+
         # Initialize new request
         request_obj = Prompt(
             self.name,
             request,
             debug=self.debug,
-            depth=0,
+            depth=depthLocal.depth,
+            request_context=request_context,
         )
 
         # Re-initialize run tracking
         self.init_run_tracking(self.db_path, run_id)
 
-        def producer(queue, request_obj):
-            for event in self.next_turn(request_obj):
+        def producer(queue, request_obj, continue_result):
+            depthLocal.depth = request_obj.depth
+            for event in self.next_turn(request_obj, continue_result=continue_result):
                 queue.put(event)
             queue.put(self.queue_done_sentinel)
         queue = Queue()
         self.request_queues[request_obj.request_id] = queue
 
-        t = threading.Thread(target=producer, args=(queue, request_obj))
+        t = threading.Thread(target=producer, args=(queue, request_obj, continue_result))
         t.start()
         return StartRequestResponse(request_id=request_obj.request_id, run_id=self.run_id)
 
@@ -1239,6 +1273,7 @@ class RayFacadeAgent:
                 break
             yield event
             time.sleep(0.01)
+        depthLocal.depth -= 1
     
     def init_run_tracking(self, db_path: Optional[str] = None, run_id: Optional[str] = None):
         from .run_manager import init_run_tracking
@@ -1288,12 +1323,22 @@ class RayFacadeAgent:
         raise a TurnCancelledError exception."""
         self.cancelled = False
         self.debug.raise_level(debug)
+
         event: Event
         if not continue_result:
             prompt = (
                 request if isinstance(request, Prompt) 
-                else Prompt(self.name, request, debug=self.debug, depth=0, request_context=request_context)
+                else Prompt(
+                    self.name, 
+                    request, 
+                    debug=self.debug, 
+                    request_context=request_context
+                )
             )
+            # Transmit depth through the Prompt to the remote agent
+            if depthLocal.depth > prompt.depth:
+                prompt.depth = depthLocal.depth
+
             remote_gen = self._agent.handlePromptOrResume.remote(
                 prompt
             )
@@ -1316,13 +1361,22 @@ class RayFacadeAgent:
             request_context: dict = {}, 
             event_handler: Callable[[Event], None] = None
         ) -> Any:
-        for event in self.next_turn(request, request_context):
+        request_id = self.start_request(
+            request, 
+            request_context=request_context, 
+            debug=self.debug
+        ).request_id
+        turn_end = None
+        for event in self.get_events(request_id):
             if event_handler:
                 event_handler(event)
             yield event
             if isinstance(event, TurnEnd):
-                return event.result
-        return event
+                turn_end = event
+        if turn_end:
+            return turn_end.result
+        else:
+            return event
 
     def grab_final_result(self, request: str, request_context: dict = {}) -> Any:
         # Iterate over generator and get the return value
@@ -1338,7 +1392,7 @@ class RayFacadeAgent:
             return e.value
     
     def set_debug_level(self, level: DebugLevel):
-        self.debug = level
+        self.debug.raise_level(level)
         ray.get(self._agent.set_debug_level.remote(self.debug))
 
     def reset_history(self):

@@ -32,9 +32,9 @@ def debug_completion_start(debug: "DebugLevel", model: str, params: dict) -> Non
             print("\n".join(msgs))
 
 
-def debug_completion_end(debug: "DebugLevel", message: Message) -> None:
+def debug_completion_end(debug: "DebugLevel", model: str, message: Message) -> None:
     if debug.debug_llm():
-        print(f"{Colors.GREEN}<< {Colors.ENDC}")
+        print(f"{Colors.GREEN}<< {model}: {Colors.ENDC}")
         for line in (message.content or "").split("\n"):
             print(f"{Colors.FOREST_GREEN}{line}{Colors.ENDC}")
         if message.tool_calls:

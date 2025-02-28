@@ -38,21 +38,44 @@ from typing import Any, Generator, Dict, List
 from pydantic import BaseModel, Field
 
 
-from agentic.common import Agent, AgentRunner, cached_call
+from agentic.common import Agent, AgentRunner, cached_call, RunContext
 from agentic.actor_agents import RayFacadeAgent
-from agentic.events import Prompt
+from agentic.events import Prompt, TurnEnd
 
 from agentic.agentic_secrets import agentic_secrets
 from agentic.models import GPT_4O_MINI, CLAUDE, GPT_4O
-from agentic.events import Event, ChatOutput
+from agentic.events import Event, ChatOutput, WaitForInput
 from agentic.tools.tavily_search_tool import TavilySearchTool
 
 # These can take any Litellm model path [see https://supercog-ai.github.io/agentic/Models/]
 # Or use aliases 'GPT_4O' or 'CLAUDE'
-PLANNER_MODEL = GPT_4O_MINI
+PLANNER_MODEL = GPT_4O
 WRITER_MODEL = GPT_4O_MINI
 
+class Section(BaseModel):
+    name: str = Field(
+        description="Name for this section of the report.",
+    )
+    description: str = Field(
+        description="Brief overview of the main topics and concepts to be covered in this section.",
+    )
+    research: bool = Field(
+        description="Whether to perform web research for this section of the report."
+    )
+    content: str = Field(
+        description="The content of the section."
+    )   
+
+class Sections(BaseModel):
+    sections: List[Section] = Field(
+        description="Sections of the report.",
+    )
+
+
 class WorkflowAgent(RayFacadeAgent):
+    sections: Sections|None = None
+    topic: str = ""
+
     def __init__(self, name: str="OSS Deep Research", model: str=GPT_4O_MINI):
         super().__init__(
             name, 
@@ -110,42 +133,65 @@ class WorkflowAgent(RayFacadeAgent):
     ) -> Generator[Event, Any, Any]:
         """Main workflow orchestration"""
 
-        topic = request.payload if isinstance(request, Prompt) else request
-        
-        # Initial research queries
-        queries = yield from self.query_planner.final_result(
-            "Generate search queries that will help with planning the sections of the report.",
-            request_context={
-                "topic": topic, 
-                "NUM_QUERIES": 2
-            }
-        )
-        msg = f"Initial research queries:\n" + "\n".join([q.search_query for q in queries.queries])
-        yield ChatOutput(self.query_planner.name, {"content": msg})
+        if request:
+            self.topic = request.payload if isinstance(request, Prompt) else request
 
-        # Get initial web content
-        content = self.query_web_content(queries)
+        # run_context = RunContext(
+        #     agent=self.name,
+        #     run_id=request_id,
+        #     context=request_context,
+        # )
 
-        # Plan the report sections
-        sections = yield from self.section_planner.final_result(
-            """Generate the sections of the report. Your response must include a 'sections' field containing a list of sections.
-            Each section must have: name, description, plan, research, and content fields.""",
-            request_context={
-                "web_context": content, 
-                "topic": topic
-            }
-        )
+        feedback = continue_result.get("feedback", "")
+        if feedback != "true" or self.sections is None:
+            # Initial research queries
+            queries = yield from self.query_planner.final_result(
+                "Generate search queries that will help with planning the sections of the report.",
+                request_context={
+                    "topic": self.topic, 
+                    "num_queries": 2
+                }
+            )
+            msg = f"Initial research queries:\n" + "\n".join([q.search_query for q in queries.queries]) + "\n\n"
+            yield ChatOutput(self.query_planner.name, {"content": msg})
+
+            # Get initial web content
+            content = self.query_web_content(queries)
+
+            # Plan the report sections
+            self.sections = yield from self.section_planner.final_result(
+                """Generate the sections of the report. Your response must include a 'sections' field containing a list of sections.
+                Each section must have: name, description, plan, research, and content fields.""",
+                request_context={
+                    "web_context": content, 
+                    "topic": self.topic,
+                    "feedback": feedback,
+                }
+            )
+
+            msg = f"""
+            Please provide feedback on the following report plan. \n\n{preview_report(self.sections.sections)}\n
+            Does the report plan meet your needs? Pass 'true' to approve the report plan or provide feedback to regenerate the report plan:
+            """
+            yield WaitForInput(
+                self.name, 
+                {"feedback": msg}
+            )
+            return
+
+        # FOR TESTING ONLY: limit report to 1 section
+        #sections.sections = sections.sections[:1]
 
         # Do web research and writing for each section in turn
-        for section in sections.sections:
+        for section in self.sections.sections:
             yield from self.process_section(section)
 
         # Format complete report
-        draft_report = format_sections(sections.sections)
+        draft_report = format_sections(self.sections.sections)
 
         # Rewrite the report sections with hindsight of the entire content of the report
         finals = []
-        for section in sections.sections:
+        for section in self.sections.sections:
             report_section = yield from self.final_section_writer.final_result(
                 "Generate a report section based on the provided sources.",
                 {
@@ -156,15 +202,30 @@ class WorkflowAgent(RayFacadeAgent):
                 },
             )
             finals.append(report_section)
+        
+        report = "\n".join(finals)
+        yield ChatOutput(
+            self.name, 
+            {
+                "content": "## Here is your completed report:\n\n" + report + "\n\n"
+            }
+        )
 
-        return "\n".join(finals)
+        yield TurnEnd(
+            self.name,
+            [{"role": "assistant", "content": report}],
+            run_context=None,
+        )
 
     def process_section(self, section: "Section", report_context: str = None) -> Generator:
         """Handle the complete processing of a single section"""
         # Generates web queries to gather content for each section
         queries = yield from self.section_query_planner.final_result(
             "Generate search queries on the provided topic.",
-            request_context={"section_topic": section.description}
+            request_context={
+                "section_topic": section.description, 
+                "num_queries": 2
+            },
         )
 
         # Get web content
@@ -200,25 +261,18 @@ class Queries(BaseModel):
         description="List of search queries.",
     )
 
-class Section(BaseModel):
-    name: str = Field(
-        description="Name for this section of the report.",
-    )
-    description: str = Field(
-        description="Brief overview of the main topics and concepts to be covered in this section.",
-    )
-    research: bool = Field(
-        description="Whether to perform web research for this section of the report."
-    )
-    content: str = Field(
-        description="The content of the section."
-    )   
-
-class Sections(BaseModel):
-    sections: List[Section] = Field(
-        description="Sections of the report.",
-    )
-
+def preview_report(sections: list[Section]) -> str:
+    formatted_str = ""
+    for idx, section in enumerate(sections, 1):
+        formatted_str += f"""
+{'='*30}
+Section {idx}: {section.name}
+{'='*30}
+Description:
+{section.description}
+Requires Research: {section.research}
+"""
+    return formatted_str
 
 def format_sections(sections: list[Section]) -> str:
     """ Format a list of sections into a string """

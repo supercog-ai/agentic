@@ -25,7 +25,8 @@ REPORT_QUERY_PLANNER: >
   </Report organization>
 
   <Task>
-  Your goal is to generate {{ NUM_QUERIES }} search queries that will help gather comprehensive information for planning the report sections. 
+  Your goal is to generate EXACTLY {{ num_queries }} search queries, and NO MORE,  
+  that will help gather comprehensive information for planning the report sections. 
 
   The queries should:
 
@@ -78,7 +79,7 @@ SECTION_QUERY_PLANNER: >
   </Section topic>
 
   <Task>
-  Your goal is to generate 2 search queries that will help gather comprehensive information above the section topic. 
+  Your goal is to generate {{ num_queries }} search queries that will help gather comprehensive information above the section topic. 
 
   The queries should:
 
@@ -176,7 +177,9 @@ FINAL_SECTION_WRITER: >
       - Use `1.` for ordered lists
       - Ensure proper indentation and spacing
   - End with specific next steps or implications
-  - No sources section needed
+  - End with ### Sources that references the below source material formatted as:
+    - List each source with title, date, and URL
+    - Format: `- Title : URL`
 
   Writing Approach:
   - Use concrete details over general statements
@@ -185,8 +188,8 @@ FINAL_SECTION_WRITER: >
   </Task>
 
   <Quality Checks>
-  - For introduction: 50-100 word limit, # for report title, no structural elements, no sources section
-  - For conclusion: 100-150 word limit, ## for section title, only ONE structural element at most, no sources section
+  - For introduction: 50-100 word limit, # for report title, no structural elements
+  - For conclusion: 100-150 word limit, ## for section title, only ONE structural element at most
   - Markdown format
   - Do not include word count or any preamble in your response
   </Quality Checks>

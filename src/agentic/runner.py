@@ -74,12 +74,14 @@ class RayAgentRunner:
             except:
                 pass
 
-    def turn(self, request: str) -> str:
+    def turn(self, request: str, print_all_events: bool = False) -> str:
         """Runs the agent and waits for the turn to finish, then returns the results
         of all output events as a single string."""
         results = []
         for event in self.facade.next_turn(request, debug=self.debug):
-            if self._should_print(event):
+            if print_all_events:
+                print(event.__dict__)
+            if self._should_print(event, ignore_depth=True):
                 results.append(str(event))
 
         return "".join(results)
@@ -87,10 +89,10 @@ class RayAgentRunner:
     def __lshift__(self, prompt: str):
         print(self.turn(prompt))
 
-    def _should_print(self, event: Event) -> bool:
+    def _should_print(self, event: Event, ignore_depth: bool = False) -> bool:
         if self.debug.debug_all():
             return True
-        if event.is_output and event.depth == 0:
+        if event.is_output and (ignore_depth or event.depth == 0):
             return True
         elif isinstance(event, ToolError):
             return self.debug != ""
@@ -126,10 +128,10 @@ class RayAgentRunner:
         continue_result = {}
         saved_completions = []
 
-        background_request = threading.Event()
         def handle_sigint(signum, frame):
             print("[cancelling run]\n")
             self.facade.cancel()
+            raise KeyboardInterrupt
 
         signal.signal(signal.SIGINT, handle_sigint)
 
@@ -148,15 +150,14 @@ class RayAgentRunner:
                     time.sleep(0.3)  # in case log messages are gonna come
                     continue
 
-                if background_request.is_set():
-                    break
-                request_id = self.facade.start_request(line, debug=self.debug).request_id
-                background_request.clear()
+                request_id = self.facade.start_request(
+                    line, 
+                    debug=self.debug, 
+                    continue_result=continue_result
+                ).request_id
 
                 for event in self.facade.get_events(request_id):
-                    if background_request.is_set():
-                        background_request.clear()
-                        threading.Thread(target=self.watch_background_request, args=(request_id,), daemon=True).start()                   
+                    if self.facade.is_cancelled():
                         break
                     continue_result = {}
                     if event is None:
@@ -167,10 +168,10 @@ class RayAgentRunner:
                             replies[key] = input(f"\n{value}\n:> ")
                         continue_result = replies
                     elif isinstance(event, FinishCompletion):
-                        print(">>>> COMPLETED: ",event)
                         saved_completions.append(event)
                     if self._should_print(event):
                         print(str(event), end="")
+                self.facade.uncancel()
                 print()
                 time.sleep(0.3)
                 if not continue_result:
@@ -185,15 +186,6 @@ class RayAgentRunner:
             except Exception as e:
                 traceback.print_exc()
                 print(f"Error: {e}")
-
-    def watch_background_request(self, request_id: str):
-        for event in self.facade.get_events(request_id):
-            if event is None:
-                break
-            if self._should_print(event):
-                print(f"{Colors.LIGHT_GRAY}{str(event)}{Colors.ENDC}", end="")
-            time.sleep(0.1)
-        print()
 
     @staticmethod
     def report_usages(completions: list[FinishCompletion]):

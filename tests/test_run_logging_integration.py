@@ -39,7 +39,7 @@ def test_agent(temp_db_path):
         instructions="""You are a helpful calculator assistant. Use the provided tools to perform calculations.
         Always explain your work before using a tool.""",
         tools=[SimpleCalculator()],
-        model="gpt-4o-mini",
+        model="gpt-4o",
         db_path=temp_db_path
     )
     return agent
@@ -49,7 +49,7 @@ def test_run_logging_enabled(test_agent, db_manager):
     runner = AgentRunner(test_agent)
     
     # Run a simple calculation
-    runner.turn("What is 5 plus 3?")
+    runner.turn("What is 5 plus 3? Use your functions")
     
     # Verify the run was created
     runs = db_manager.get_runs_by_user("default")
@@ -60,7 +60,7 @@ def test_run_logging_enabled(test_agent, db_manager):
     # Verify run metadata
     assert run.agent_id == "Calculator"
     assert run.user_id == "default"
-    assert run.initial_prompt == "What is 5 plus 3?"
+    assert run.initial_prompt == "What is 5 plus 3? Use your functions"
     assert isinstance(run.created_at, datetime)
     assert isinstance(run.updated_at, datetime)
     

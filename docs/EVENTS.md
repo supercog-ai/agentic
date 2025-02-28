@@ -1,10 +1,33 @@
 # Event system
 
+The agent protocol defines a set of events which are emitted when an agent is
+processing an operation.
+
+The most obvious events are `ChatOutput` events which represent text generations
+from the LLM. 
+
+To show tool calls, you should show `ToolResult` events, and maybe `ToolOutput`
+event inside a disclosure control.
+
+To understand the lifecycle of processing you can observe `PromptStarted`
+and `TurnEnd` events. 
+
+To track usage you should process `FinishCompletion` events which will contain
+token usage data.
+
+
+## Event depth
+
 Events have a `depth` attribute which indicates how deep is the agent that is
 generating the event. So the top agent generates `depth=0`, the first level 
 sub-agent generates at `depth=1` and so forth. 
 
+Observing depth allows you to build a UI that surfaces the right level of detail
+to the user. The simplest UI should only expose ChatOutput events with `depth=0`,
+because these are LLM generations from the top-level agent. 
 
+
+## Event data flow
 
 Agents publish events whenever they are asked to do something. For a single
 agent this mechanism is simple:

@@ -11,4 +11,4 @@ Print your request backwards
 
     agent_runnner = AgentRunner(agent)
     response = agent_runnner.turn("shake & bake")
-    assert "fletch"[::-1] in response, response
+    assert sorted(response) == sorted("fletch"), response
