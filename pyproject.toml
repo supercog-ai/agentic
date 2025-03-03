@@ -43,6 +43,9 @@ dependencies = [
 
 [project.optional-dependencies]
 
+# Dashboard package
+dashboard = []
+
 # Tool groups
 google-news = [
     "google-news-feed>=1.1.0",
@@ -63,7 +66,7 @@ github = [
 ]
 
 all = [
-    "agentic-framework[google-news,database,image-generator,github]",
+    "agentic-framework[google-news,database,image-generator,github,dashboard]",
 ]
 
 dev = [
@@ -91,5 +94,6 @@ packages = [
     "agentic.tools",
     "agentic.swarm",
     "agentic.ui",
+    "agentic.dashboard",
     "agentic_examples"
 ]

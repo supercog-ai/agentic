@@ -14,7 +14,7 @@ from agentic.settings import settings
 
 import shutil
 from pathlib import Path
-from importlib import resources
+from importlib import resources, import_module
 from rich.status import Status
 
 import warnings
@@ -164,13 +164,6 @@ Get the names and descriptions from the top 20 models in this list:
 def ui():
     """Runs the agentic UI"""
     os.execvp("streamlit", ["streamlit", "run", "src/agentic/ui/app.py"])
-
-@app.command()
-def webui():
-    """Runs the agentic NextJS web UI"""
-    # FIXME: get the right path when installed from the package
-    os.chdir("./src/agentic/ui/next-js")
-    os.execvp("npm", ["npm", "run", "dev"])
 
 @app.command()
 def claude(prompt: str):
@@ -681,6 +674,36 @@ def search(
         if client:
             client.close()
 
+# Create a dashboard command group
+dashboard_app = typer.Typer(name="dashboard", help="Manage the dashboard UI")
+
+@dashboard_app.callback()
+def dashboard_callback():
+    """Manage the dashboard UI."""
+    # Check if the dashboard package is installed
+    try:
+        importlib.import_module("agentic.dashboard")
+    except ImportError:
+        typer.echo("Dashboard package not installed. Install with 'pip install agentic-framework[dashboard]'")
+        raise typer.Exit(1)
+
+@dashboard_app.command()
+def start(
+    port: int = typer.Option(3000, "--port", "-p", help="Port to run the dashboard on"),
+    dev: bool = typer.Option(False, "--dev", help="Run in development mode")
+):
+    """Start the dashboard server."""
+    from agentic.dashboard.setup import start_command
+    start_command(port=port, dev=dev)
+
+@dashboard_app.command()
+def build():
+    """Build the dashboard for production."""
+    from agentic.dashboard.setup import build_command
+    build_command()
+
+# Add the dashboard app to the main app
+app.add_typer(dashboard_app)
 
 if __name__ == "__main__":
     app()
