@@ -214,14 +214,6 @@ class WorkflowAgent(RayFacadeAgent):
             }
         )
 
-        report = "\n".join(finals)
-        yield ChatOutput(
-            self.name, 
-            {
-                "content": "## Here is your completed report:\n\n" + report + "\n\n"
-            }
-        )
-
         yield TurnEnd(
             self.name,
             [{"role": "assistant", "content": report}],
