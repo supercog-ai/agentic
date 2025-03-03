@@ -12,8 +12,9 @@ nav:
  - Tools.md
  - Rag.md
  - Models.md
- - REST_API.md 
+ - REST_API.md
+ - Dashboard.md
  - PROJECT_STRUCTURE.md
- - Events.md
+ - EVENTS.md
  - AGENTIC_MANIFESTO.md
 
