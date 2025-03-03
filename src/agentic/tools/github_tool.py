@@ -557,7 +557,7 @@ class GithubTool:
     async def get_pr_comments(self, run_context: RunContext, pr_number: int, state: str = 'open',
                         repo_owner: Optional[str] = None, repo_name: Optional[str] = None) -> List[Dict[str, Any]]:
         """
-        Get a list of comments for a pull request.
+        Get a list of comments in the reviews of a pull request.
         :param pr_number: The number of the pr
         :param state: State of pull requests to return. Can be either 'open', 'closed', or 'all'
         :param repo_owner: Repository owner (if None, uses default_repo owner)
