@@ -24,6 +24,7 @@ Agentic supports providing tool functions as:
 - Class instance methods
 - Langchain tools
 - Model Context Protocol (from Anthropic) tools
+- Other Agents
 
 Here are a few examples:
 

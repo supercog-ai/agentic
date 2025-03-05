@@ -114,6 +114,10 @@ class ChatOutput(Output):
         super().__init__(agent=agent, message=payload, depth=depth)
         self.type = "chat_output"
 
+    @classmethod
+    def assistant_message(cls, agent: str, content: str, depth: int = 0):
+        return cls(agent, {"content": content, "role": "assistant"}, depth)
+
     def __str__(self) -> str:
         return str(self.payload.get("content") or "")
 

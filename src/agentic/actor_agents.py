@@ -1397,7 +1397,20 @@ class RayFacadeAgent:
             event = ray.get(remote_next)
             if isinstance(event, TurnEnd):
                 if isinstance(event.result, str) and self.result_model:
-                    event.set_result(self.result_model.model_validate_json(event.result))
+                    try:
+                        event.set_result(self.result_model.model_validate_json(event.result))
+                    except Exception as e:
+                        try:
+                            # Hack for LLM poorly parsing Claude structured outputs
+                            data = json.loads(event.result)
+                            if 'values' in data:
+                                event.set_result(self.result_model.model_validate(data['values']))
+                        except Exception as e:
+                            yield ChatOutput.assistant_message(
+                                self.name, 
+                                f"Error validating result: {e}", 
+                                depth=event.depth
+                            )
             yield event
 
     def final_result(
@@ -1439,6 +1452,10 @@ class RayFacadeAgent:
     def set_debug_level(self, level: DebugLevel):
         self.debug.raise_level(level)
         ray.get(self._agent.set_debug_level.remote(self.debug))
+
+    def set_result_model(self, model: Type[BaseModel]):
+        self.result_model = model
+        self._update_state({"result_model": model})
 
     def reset_history(self):
         ray.get(self._agent.reset_history.remote())
