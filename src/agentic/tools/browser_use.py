@@ -1,6 +1,7 @@
 # pip install playwright
 # pip install browser-use
 from typing import Optional
+import os
 
 from agentic.tools import tool_registry
 from agentic.models import GPT_4O_MINI
@@ -47,7 +48,35 @@ class BrowserUseTool:
     def get_tools(self):
         return [self.run_browser_agent]
     
-    # Yield strings of browser actions
+    def _get_api_key(self, model: str) -> str:
+        """Get the appropriate API key based on model type."""
+        from agentic.agentic_secrets import agentic_secrets
+        
+        if model.startswith("gemini"):
+            return agentic_secrets.get_required_secret("GEMINI_API_KEY")
+        elif model.startswith("gpt") or model.startswith("openai"):
+            return agentic_secrets.get_required_secret("OPENAI_API_KEY")
+        elif model.startswith("anthropic") or model.startswith("claude"):
+            return agentic_secrets.get_required_secret("ANTHROPIC_API_KEY")
+        else:
+            # For other models, try to infer the API key name
+            provider = model.split("/")[0] if "/" in model else model.split("-")[0]
+            key_name = f"{provider.upper()}_API_KEY"
+            return agentic_secrets.get_required_secret(key_name)
+    
+    def _initialize_llm(self, model: str):
+        """Initialize LLM based on model path string."""
+        api_key = self._get_api_key(model)
+        
+        if model.startswith("gemini"):
+            model_name = model.split("/")[-1] if "/" in model else model
+            return ChatGoogleGenerativeAI(model=model_name, api_key=api_key)
+        else:
+            # For other models, use Litellm's completion
+            from litellm import completion
+            os.environ["OPENAI_API_KEY"] = api_key  # Ensure API key is set for Litellm
+            return completion
+
     async def run_browser_agent(
             self, 
             run_context: RunContext,
@@ -60,16 +89,14 @@ class BrowserUseTool:
         browser = None
         print(f"BrowserTool, Using model: {self.model}")
         if self.chrome_instance_path:
-            browser = browser = Browser(
+            browser = Browser(
                 config=BrowserConfig(
                     chrome_instance_path=self.chrome_instance_path
                 )
             )
+        
         token_counter = TokenCounterStdOutCallback()
-        if self.model.startswith("gemini"):
-            llm = ChatGoogleGenerativeAI(model=self.model.split("/")[-1], callbacks=[token_counter])
-        else:
-            llm = ChatOpenAI(model=self.model, callbacks=[token_counter])
+        llm = self._initialize_llm(model or self.model)
 
         agent = BrowserAgent(   
             task=instructions,
