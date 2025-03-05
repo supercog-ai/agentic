@@ -1,11 +1,13 @@
 # pip install playwright
 # pip install browser-use
-from typing import Optional
+from typing import Optional, Generator, Any
+import asyncio
 
 from agentic.tools import tool_registry
 from agentic.models import GPT_4O_MINI
-from agentic.common import RunContext
-from agentic.events import FinishCompletion
+from agentic.common import RunContext, Agent
+from agentic.events import Event, Prompt, ChatOutput, FinishCompletion, TurnEnd
+from agentic.actor_agents import RayFacadeAgent
 from browser_use import Agent as BrowserAgent
 from browser_use import Browser, BrowserConfig
 from langchain_openai import ChatOpenAI
@@ -113,3 +115,136 @@ class TokenCounterStdOutCallback(StdOutCallbackHandler):
         else:
             print("[AGENTIC] No token usage data available.")
 
+
+class BrowserUseAgent(RayFacadeAgent):
+    """
+    An agent that wraps the BrowserUseTool to provide browser automation capabilities.
+    
+    This agent can be used directly as a tool in other agents:
+    operator = Agent(name="Operator", tools=[BrowserUseAgent()])
+    """
+    
+    def __init__(
+        self, 
+        name: str = "Browser Agent", 
+        chrome_instance_path: Optional[str] = None,
+        model: str = GPT_4O_MINI
+    ):
+        """
+        Initialize the Browser Use Agent.
+        
+        Args:
+            name: The name of the agent
+            chrome_instance_path: Optional path to Chrome executable
+            model: The model to use for the agent
+        """
+        super().__init__(
+            name, 
+            welcome=f"I am the {name}, capable of automating browser interactions.",
+            model=model,
+        )
+        self.chrome_instance_path = chrome_instance_path
+        self.browser_tool = BrowserUseTool(chrome_instance_path, model)
+        
+    def next_turn(
+        self,
+        request: str | Prompt,
+        request_context: dict = {},
+        request_id: str = None,
+        continue_result: dict = {},
+        debug = "",
+    ) -> Generator[Event, Any, Any]:
+        """
+        Process a turn with the Browser agent.
+        
+        Args:
+            request: The prompt or string request
+            request_context: Additional context for the request
+            request_id: Optional request ID
+            continue_result: Results to continue from
+            debug: Debug level
+            
+        Yields:
+            Event: Agentic events representing the agent's processing
+        """
+        # Convert request to string if it's a Prompt
+        instructions = request.payload if isinstance(request, Prompt) else request
+        
+        # Yield a chat output to show we're processing
+        yield ChatOutput(self.name, {"content": f"Processing browser instructions: {instructions}"})
+        
+        try:
+            # Create browser configuration
+            browser = None
+            if self.chrome_instance_path:
+                browser = Browser(
+                    config=BrowserConfig(
+                        chrome_instance_path=self.chrome_instance_path
+                    )
+                )
+            
+            # Set up token counter
+            token_counter = TokenCounterStdOutCallback()
+            
+            # Set up LLM based on model type
+            if self.model.startswith("gemini"):
+                llm = ChatGoogleGenerativeAI(model=self.model.split("/")[-1], callbacks=[token_counter])
+            else:
+                llm = ChatOpenAI(model=self.model, callbacks=[token_counter])
+            
+            # Create and run browser agent
+            browser_agent = BrowserAgent(   
+                task=instructions,
+                llm=llm,
+                browser=browser,
+            )
+            
+            # Yield a message that we're running the browser agent
+            yield ChatOutput(self.name, {"content": "Running browser automation..."})
+            
+            # Run the browser agent
+            result = asyncio.run(browser_agent.run())
+            
+            # Extract content from result
+            content = "\n".join(result.extracted_content())
+            
+            # Yield the content as a chat output
+            yield ChatOutput(self.name, {"content": content})
+            
+            # Yield token usage information
+            yield FinishCompletion.create(
+                agent=self.name,
+                llm_message=f"Tokens used - Input: {token_counter.total_input_tokens}, Output: {token_counter.total_output_tokens}",
+                model=self.model,
+                cost=0,
+                input_tokens=token_counter.total_input_tokens,
+                output_tokens=token_counter.total_output_tokens,
+                elapsed_time=0,
+                depth=self.depth,
+            )
+            
+            # Return the final result
+            messages = [{"role": "assistant", "content": content}]
+            yield TurnEnd(
+                self.name,
+                messages,
+                self.run_context,
+                self.depth
+            )
+            return content
+            
+        except Exception as e:
+            error_message = f"Error running browser automation: {str(e)}"
+            yield ChatOutput(self.name, {"content": error_message})
+            messages = [{"role": "assistant", "content": error_message}]
+            yield TurnEnd(
+                self.name,
+                messages,
+                self.run_context,
+                self.depth
+            )
+            return error_message
+    
+    def get_tools(self):
+        """Return the browser tools for use in other agents."""
+        return self.browser_tool.get_tools()
