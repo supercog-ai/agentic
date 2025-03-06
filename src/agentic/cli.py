@@ -226,7 +226,12 @@ import time
 def serve(filename: str = typer.Argument(default="", show_default=False)):
     """Runs the FastAPI server for an agent"""
     from agentic.common import AgentRunner
-
+    if not os.getcwd().endswith("runtime"):
+        try:
+            os.chdir("runtime")
+        except:
+            pass
+        
     def find_agent_instances(file_path):
         # Load the module from file path
         spec = importlib.util.spec_from_file_location("dynamic_module", file_path)
