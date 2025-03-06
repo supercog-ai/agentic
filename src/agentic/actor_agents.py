@@ -628,23 +628,28 @@ class ActorBaseAgent:
 
     def get_instructions(self, context: RunContext):
         # Support context var substitution in prompts
-        prompt = Template(
-            self.instructions_str, 
-            undefined=DebugUndefined
-        ).render(
-            context.get_context()
-        )
-        if self.memories:
-            prompt += """
-<memory blocks>
-{% for memory in MEMORIES -%}
-{{memory|trim}}
-{%- endfor %}
-</memory>
-"""
-        return Template(prompt).render(
-            context.get_context() | {"MEMORIES": self.memories}
-        )
+        try:
+            prompt = Template(
+                self.instructions_str, 
+                undefined=DebugUndefined
+            ).render(
+                context.get_context()
+            )
+            if self.memories:
+                prompt += """
+    <memory blocks>
+    {% for memory in MEMORIES -%}
+    {{memory|trim}}
+    {%- endfor %}
+    </memory>
+    """
+            return Template(prompt).render(
+                context.get_context() | {"MEMORIES": self.memories}
+            )
+        except:
+            print(f"Prompt = {prompt}")
+            print(f"Context = {context.get_context()}")
+            print(f"Memories = {self.memories}")
 
     def set_state(self, actor_message: SetState):
         self.inject_secrets_into_env()
