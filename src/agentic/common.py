@@ -1,10 +1,12 @@
 from .runner import RayAgentRunner
+from .thread_runner import ThreadAgentRunner
 from .events import SetState, AddChild, PauseForInputResult, WaitForInput
 from .actor_agents import (
     ActorBaseAgent,
     RayFacadeAgent,
     handoff,
 )
+from .thread_agents import ThreadFacadeAgent
 from .swarm.types import RunContext
 from .workflow import Pipeline
 from jinja2 import Template
@@ -18,6 +20,8 @@ from pydantic import BaseModel, Field
 # Common aliases
 Agent = RayFacadeAgent
 AgentRunner = RayAgentRunner
+ThreadAgent = ThreadFacadeAgent
+ThreadRunner = ThreadAgentRunner
 
 def make_prompt(template: str, run_context: RunContext, **kwargs) -> str:
     context = run_context._context.copy() | kwargs
