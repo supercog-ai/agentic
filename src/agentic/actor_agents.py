@@ -81,6 +81,7 @@ from .events import (
     ToolError,
     AgentDescriptor,
     StartRequestResponse,
+    OauthFlowRequest,
 )
 from agentic.db.models import Run, RunLog
 from agentic.utils.json import make_json_serializable
@@ -441,7 +442,18 @@ class ActorBaseAgent:
             yield from events
 
             if partial_response.last_tool_result:
-                if isinstance(partial_response.last_tool_result, PauseForInputResult):
+                # Tool returns OauthFlowRequest
+                if isinstance(partial_response.last_tool_result, OauthFlowRequest):
+                    # Store context to resume later
+                    self.paused_context = AgentPauseContext(
+                        orig_history_length=init_len,
+                        tool_partial_response=partial_response,
+                        tool_function=partial_response.last_tool_result.tool_function
+                    )
+                    # Pass OAuth request up to client
+                    yield partial_response.last_tool_result
+                    return
+                elif isinstance(partial_response.last_tool_result, PauseForInputResult):
                     self.paused_context = AgentPauseContext(
                         orig_history_length=init_len,
                         tool_partial_response=partial_response,
@@ -952,6 +964,45 @@ class DynamicFastAPIHandler:
             )
         )
         return {"status": "success", "result": result}
+
+    @app.get("/oauth/{run_id}/{tool_name}")
+    async def handle_oauth_callback(
+        self,
+        run_id: str,
+        tool_name: str,
+        request: Request
+    ) -> dict:
+        """Handle OAuth callback requests
+        
+        Args:
+            run_id: ID of the agent run this callback is for
+            tool_name: Name of the tool that initiated the OAuth flow
+            request: FastAPI request containing auth code and state
+        """
+        # Get auth code from query params
+        params = dict(request.query_params)
+        auth_code = params.get("code")
+        
+        if not auth_code:
+            raise ValueError("No authorization code provided in OAuth callback")
+
+        # Create continuation with auth code
+        resume_data = {
+            f"{tool_name}_auth_code": auth_code,
+            # Can add other OAuth params like state if needed
+        }
+
+        # Resume the agent with the auth code
+        # This will trigger token exchange in the tool
+        remote_gen = self._agent.handlePromptOrResume.remote(
+            ResumeWithInput(self.name, resume_data)
+        )
+
+        # Wait for processing to start
+        ray.get(remote_gen.__anext__.remote())
+
+        # Return success page
+        return {"status": "success", "message": "Authorization successful"}
 
     def next_turn(
         self,
