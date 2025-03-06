@@ -63,7 +63,9 @@ At this stage it's probably easiest to run this repo from source. We use `uv` fo
 ```
 git clone git@github.com:supercog-ai/agentic.git
 cd agentic
+uv venv --python 3.12
 uv pip install -e ".[all,dev]"
+source .venv/bin/activate
 ```
 
 these commands will install the `agentic` package locally so that you can use the `agentic` cli command
