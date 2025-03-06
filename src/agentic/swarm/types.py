@@ -176,6 +176,21 @@ class RunContext:
         
         return webhook_url
 
+    def get_oauth_callback_url(self, tool_name: str) -> str:
+        """Get the OAuth callback URL for a tool"""
+        if not self.run_id:
+            raise ValueError("No active run_id. OAuth requires an active agent run.")
+        
+        if not self.api_endpoint:
+            # Fallback to default if not set
+            host = "localhost" 
+            port = 8086
+            base_url = f"http://{host}:{port}/{self.agent_name}"
+        else:
+            base_url = self.api_endpoint
+            
+        return f"{base_url}/oauth/{self.run_id}/{tool_name}"
+
 
 class SwarmAgent(BaseModel):
     name: str = "Agent"
