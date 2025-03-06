@@ -15,12 +15,12 @@ from agentic.utils.rag_helper import init_weaviate, create_collection, init_embe
 import logging  
 
 # Configure logging  
-logging.basicConfig(  
-    level=logging.INFO,  # Set the minimum log level (DEBUG, INFO, WARNING, ERROR, CRITICAL)  
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",  # Set the log format  
-    datefmt="%Y-%m-%d %H:%M:%S",  # Set the date format  
-)  
-logger = logging.getLogger(__name__)
+# logging.basicConfig(  
+#     level=logging.INFO,  # Set the minimum log level (DEBUG, INFO, WARNING, ERROR, CRITICAL)  
+#     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",  # Set the log format  
+#     datefmt="%Y-%m-%d %H:%M:%S",  # Set the date format  
+# )  
+# logger = logging.getLogger(__name__)
 
 Base = declarative_base()
 

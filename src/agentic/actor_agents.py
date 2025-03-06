@@ -16,6 +16,7 @@ from pathlib import Path
 import os
 import yaml
 from jinja2 import Template, DebugUndefined
+import jinja2.exceptions
 import ray
 import traceback
 from datetime import timedelta
@@ -630,6 +631,7 @@ class ActorBaseAgent:
         # Support context var substitution in prompts
         prompt = Template(
             self.instructions_str, 
+            autoescape=True,
             undefined=DebugUndefined
         ).render(
             context.get_context()
@@ -642,9 +644,17 @@ class ActorBaseAgent:
 {%- endfor %}
 </memory>
 """
-        return Template(prompt).render(
-            context.get_context() | {"MEMORIES": self.memories}
-        )
+        try:
+            return Template(prompt, autoescape=True).render(
+                context.get_context() | {"MEMORIES": self.memories}
+            )
+        except jinja2.exceptions.TemplateSyntaxError as e:
+            print(f"!! ERROR rendering template: {e}")
+            print(f"Source: {prompt}")
+            print("Context: ", context.get_context())
+            print("Using prompt without rendering")
+            return prompt
+
 
     def set_state(self, actor_message: SetState):
         self.inject_secrets_into_env()
@@ -1090,6 +1100,28 @@ class RayFacadeAgent:
                 except Exception as e:
                     print(f"Warning: Failed to set mock params on remote agent: {e}")
 
+    def __getstate__(self):
+        # Return a custom state that excludes the global reference
+        state = self.__dict__.copy()
+        if '_AGENT_REGISTRY' in state:
+            del state['_AGENT_REGISTRY']
+        return state
+
+    def copy(self):
+        return self.__class__(
+            name=self.name,
+            instructions=self.instructions,
+            welcome=self.welcome,
+            tools=self._tools.copy(),
+            model = self.model,
+            max_tokens = self.max_tokens,
+            db_path = self.db_path,
+            memories = self.memories.copy(),
+            handle_turn_start = self._handle_turn_start,
+            result_model = self.result_model,
+            debug = self.debug,
+        )
+    
     def _init_base_actor(self, instructions: str):
         # Process instructions if provided
         if instructions.strip():

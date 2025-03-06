@@ -73,6 +73,7 @@ class RayAgentRunner:
                 os.chdir("runtime")
             except:
                 pass
+        self.repl_running: bool = False
 
     def turn(self, request: str, print_all_events: bool = False) -> str:
         """Runs the agent and waits for the turn to finish, then returns the results
@@ -112,7 +113,11 @@ class RayAgentRunner:
         self.facade.set_debug_level(self.debug)
 
     def serve(self, port: int = 8086):
-        path = self.facade.start_api_server(port)
+        if self.repl_running:
+            self.api_agent = self.facade.copy()
+            path = self.api_agent.start_api_server(port)
+        else:
+            path = self.facade.start_api_server(port)
         return path
 
     def repl_loop(self):
@@ -121,7 +126,8 @@ class RayAgentRunner:
             readline.read_history_file(hist)
 
         print(self.facade.welcome)
-        print("press <enter> to quit")
+        print("press <ctrl-D> to quit")
+        self.repl_running = True
 
         aggregator = Aggregator()
 
@@ -148,6 +154,9 @@ class RayAgentRunner:
                     self.run_dot_commands(line)
                     readline.write_history_file(hist)
                     time.sleep(0.3)  # in case log messages are gonna come
+                    continue
+
+                if line == "":
                     continue
 
                 request_id = self.facade.start_request(
@@ -274,6 +283,9 @@ class RayAgentRunner:
             self.facade.reset_history()
             print("Session cleared")
 
+        elif line == ".serve":
+            self.serve()
+
         elif line.startswith(".debug"):
             if len(line.split()) > 1:
                 debug_level = line.split()[1]
@@ -291,6 +303,7 @@ class RayAgentRunner:
             .agent - Dump the state of the active agent
             .load <filename> - Load an agent from a file
             .run <agent name> - switch the active agent
+            .serve - start the FastAPI server for the current agent
             .debug [<level>] - enable debug. Defaults to 'tools', or one of 'llm', 'tools', 'all', 'off'
             .settings - show the current config settings
             .help - Show this help
