@@ -119,10 +119,25 @@ def init_run_tracking(
         user_id=user_id,
         db_path=db_path
     )
-    agent._agent.set_callback.remote('handle_event', run_manager.handle_event)
+    
+    # Check if the agent is Ray-based by checking for remote attribute
+    if hasattr(agent._agent.set_callback, 'remote'):
+        # Ray-based agent
+        agent._agent.set_callback.remote('handle_event', run_manager.handle_event)
+    else:
+        # Thread-based agent
+        agent._agent.set_callback('handle_event', run_manager.handle_event)
+    
     return run_id
 
 def disable_run_tracking(agent: Agent) -> None:
     """Helper function to disable run tracking for an agent"""
-    if agent._agent.get_callback.remote('handle_event'):
-        agent._agent.set_callback.remote('handle_event', None)
+    # Check if the agent is Ray-based by checking for remote attribute
+    if hasattr(agent._agent.set_callback, 'remote'):
+        # Ray-based agent
+        if agent._agent.get_callback.remote('handle_event'):
+            agent._agent.set_callback.remote('handle_event', None)
+    else:
+        # Thread-based agent
+        if agent._agent.get_callback('handle_event'):
+            agent._agent.set_callback('handle_event', None)
