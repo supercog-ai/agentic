@@ -434,21 +434,24 @@ class OauthFlowRequest(Event):
         scope: str = "",
         depth: int = 0
     ):
-        super().__init__(
-            agent=agent,
-            type="oauth_flow_request",
-            payload={
+        # First initialize the base Event fields
+        data = {
+            "agent": agent,
+            "type": "oauth_flow_request",
+            "payload": {
                 "message": message,
                 "authorize_url": authorize_url,
                 "auth_code_name": auth_code_name,
                 "scope": scope
             },
-            depth=depth
-        )
-        self.message = message
-        self.authorize_url = authorize_url
-        self.auth_code_name = auth_code_name
-        self.scope = scope
+            "depth": depth,
+            # Add required OauthFlowRequest fields
+            "authorize_url": authorize_url,
+            "auth_code_name": auth_code_name,
+            "message": message,
+            "scope": scope
+        }
+        super().__init__(**data)
 
     def __str__(self):
         return f"[OAUTH] {self.message}\nAuthorize URL: {self.authorize_url}"
