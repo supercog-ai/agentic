@@ -185,7 +185,8 @@ class RunContext:
             # Fallback to default if not set
             host = "localhost" 
             port = 8086
-            base_url = f"http://{host}:{port}/{self.agent_name}"
+            safe_agent_name = "".join(c if c.isalnum() else "_" for c in self.agent_name).lower()
+            base_url = f"http://{host}:{port}/{safe_agent_name}"
         else:
             base_url = self.api_endpoint
             
