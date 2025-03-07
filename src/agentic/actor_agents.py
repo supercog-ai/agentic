@@ -965,6 +965,79 @@ class DynamicFastAPIHandler:
         )
         return {"status": "success", "result": result}
 
+    @app.get("/oauth/callback/{tool_name}")
+    async def handle_oauth_static_callback(
+        self,
+        tool_name: str,
+        request: Request
+    ) -> dict:
+        """Static OAuth callback endpoint that extracts run_id from state parameter"""
+        params = dict(request.query_params)
+        run_id = params.get("state")  # Get run_id from state
+        
+        if not run_id:
+            raise ValueError("No state/run_id provided in OAuth callback")
+            
+        # Forward to main OAuth handler
+        return await self.handle_oauth_callback(run_id, tool_name, request)
+
+    @app.get("/oauth/{run_id}/{tool_name}") 
+    async def handle_oauth_callback(
+        self,
+        run_id: str,
+        tool_name: str,
+        request: Request
+    ) -> dict:
+        """Core OAuth callback handler implementation
+        
+        Args:
+            run_id: ID of the agent run this callback is for
+            tool_name: Name of the tool that initiated the OAuth flow
+            request: FastAPI request containing auth code and state
+        """
+        # Get query parameters
+        params = dict(request.query_params)
+        auth_code = params.get("code")
+        
+        if not auth_code:
+            raise ValueError("No authorization code provided in OAuth callback")
+
+        # Get the run context from the database
+        db_manager = DatabaseManager()
+        run = db_manager.get_run(run_id)
+        if not run:
+            raise ValueError(f"No run found with ID {run_id}")
+
+        # Create RunContext for storing auth code
+        run_context = RunContext(
+            agent=self._agent,
+            agent_name=self.name,
+            debug_level=self.debug,
+            run_id=run_id,
+        )
+
+        # Store auth code and state in RunContext
+        auth_key = f"{tool_name}_auth_code"
+        run_context[auth_key] = auth_code
+        
+        # Store any additional OAuth params (except code and state)
+        for key, value in params.items():
+            if key not in ["code", "state"]:
+                run_context[f"{tool_name}_oauth_{key}"] = value
+
+        # Return success page with stored values
+        return {
+            "status": "success", 
+            "message": "Authorization successful",
+            "stored_values": {
+                "auth_code": auth_code,
+                "tool_name": tool_name,
+                "additional_params": {k:v for k,v in params.items() 
+                                   if k not in ["code", "state"]}
+            }
+        }
+
+    # Remove or deprecate the old dynamic endpoint
     @app.get("/oauth/{run_id}/{tool_name}")
     async def handle_oauth_callback(
         self,
@@ -972,37 +1045,8 @@ class DynamicFastAPIHandler:
         tool_name: str,
         request: Request
     ) -> dict:
-        """Handle OAuth callback requests
-        
-        Args:
-            run_id: ID of the agent run this callback is for
-            tool_name: Name of the tool that initiated the OAuth flow
-            request: FastAPI request containing auth code and state
-        """
-        # Get auth code from query params
-        params = dict(request.query_params)
-        auth_code = params.get("code")
-        
-        if not auth_code:
-            raise ValueError("No authorization code provided in OAuth callback")
-
-        # Create continuation with auth code
-        resume_data = {
-            f"{tool_name}_auth_code": auth_code,
-            # Can add other OAuth params like state if needed
-        }
-
-        # Resume the agent with the auth code
-        # This will trigger token exchange in the tool
-        remote_gen = self._agent.handlePromptOrResume.remote(
-            ResumeWithInput(self.name, resume_data)
-        )
-
-        # Wait for processing to start
-        ray.get(remote_gen.__anext__.remote())
-
-        # Return success page
-        return {"status": "success", "message": "Authorization successful"}
+        """Deprecated: Use /oauth/callback/{tool_name} instead"""
+        return await self.handle_oauth_static_callback(tool_name, request)
 
     def next_turn(
         self,
