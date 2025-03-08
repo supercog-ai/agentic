@@ -193,7 +193,12 @@ class RunContext:
     def get_oauth_auth_code(self, tool_name: str) -> Optional[str]:
         """Get OAuth authorization code for a tool if available"""
         auth_key = f"{tool_name}_auth_code"
-        return self.get(auth_key)
+        return self.get_secret(auth_key)
+
+    def set_oauth_auth_code(self, tool_name: str, auth_code: str):
+        """Store OAuth authorization code for a tool using secure storage"""
+        auth_key = f"{tool_name}_auth_code"
+        self.set_secret(auth_key, auth_code)
 
     def set_oauth_token(self, tool_name: str, token: str):
         """Store OAuth token for a tool securely"""
