@@ -991,9 +991,8 @@ class DynamicFastAPIHandler:
             run_id=run_id,
         )
 
-        # Store auth code and state in RunContext
-        auth_key = f"{tool_name}_auth_code"
-        run_context[auth_key] = auth_code
+        # Store auth code
+        run_context.set_oauth_auth_code(tool_name, auth_code)
         
         # Store any additional OAuth params (except code and state)
         for key, value in params.items():
@@ -1011,17 +1010,6 @@ class DynamicFastAPIHandler:
                                    if k not in ["code", "state"]}
             }
         }
-
-    # Remove or deprecate the old dynamic endpoint
-    @app.get("/oauth/{run_id}/{tool_name}")
-    async def handle_oauth_callback(
-        self,
-        run_id: str,
-        tool_name: str,
-        request: Request
-    ) -> dict:
-        """Deprecated: Use /oauth/callback/{tool_name} instead"""
-        return await self.handle_oauth_static_callback(tool_name, request)
 
     def next_turn(
         self,
