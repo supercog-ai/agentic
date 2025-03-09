@@ -159,6 +159,8 @@ async def test_create_and_get_pull_request(github_tool, run_context):
 
 @pytest.mark.asyncio
 async def test_get_pr_reviews(github_tool, run_context):
+    # This test assumes there is a PR with number 17 and 
+    # TEST_REPO_OWNER = "supercog-ai" and TEST_REPO_NAME = "test-repo"
     reviews_result = await github_tool.get_pr_reviews(
         run_context,
         pr_number=17
@@ -171,16 +173,16 @@ async def test_get_pr_reviews(github_tool, run_context):
 
 @pytest.mark.asyncio
 async def test_get_pr_comments(github_tool, run_context):
+    # This test assumes there is a PR with number 17 and 
+    # TEST_REPO_OWNER = "supercog-ai" and TEST_REPO_NAME = "test-repo"
     comments_result = await github_tool.get_pr_comments(
         run_context,
         pr_number=17
     )
     
-    # Verify the result structure
     print(comments_result)
     assert comments_result['status'] == 'success'
     assert isinstance(comments_result['results'], list)
-    # assert comments_result['results'][0]['body'] == 'Dummy comment 1'
 
 if __name__ == "__main__":
     pytest.main(["-v", __file__])
