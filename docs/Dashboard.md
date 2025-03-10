@@ -55,6 +55,9 @@ agentic dashboard start --dev
 
 # Specify a custom port
 agentic dashboard start --port 8000
+
+# Start an agent server alongside the dashboard
+agentic dashboard start --agent-path examples/basic_agent.py
 ```
 
 ### Programmatically
@@ -75,7 +78,7 @@ process = setup.start_dashboard(port=3000, dev_mode=False)
 
 The dashboard uses a client-server architecture:
 
-1. The **Backend Server** is your Agentic API server (started with `agentic serve`)
+1. The **Backend Server** is your Agentic API server (started with `agentic serve` or `agentic dashboard start --agent-path <path>`)
 2. The **Frontend Dashboard** is the Next.js application that communicates with the backend
 
 ### Backend Integration
@@ -159,5 +162,5 @@ The dashboard uses Tailwind CSS for styling and can be customized by modifying:
 Common issues and solutions:
 
 - **Dashboard fails to start**: Ensure Node.js and npm are installed and up to date
-- **Cannot connect to agents**: Make sure the Agentic server is running (`agentic serve`)
+- **Cannot connect to agents**: Make sure the Agentic server is running (`agentic serve` or `agentic dashboard start --agent-path <path>`)
 - **UI not updating after changes**: Make sure you started the dashboard in development mode (`--dev`)

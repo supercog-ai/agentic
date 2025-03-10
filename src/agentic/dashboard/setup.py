@@ -91,7 +91,7 @@ def build_dashboard():
         logger.error(f"Failed to build dashboard: {e}")
         return False
 
-def start_dashboard(port: Optional[int] = None, dev_mode: bool =False):
+def start_dashboard(port: Optional[int] = None, dev_mode: bool = False):
     """
     Start the Next.js dashboard.
     

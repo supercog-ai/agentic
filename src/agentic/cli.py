@@ -690,10 +690,26 @@ def dashboard_callback():
 @dashboard_app.command()
 def start(
     port: int = typer.Option(None, "--port", "-p", help="Port to run the dashboard on"),
-    dev: bool = typer.Option(False, "--dev", help="Run in development mode")
+    dev: bool = typer.Option(False, "--dev", help="Run in development mode"),
+    agent_path: str = typer.Option(None, "--agent-path", help="Path to the agent configuration file, will start the agent if provided"),
 ):
     """Start the dashboard server."""
+    import threading
+    
+    if agent_path:
+        # Start the agent in a separate thread
+        typer.echo(f"Starting agent from {agent_path} in a background thread...")
+        agent_thread = threading.Thread(
+            target=serve, 
+            args=(agent_path,),
+            daemon=True  # This ensures the thread exits when the main program exits
+        )
+        agent_thread.start()
+        typer.echo("Agent thread started")
+    
+    # Start the dashboard in the main thread
     from agentic.dashboard.setup import start_command
+    typer.echo("Starting dashboard...")
     start_command(port=port, dev=dev)
 
 @dashboard_app.command()

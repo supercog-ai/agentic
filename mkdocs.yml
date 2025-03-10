@@ -13,6 +13,7 @@ nav:
  - Rag.md
  - Models.md
  - REST_API.md
+ - CLI.md
  - Dashboard.md
  - PROJECT_STRUCTURE.md
  - EVENTS.md

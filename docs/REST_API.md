@@ -1,3 +1,5 @@
+# Rest API
+
 Agentic includes built-in support for your agent to expose a **REST API** using _FastAPI_. This API
 is an alternative way to use your agent besides the command line.
 
