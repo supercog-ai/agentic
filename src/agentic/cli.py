@@ -689,7 +689,7 @@ def dashboard_callback():
 
 @dashboard_app.command()
 def start(
-    port: int = typer.Option(3000, "--port", "-p", help="Port to run the dashboard on"),
+    port: int = typer.Option(None, "--port", "-p", help="Port to run the dashboard on"),
     dev: bool = typer.Option(False, "--dev", help="Run in development mode")
 ):
     """Start the dashboard server."""

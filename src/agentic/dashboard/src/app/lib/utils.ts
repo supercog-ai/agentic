@@ -1,5 +1,6 @@
 import { type ClassValue,clsx } from 'clsx'
 import { twMerge } from 'tailwind-merge'
+
 import { AgentEventType } from '@/lib/api';
 
 export function cn(...inputs: ClassValue[]) {

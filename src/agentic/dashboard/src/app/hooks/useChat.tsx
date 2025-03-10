@@ -2,13 +2,13 @@ import { useCallback, useEffect,useRef, useState } from 'react';
 import { mutate } from 'swr';
 
 import { useRunLogs } from '@/hooks/useAgentData';
-import { agenticApi, AgentEventType } from '@/lib/api';
+import { AgentEventType,agenticApi } from '@/lib/api';
 import { convertFromUTC, isUserTurn } from '@/lib/utils';
 
 /**
  * Custom hook for handling agent prompt submission and event streaming
  */
-export function useChat(agentPath: string, agentName: string, currentRunId: string | undefined) {
+export function useChat(agentPath: string, agentName: string, _currentRunId: string | undefined) {
   const [isSending, setIsSending] = useState(false);
   const [events, setEvents] = useState<Ui.Event[]>([]);
   const streamContentRef = useRef<string>('');
@@ -76,7 +76,6 @@ export function useChat(agentPath: string, agentName: string, currentRunId: stri
       setEvents(processedEvents);
     } else {
       // Reset events when we get empty logs
-      console.log("RUN LOG RESET")
       // setEvents([]); TODO: Figure this out better
     }
   }, [runLogs]);

@@ -1,47 +1,43 @@
 import React from 'react';
-import ReactMarkdown from 'react-markdown';
+import ReactMarkdown, { Components } from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
-const MarkdownComponents = {
+// Define the components using the correct typing from react-markdown
+const MarkdownComponents: Components = {
   // Style code blocks
-  code(props: any) {
-    const {children, className, ...rest} = props;
+  code({ className, children, ...props }) {
     return (
       <pre className="bg-muted/50 p-4 rounded-lg overflow-auto">
-        <code className={className} {...rest}>
+        <code className={className} {...props}>
           {children}
         </code>
       </pre>
     );
   },
-  // Style inline code
-  inlineCode(props: any) {
-    return (
-      <code className="bg-muted/50 px-1.5 py-0.5 rounded-md text-sm" {...props} />
-    );
-  },
   // Style links
-  a(props: any) {
+  a({ children, ...props }) {
     return (
-      <a className="text-blue-500 hover:underline whitespace-pre-wrap break-all" target="_blank" {...props} />
+      <a className="text-blue-500 hover:underline whitespace-pre-wrap break-all" target="_blank" rel="noopener noreferrer" {...props}>
+        {children}
+      </a>
     );
   },
   // Style lists
-  ul(props: any) {
-    return <ul className="list-disc list-inside my-4" {...props} />;
+  ul({ children, ...props }) {
+    return <ul className="list-disc list-inside my-4" {...props}>{children}</ul>;
   },
-  ol(props: any) {
-    return <ol className="list-decimal list-inside my-4" {...props} />;
+  ol({ children, ...props }) {
+    return <ol className="list-decimal list-inside my-4" {...props}>{children}</ol>;
   },
   // Style headings
-  h1(props: any) {
-    return <h1 className="text-2xl font-bold my-4" {...props} />;
+  h1({ children, ...props }) {
+    return <h1 className="text-2xl font-bold my-4" {...props}>{children}</h1>;
   },
-  h2(props: any) {
-    return <h2 className="text-xl font-bold my-3" {...props} />;
+  h2({ children, ...props }) {
+    return <h2 className="text-xl font-bold my-3" {...props}>{children}</h2>;
   },
-  h3(props: any) {
-    return <h3 className="text-lg font-bold my-2" {...props} />;
+  h3({ children, ...props }) {
+    return <h3 className="text-lg font-bold my-2" {...props}>{children}</h3>;
   },
 };
 
@@ -60,4 +56,4 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) => {
   );
 }
 
-export  default MarkdownRenderer;
+export default MarkdownRenderer;

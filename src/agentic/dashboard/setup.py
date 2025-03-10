@@ -10,6 +10,7 @@ import sys
 import time
 import signal
 import logging
+from typing import Optional
 
 from . import DASHBOARD_ROOT
 
@@ -90,53 +91,48 @@ def build_dashboard():
         logger.error(f"Failed to build dashboard: {e}")
         return False
 
-def start_dashboard(port=3000, dev_mode=False):
+def start_dashboard(port: Optional[int] = None, dev_mode: bool =False):
     """
     Start the Next.js dashboard.
     
     Args:
-        port (int): The port to run the dashboard on.
+        port (Optional[int): The port to run the dashboard on.
         dev_mode (bool): Whether to run in development mode.
     
     Returns:
         subprocess.Popen: The process running the dashboard, or None if startup failed.
     """
+    command = ["npm", "run"]
     if dev_mode:
         if not install_dependencies():
             return None
         
-        logger.info(f"Starting dashboard in development mode on port {port}...")
-        try:
-            process = subprocess.Popen(
-                ["npm", "run", "dev", "--", "-p", str(port)],
-                cwd=DASHBOARD_ROOT
-            )
-            return process
-        except subprocess.SubprocessError as e:
-            logger.error(f"Failed to start dashboard in development mode: {e}")
-            return None
+        command.append("dev")
     else:
         if not build_dashboard():
             return None
         
-        logger.info(f"Starting dashboard on port {port}...")
-        try:
-            process = subprocess.Popen(
-                ["npm", "run", "start", "--", "-p", str(port)],
-                cwd=DASHBOARD_ROOT
-            )
-            return process
-        except subprocess.SubprocessError as e:
-            logger.error(f"Failed to start dashboard: {e}")
-            return None
+        command.append("start")
+
+    if port:
+        command.extend(["-p", str(port)])
+
+    logger.info(f"Starting dashboard with command: {command}")
+
+    try:
+        process = subprocess.Popen(command, cwd=DASHBOARD_ROOT)
+        return process
+    except subprocess.SubprocessError as e:
+        logger.error(f"Failed to start dashboard: {e}")
+        return None
 
 # CLI commands
-def start_command(port=3000, dev=False):
+def start_command(port: Optional[int] = None, dev: bool = False):
     """
     Start the dashboard server.
     
     Args:
-        port (int): The port to run the dashboard on.
+        port (Optional[int]): The port to run the dashboard on.
         dev (bool): Whether to run in development mode.
     """
     print("\nStarting Agentic Framework Dashboard")
@@ -153,9 +149,7 @@ def start_command(port=3000, dev=False):
     
     if not dashboard_process:
         sys.exit(1)
-    
-    url = f"http://localhost:{port}"
-    print(f"\nDashboard started at {url}")
+
     print("\nPress Ctrl+C to stop the dashboard\n")
     
     try:

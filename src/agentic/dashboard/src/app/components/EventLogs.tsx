@@ -17,8 +17,8 @@ import {
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { formatDate } from '@/lib/utils';
 import { AgentEventType } from '@/lib/api';
+import { formatDate } from '@/lib/utils';
 
 interface EventLogsProps {
   events: Ui.Event[];
