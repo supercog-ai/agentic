@@ -1,10 +1,9 @@
-// src/app/hooks/useChat.ts
 import { useCallback, useEffect,useRef, useState } from 'react';
 import { mutate } from 'swr';
 
 import { useRunLogs } from '@/hooks/useAgentData';
-import { agenticApi } from '@/lib/api';
-import { convertFromUTC } from '@/lib/utils';
+import { agenticApi, AgentEventType } from '@/lib/api';
+import { convertFromUTC, isUserTurn } from '@/lib/utils';
 
 /**
  * Custom hook for handling agent prompt submission and event streaming
@@ -17,8 +16,8 @@ export function useChat(agentPath: string, agentName: string, currentRunId: stri
   
   // Fetch run logs when runId changes
   // If running Deep Researcher or other custom next_turn agents uncomment this line and comment out the next one
-  // const { data: runLogs, isLoading: isLoadingRunLogs } = useRunLogs(agentPath, null);
-  const { data: runLogs, isLoading: isLoadingRunLogs } = useRunLogs(agentPath, currentRunId ?? null);
+  const { data: runLogs, isLoading: isLoadingRunLogs } = useRunLogs(agentPath, null);
+  // const { data: runLogs, isLoading: isLoadingRunLogs } = useRunLogs(agentPath, currentRunId ?? null);
   
   // Convert run logs to Ui.Event format when they change
   useEffect(() => {
@@ -39,9 +38,9 @@ export function useChat(agentPath: string, agentName: string, currentRunId: stri
         
         // If this is a chat_output and the previous event was also a chat_output from the same agent
         if (
-          event.type === 'chat_output' && 
+          event.type === AgentEventType.CHAT_OUTPUT && 
           processedEvents.length > 0 &&
-          processedEvents[processedEvents.length - 1].type === 'chat_output' &&
+          processedEvents[processedEvents.length - 1].type === AgentEventType.CHAT_OUTPUT &&
           processedEvents[processedEvents.length - 1].agentName === event.agentName
         ) {
           // Get the previous event
@@ -75,9 +74,10 @@ export function useChat(agentPath: string, agentName: string, currentRunId: stri
       }
       
       setEvents(processedEvents);
-    } else if (!runLogs || runLogs.length === 0) {
+    } else {
       // Reset events when we get empty logs
-      setEvents([]);
+      console.log("RUN LOG RESET")
+      // setEvents([]); TODO: Figure this out better
     }
   }, [runLogs]);
   
@@ -118,7 +118,7 @@ export function useChat(agentPath: string, agentName: string, currentRunId: stri
             };
             
             // Handle chat output events
-            if (event.type === 'chat_output') {
+            if (event.type === AgentEventType.CHAT_OUTPUT) {
               const content = event.payload.content || '';
               onStreamContent(content);
               
@@ -126,9 +126,9 @@ export function useChat(agentPath: string, agentName: string, currentRunId: stri
               setEvents(prev => {
                 // Find if we already have a chat_output event for this turn
                 const chatOutputIndex = prev.findLastIndex(e => 
-                  e.type === 'chat_output' && 
+                  e.type === AgentEventType.CHAT_OUTPUT && 
                   e.agentName === event.agent && 
-                  prev.indexOf(e) > prev.findLastIndex(e => e.type === 'prompt_started' && e.agentName === event.agent)
+                  prev.indexOf(e) > prev.findLastIndex(e => e.type === AgentEventType.PROMPT_STARTED && e.agentName === event.agent)
                 );
                 
                 if (chatOutputIndex >= 0) {
@@ -149,12 +149,12 @@ export function useChat(agentPath: string, agentName: string, currentRunId: stri
               });
             } 
             // Add non-chat output events to the events list
-            else if (uiEvent.type !== 'chat_output' || !isBackground) {
+            else if (uiEvent.type !== AgentEventType.CHAT_OUTPUT || !isBackground) {
               setEvents(prev => [...prev, uiEvent]);
             }
             
             // Handle turn end
-            if (event.type === 'turn_end' && event.agent === agentName) {
+            if (isUserTurn(agentName, event)) {
               cleanup();
               if (onComplete) onComplete();
               resolve();
@@ -261,6 +261,53 @@ export function useChat(agentPath: string, agentName: string, currentRunId: stri
     }
   }, [agentPath, processEventStream]);
 
+  const resumeWithInput = useCallback(async (
+    continueResult: Record<string, string>, 
+    existingRunId: string,
+    onMessageUpdate?: (_content: string) => void,
+    onComplete?: (_runId: string) => void
+  ) => {
+    if (Object.keys(continueResult).length === 0) return null;
+    
+    try {
+      setIsSending(true);
+      streamContentRef.current = '';
+      
+      // Send the prompt to the agent
+      const response = await agenticApi.resumeWithInput(agentPath, continueResult, existingRunId);
+      const requestId = response.request_id;
+      const runId = response.run_id;
+
+      // Set up event streaming
+      await processEventStream(
+        requestId, 
+        runId, 
+        (newContent) => {
+          streamContentRef.current += newContent;
+          onMessageUpdate?.(streamContentRef.current);
+        },
+        false
+      );
+
+      // Refresh runs data when complete
+      if (onComplete) {
+        onComplete(runId);
+        mutate(['agent-runs', agentPath]);
+      }
+
+      return {
+        requestId,
+        runId,
+        content: streamContentRef.current
+      };
+    } catch (error) {
+      console.error('Error resuming chat:', error);
+      return null;
+    } finally {
+      setIsSending(false);
+    }
+  }, [agentPath, processEventStream]);
+
   // Cancel any ongoing stream when component unmounts
   const cancelStream = useCallback(() => {
     cleanupStream();
@@ -273,16 +320,21 @@ export function useChat(agentPath: string, agentName: string, currentRunId: stri
   const messages = events
     .filter(event => (
       !event.isBackground &&
-      (event.type === 'prompt_started' || event.type === 'chat_output') &&
+      (event.type === AgentEventType.PROMPT_STARTED || event.type === AgentEventType.CHAT_OUTPUT || event.type === AgentEventType.WAIT_FOR_INPUT) &&
       event.agentName === agentName
     ))
     .map(event => {
-      if (event.type === 'prompt_started') {
+      if (event.type === AgentEventType.PROMPT_STARTED) {
         return {
           role: 'user' as const,
           content: typeof event.payload === 'string' 
             ? event.payload 
             : event.payload?.content || ''
+        };
+      } else if (event.type === AgentEventType.WAIT_FOR_INPUT) {
+        return {
+          role: 'agent' as const,
+          inputKeys: event.payload
         };
       } else {
         return {
@@ -302,10 +354,10 @@ export function useChat(agentPath: string, agentName: string, currentRunId: stri
     });
   }
 
-
   return {
     sendPrompt,
     sendBackgroundPrompt,
+    resumeWithInput,
     cancelStream,
     events,
     messages,

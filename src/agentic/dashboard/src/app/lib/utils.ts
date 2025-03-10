@@ -1,5 +1,6 @@
 import { type ClassValue,clsx } from 'clsx'
 import { twMerge } from 'tailwind-merge'
+import { AgentEventType } from '@/lib/api';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -24,4 +25,9 @@ export const formatDate = (date: string | Date, convertToLocale: boolean = false
   }).toLowerCase();
   
   return `${month} ${day}${suffix}, ${time}`;
+};
+
+export const isUserTurn = (agentName: string, event: Api.AgentEvent): boolean => {
+  const isTerminationEvent = event.type === AgentEventType.TURN_END || event.type === AgentEventType.TURN_CANCELLED || event.type === AgentEventType.WAIT_FOR_INPUT;
+  return isTerminationEvent && agentName === event.agent;
 };

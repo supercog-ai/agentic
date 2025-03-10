@@ -1,6 +1,41 @@
 declare namespace Api {
+  type AddChild = 'add_child';
+  type ChatOutput = 'chat_output';
+  type CompletionEnd = 'completion_end';
+  type CompletionStart = 'completion_start';
+  type Output = 'output';
+  type Prompt = 'prompt';
+  type PromptStarted = 'prompt_started';
+  type ResetHistory = 'reset_history';
+  type ResumeWithInput = 'resume_with_input';
+  type SetState = 'set_state';
+  type ToolCall = 'tool_call';
+  type ToolError = 'tool_error';
+  type ToolResult = 'tool_result';
+  type TurnCancelled = 'turn_cancelled';
+  type TurnEnd = 'turn_end';
+  type WaitForInput = 'wait_for_input';
+
+  type AgentEventType = 
+    | AddChild
+    | ChatOutput
+    | CompletionEnd
+    | CompletionStart
+    | Output
+    | Prompt
+    | PromptStarted
+    | ResetHistory
+    | ResumeWithInput
+    | SetState
+    | ToolCall
+    | ToolError
+    | ToolResult
+    | TurnCancelled
+    | TurnEnd
+    | WaitForInput;
+    
   interface AgentEvent {
-    type: string;
+    type: AgentEventType;
     payload: any;
     agent: string;
     depth: number;
@@ -46,7 +81,7 @@ declare namespace Api {
     created_at: string;
     event_name: string;
     event: {
-      type: string;
+      type: AgentEventType;
       payload: any;
       content?: string;
     };
@@ -56,11 +91,12 @@ declare namespace Api {
 declare namespace Ui {
   interface Message {
     role: 'user' | 'agent';
-    content: string;
+    content?: string;
+    inputKeys?: Record<string, string>;
   }
 
   interface Event {
-    type: string;
+    type: AgentEventType;
     payload: any;
     agentName: string;
     timestamp: Date;

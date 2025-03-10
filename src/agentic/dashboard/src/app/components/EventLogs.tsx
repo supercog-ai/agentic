@@ -18,7 +18,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { formatDate } from '@/lib/utils';
-
+import { AgentEventType } from '@/lib/api';
 
 interface EventLogsProps {
   events: Ui.Event[];
@@ -26,20 +26,24 @@ interface EventLogsProps {
   className?: string;
 }
 
-const EVENT_TYPES = {
-  PROMPT: ['prompt_started'],
-  LLM: ['completion_start', 'completion_end', 'chat_output'],
-  TOOLS: ['tool_call', 'tool_result', 'tool_error'],
-  AGENT: ['turn_end', 'wait_for_input', 'resume_with_input'],
-  OTHER: [] as string []
+const EVENT_TYPES: Record<string, AgentEventType[]> = {
+  INPUT: [AgentEventType.PROMPT, AgentEventType.PROMPT_STARTED, AgentEventType.RESUME_WITH_INPUT],
+  COMPLETION: [AgentEventType.COMPLETION_START, AgentEventType.COMPLETION_END],
+  OUTPUT: [AgentEventType.CHAT_OUTPUT, AgentEventType.OUTPUT],
+  TOOLS: [AgentEventType.TOOL_CALL, AgentEventType.TOOL_RESULT, AgentEventType.TOOL_ERROR],
+  TURN_COMPLETION: [AgentEventType.WAIT_FOR_INPUT, AgentEventType.TURN_END, AgentEventType.TURN_CANCELLED],
+  STATE_MANAGEMENT: [AgentEventType.SET_STATE, AgentEventType.ADD_CHILD, AgentEventType.RESET_HISTORY],
+  OTHER: [] as AgentEventType[]
 };
 
 const EventLogs: React.FC<EventLogsProps> = ({ events, onClose, className = '' }) => {
-  const [enabledEventTypes, setEnabledEventTypes] = useState<Record<string, boolean>>({
-    PROMPT: true,
-    LLM: true,
+  const [enabledEventTypes, setEnabledEventTypes] = useState<Record<keyof typeof EVENT_TYPES, boolean>>({
+    INPUT: true,
+    COMPLETION: true,
+    OUTPUT: true,
     TOOLS: true,
-    AGENT: true,
+    TURN_COMPLETION: true,
+    STATE_MANAGEMENT: true,
     OTHER: true
   });
   const logsEndRef = useRef<HTMLDivElement>(null);
@@ -63,9 +67,9 @@ const EventLogs: React.FC<EventLogsProps> = ({ events, onClose, className = '' }
       
       // If this is a chat_output and the previous event was also a chat_output
       if (
-        event.type === 'chat_output' && 
+        event.type === AgentEventType.CHAT_OUTPUT && 
         i > 0 && 
-        events[i-1].type === 'chat_output' &&
+        events[i-1].type === AgentEventType.CHAT_OUTPUT &&
         event.agentName === events[i-1].agentName
       ) {
         // Combine with the previous chat_output
@@ -85,7 +89,7 @@ const EventLogs: React.FC<EventLogsProps> = ({ events, onClose, className = '' }
 
   if (!processedEvents || processedEvents.length === 0) return null;
   
-  const getEventGroup = (type: string): string => {
+  const getEventGroup = (type: AgentEventType): keyof typeof EVENT_TYPES => {
     for (const [group, types] of Object.entries(EVENT_TYPES)) {
       if (types.includes(type)) {
         return group;
@@ -94,19 +98,19 @@ const EventLogs: React.FC<EventLogsProps> = ({ events, onClose, className = '' }
     return 'OTHER';
   };
 
-  const isEventTypeEnabled = (type: string): boolean => {
+  const isEventTypeEnabled = (type: AgentEventType): boolean => {
     const group = getEventGroup(type);
     return enabledEventTypes[group];
   };
   
   const formatPayload = (event: Ui.Event) => {
-    if (event.type === 'chat_output' && typeof event.payload?.content === 'string') {
+    if (event.type === AgentEventType.CHAT_OUTPUT && typeof event.payload?.content === 'string') {
       return (
         <MarkdownRenderer content={event.payload.content} />
       );
     }
     
-    if (event.type === 'prompt_started') {
+    if (event.type === AgentEventType.PROMPT_STARTED) {
       const content = typeof event.payload === 'string' 
         ? event.payload 
         : event.payload?.content || '';
@@ -122,7 +126,7 @@ const EventLogs: React.FC<EventLogsProps> = ({ events, onClose, className = '' }
     }
     
     // Special handling for tool_result with fixed horizontal scrolling
-    if (event.type === 'tool_result') {
+    if (event.type === AgentEventType.TOOL_RESULT) {
       return (
         <pre className="text-xs bg-muted/30 p-2 rounded whitespace-pre-wrap" style={{wordBreak: 'break-word'}}>
           {typeof event.payload === 'string' 
@@ -139,24 +143,34 @@ const EventLogs: React.FC<EventLogsProps> = ({ events, onClose, className = '' }
     );
   };
 
-  const getEventColor = (type: string) => {
+  const getEventColor = (type: AgentEventType) => {
     switch (type) {
-      case 'prompt_started':
-        return 'text-blue-500';
-      case 'tool_call':
-        return 'text-amber-500';
-      case 'tool_result':
+      case AgentEventType.PROMPT_STARTED:
+      case AgentEventType.PROMPT:
+      case AgentEventType.RESUME_WITH_INPUT:
         return 'text-green-500';
-      case 'tool_error':
+      case AgentEventType.TOOL_CALL:
+        return 'text-amber-500';
+      case AgentEventType.TOOL_RESULT:
+        return 'text-blue-500';
+      case AgentEventType.TOOL_ERROR:
         return 'text-red-500';
-      case 'completion_start':
+      case AgentEventType.COMPLETION_START:
         return 'text-purple-500';
-      case 'completion_end':
+      case AgentEventType.COMPLETION_END:
         return 'text-purple-600';
-      case 'chat_output':
+      case AgentEventType.CHAT_OUTPUT:
+      case AgentEventType.OUTPUT:
         return 'text-indigo-400';
-      case 'turn_end':
+      case AgentEventType.TURN_END:
+      case AgentEventType.TURN_CANCELLED:
         return 'text-teal-500';
+      case AgentEventType.WAIT_FOR_INPUT:
+        return 'text-orange-500';
+      case AgentEventType.ADD_CHILD:
+      case AgentEventType.RESET_HISTORY:
+      case AgentEventType.SET_STATE:
+        return 'text-yellow-500';
       default:
         return 'text-foreground';
     }

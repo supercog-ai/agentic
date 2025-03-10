@@ -1,3 +1,24 @@
+import { isUserTurn } from '@/lib/utils';
+
+export enum AgentEventType {
+  ADD_CHILD = 'add_child',
+  CHAT_OUTPUT = 'chat_output',
+  COMPLETION_END = 'completion_end',
+  COMPLETION_START = 'completion_start',
+  OUTPUT = 'output',
+  PROMPT = 'prompt',
+  PROMPT_STARTED = 'prompt_started',
+  RESET_HISTORY = 'reset_history',
+  RESUME_WITH_INPUT = 'resume_with_input',
+  SET_STATE = 'set_state',
+  TOOL_CALL = 'tool_call',
+  TOOL_ERROR = 'tool_error',
+  TOOL_RESULT = 'tool_result',
+  TURN_CANCELLED = 'turn_cancelled',
+  TURN_END = 'turn_end',
+  WAIT_FOR_INPUT = 'wait_for_input'
+}
+
 export const agenticApi = {
   // Send a prompt to an agent, optionally continuing from a run
   sendPrompt: async (agentPath: string, prompt: string, runId?: string): Promise<Api.SendPromptResponse> => {
@@ -8,6 +29,26 @@ export const agenticApi = {
       },
       body: JSON.stringify({
         prompt,
+        //debug: "off",
+        run_id: runId
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return response.json();
+  },
+
+  resumeWithInput: async (agentPath: string, continueResult: Record<string, string>, runId?: string): Promise<Api.SendPromptResponse> => {
+    const response = await fetch(`/api${agentPath}/resume_with_input`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        continue_result: continueResult,
         //debug: "off",
         run_id: runId
       }),
@@ -31,10 +72,10 @@ export const agenticApi = {
 
     eventSource.onmessage = (event) => {
       try {
-        const data = JSON.parse(event.data);
+        const data = JSON.parse(event.data) as Api.AgentEvent;
         onEvent(data);
         // Close the event source when the agent's turn ends
-        if (data.type === 'turn_end' && agentName === data.agent) {
+        if (isUserTurn(agentName, data)) {
           eventSource.close();
         }
       } catch (error) {

@@ -1,7 +1,8 @@
-import { Bot, CircleDashed,History, ListTodo, PlayCircle, Send, User, MessageSquarePlus} from 'lucide-react';
+import { Bot, CircleDashed,History, ListTodo, PlayCircle, Send, User, MessageSquarePlus } from 'lucide-react';
 import React, { useEffect, useRef,useState } from 'react';
 
 import BackgroundTasks from '@/components/BackgroundTasks';
+import ChatInputForm from '@/components/ChatInputForm';
 import EventLogs from '@/components/EventLogs';
 import MarkdownRenderer from '@/components/MarkdownRenderer';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -19,8 +20,8 @@ interface AgentChatProps {
 }
 
 const AgentChat: React.FC<AgentChatProps> = ({ agentPath, agentInfo, currentRunId, onRunComplete }) => {
-  const defaultPurpose = agentInfo.purpose ? [
-    { role: 'agent' as const, content: agentInfo.purpose }
+  const defaultPurpose: Ui.Message[] = agentInfo.purpose ? [
+    { role: 'agent' as const, content: agentInfo.purpose } 
   ] : [];
   
   const [input, setInput] = useState<string>('');
@@ -35,6 +36,7 @@ const AgentChat: React.FC<AgentChatProps> = ({ agentPath, agentInfo, currentRunI
   const { 
     sendPrompt,
     sendBackgroundPrompt,
+    resumeWithInput,
     events,
     messages,
     isSending,
@@ -230,13 +232,22 @@ const handleSubmit = async (e: React.FormEvent, isBackground: boolean = false, c
                     ? 'bg-primary text-primary-foreground'
                     : 'bg-muted'
                 }`}>
-                  {msg.role === 'user' ? (
+                  {msg.role === 'user' ? ( // If user message, show the content as normal
                     <p className="whitespace-pre-wrap">{msg.content}</p>
                   ) : (
-                    !msg.content && idx === displayMessages.length - 1 ? (
-                      <CircleDashed className="h-4 w-4 animate-spin flex-shrink-0" />
+                    !msg.content && msg.inputKeys ? ( // If inputKeys, show the inputKeys as input
+                      <ChatInputForm 
+                        inputKeys={msg.inputKeys}
+                        runId={currentRunId || ''}
+                        resumeWithInput={resumeWithInput}
+                        onRunComplete={onRunComplete}
+                      />
                     ) : (
-                      <MarkdownRenderer content={msg.content} />
+                      !msg.content && idx === displayMessages.length - 1 ? ( // If no inputKeys and last message is blank, show loading
+                        <CircleDashed className="h-4 w-4 animate-spin flex-shrink-0" />
+                      ) : ( // Default show the content as markdown
+                        <MarkdownRenderer content={msg.content} />
+                      )
                     )
                   )}
                 </div>
