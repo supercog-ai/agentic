@@ -1037,7 +1037,8 @@ class BaseAgentProxy:
         self.model = model or "gpt-4o-mini"
         self.cancelled = False
         self.enable_run_logs = enable_run_logs
-        
+        self.mock_settings = mock_settings
+
         # Setup template path
         caller_frame = inspect.currentframe()
         if caller_frame:
@@ -1086,9 +1087,6 @@ class BaseAgentProxy:
         # Ensure API key is set
         self.ensure_api_key_for_model(self.model)
         
-        # Handle mock settings - subclasses should implement this
-        self._handle_mock_settings(mock_settings)
-
     def _handle_mock_settings(self, mock_settings):
         """Handle mock settings - to be implemented by subclasses"""
         pass
@@ -1275,12 +1273,18 @@ class BaseAgentProxy:
 
     def _get_agent_for_request(self, request_id: str):
         """Get the agent instance for a request, creating it if needed"""
-        if request_id not in self.agent_instances:
+        # The logic here is to keep reusing the default '_agent' value created when the Proxy is
+        # first constructed. We only go to create a new instance if a request is started before
+        # the prior one finishes.
+        if len(self.agent_instances) == 0:
+            self.agent_instances[request_id] = self._agent or self._create_agent_instance(request_id)
+        else:
             self.agent_instances[request_id] = self._create_agent_instance(request_id)
         return self.agent_instances[request_id]
 
     def _cleanup_agent_instance(self, request_id: str):
         """Clean up an agent instance after a request is complete"""
+        # We remove the agent from our set, but the _agent default instance will stay around
         if request_id in self.agent_instances:
             del self.agent_instances[request_id]
 
@@ -1349,6 +1353,9 @@ class BaseAgentProxy:
             request_id = continue_result.get("request_id") or str(uuid.uuid4())
             if isinstance(request, Prompt):
                 request.request_id = request_id
+
+        # Handle mock settings - subclasses should implement this
+        self._handle_mock_settings(self.mock_settings)
 
         # Get the agent instance for this request
         agent_instance = self._get_agent_for_request(request_id)
@@ -1535,6 +1542,8 @@ class RayAgentProxy(BaseAgentProxy):
 
         if request_id is None:
             self._agent = agent
+
+        return agent
 
     def init_run_tracking(self, agent, run_id: Optional[str] = None):
         """Initialize run tracking"""
