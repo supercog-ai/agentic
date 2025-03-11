@@ -63,7 +63,7 @@ class Prompt(Event):
         request_context: dict = {},
         depth: int = 0,
         ignore_result: bool = False,
-        request_id: str = None,
+        request_id: str|None = None,
     ):
         data = {
             "agent": agent,
@@ -300,8 +300,11 @@ class WaitForInput(Event):
 
 # Sent by the caller with human input
 class ResumeWithInput(Event):
-    def __init__(self, agent, request_keys: dict):
+    request_id: str|None = None
+
+    def __init__(self, agent, request_keys: dict, request_id: str|None = None):
         super().__init__(agent=agent, type="resume_with_input", payload=request_keys)
+        self.request_id = request_id
 
     @property
     def request_keys(self):

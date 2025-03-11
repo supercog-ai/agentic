@@ -10,6 +10,8 @@ from agentic.events import FinishCompletion
 # Database setup and management
 class DatabaseManager:
     def __init__(self, db_path: str = "./runtime/agent_runs.db"):
+        if db_path is None:
+            db_path = "./runtime/agent_runs.db"
         self.db_path = Path(db_path).expanduser()
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
         self.engine = create_engine(f"sqlite:///{self.db_path}", echo=False)
