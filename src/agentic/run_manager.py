@@ -123,4 +123,4 @@ def init_run_tracking(
 
 def disable_run_tracking(agent) -> None:
     """Helper function to disable run tracking for an agent"""
-    agent.set_callback('handle_event', None)
+    raise NotImplemented("Can't disable run tracking from outside the proxy")

@@ -365,7 +365,6 @@ class ActorBaseAgent:
     def handlePromptOrResume(self, actor_message: Prompt | ResumeWithInput):
         request_id = getattr(actor_message, 'request_id', None)
         if not request_id:
-            print("Missing request id from actor_message: ", actor_message, " with type: ", type(actor_message))
             raise ValueError("Request ID is required")
                     
         for event in self._handlePromptOrResume(actor_message, request_id):
@@ -374,8 +373,6 @@ class ActorBaseAgent:
             yield event
 
     def _handlePromptOrResume(self, actor_message: Prompt | ResumeWithInput, request_id: str):
-        #print(f"HandlePrompt {actor_message} for {self.name}, {hash(self)} with state: {state}")
-        
         if isinstance(actor_message, Prompt):
             self.run_context = (
                 RunContext(
@@ -400,7 +397,6 @@ class ActorBaseAgent:
 
         elif isinstance(actor_message, ResumeWithInput):
             if not self.paused_context:
-                #print(f"Got a ResumeWithInput for {self.name}, {hash(self)}, request_id: {request_id}, but no paused_context, state: {state}")
                 self.run_context.debug(
                     "Ignoring ResumeWithInput event, parent not paused: ",
                     actor_message,
@@ -452,7 +448,6 @@ class ActorBaseAgent:
                         tool_partial_response=partial_response,
                         tool_function=partial_response.last_tool_result.tool_function
                     )
-                    #print(f"Sending WaitForInput event from {self.name}, {hash(self)}, request_id: {request_id}, we set paused_context, state: {state}")
                     yield WaitForInput(self.name, partial_response.last_tool_result.request_keys)
                     return
                 elif FinishAgentResult.matches_sentinel(partial_response.messages[-1]["content"]):
@@ -1067,6 +1062,7 @@ class BaseAgentProxy:
         self.model = model or "gpt-4o-mini"
         self.prompts = prompts or {}
         self.cancelled = False
+        self.enable_run_logs = enable_run_logs
         
         # Setup template path
         caller_frame = inspect.currentframe()
@@ -1086,7 +1082,7 @@ class BaseAgentProxy:
         self.memories = memories
         self.debug = debug
         self._handle_turn_start = handle_turn_start
-        self.request_queues = {}
+        self.request_queues: dict[str,Queue] = {}
         self.result_model = result_model
         self.queue_done_sentinel = "QUEUE_DONE"
         
@@ -1404,7 +1400,8 @@ class BaseAgentProxy:
         # Get the agent instance for this request
         agent_instance = self._get_agent_for_request(request_id)
         if not self.run_id:
-            self.init_run_tracking(agent_instance)
+            if self.enable_run_logs:
+                self.init_run_tracking(agent_instance)
 
         # Prepare the prompt or resume input
         if not continue_result:
