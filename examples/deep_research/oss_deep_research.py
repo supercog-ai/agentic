@@ -54,7 +54,7 @@ class DeepResearchAgent(RayFacadeAgent):
 
         ## CONFIGURATION
         self.num_queries = 4
-        self.playwright_fallback: bool = False
+        self.playwright_fallback: bool = playwright_fallback
         self.sections_limit: Optional[int] = None  # For testing, limit the number of sections generated
         
         if self.playwright_fallback:
