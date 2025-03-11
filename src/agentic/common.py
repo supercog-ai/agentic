@@ -1,8 +1,7 @@
 from .runner import RayAgentRunner
 from .events import SetState, AddChild, PauseForInputResult, WaitForInput
 from .actor_agents import (
-    ActorBaseAgent,
-    RayFacadeAgent,
+    AgentProxyClass,
     handoff,
 )
 from .swarm.types import RunContext
@@ -16,7 +15,7 @@ from typing import Any, Callable, TypeVar, ParamSpec, Dict, List
 from pydantic import BaseModel, Field
 
 # Common aliases
-Agent = RayFacadeAgent
+Agent = AgentProxyClass
 AgentRunner = RayAgentRunner
 
 def make_prompt(template: str, run_context: RunContext, **kwargs) -> str:

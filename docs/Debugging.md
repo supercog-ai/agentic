@@ -14,6 +14,11 @@ Note that you can also combine tags like 'tools,llm':
 Debug level set to: tools,llm
 ```
 
+You can also set the debug level via the `AGENTIC_DEBUG` env var:
+
+    export AGENTIC_DEBUG=tools
+
+    
 **Switching models**
 
 Use `.model <model>` to temporarily change the active model of the current agent:

@@ -1,11 +1,14 @@
 import asyncio
 import time
 from pydantic import BaseModel, ConfigDict
-from typing import Any, Optional, Generator, Literal, Type
+import typing
+from typing import Any, Optional, Generator, Literal, Type, Union
 from dataclasses import dataclass
 from pathlib import Path
 from queue import Queue
 import threading
+from copy import deepcopy
+import uuid
 
 from starlette.requests import Request
 
@@ -16,11 +19,12 @@ from pathlib import Path
 import os
 import yaml
 from jinja2 import Template, DebugUndefined
-import ray
+import os
+import threading
+
 import traceback
 from datetime import timedelta
 from .swarm.types import agent_secret_key, tool_name
-from ray import serve
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import yaml
@@ -105,6 +109,18 @@ class AgentPauseContext:
 
 
 litellm.drop_params = True
+
+# Pick the agent runtime
+if os.environ.get("AGENTIC_USE_RAY"):
+    # Use the actual Ray implementation
+    print("Using Ray engine for running agents")
+    import ray
+    from ray import serve
+
+else:
+    print("Using simple Thread engine for running agents")
+    from .ray_mock import ray, serve
+
 @ray.remote
 class ActorBaseAgent:
     name: str = "Agent"
@@ -128,8 +144,6 @@ class ActorBaseAgent:
     _prompter = None
     _callbacks: dict[CallbackType, CallbackFunc] = {}
     result_model: Type[BaseModel]|None = None,
-
-    request_states: dict[str, dict[str, Any]] = {}
 
     model_config = ConfigDict(
         arbitrary_types_allowed=True
@@ -333,7 +347,6 @@ class ActorBaseAgent:
 
             events.append(ToolResult(self.name, name, result.value))
 
-            tool_name_key = ""
             partial_response.messages.append(
                 {
                     "role": "tool",
@@ -349,44 +362,22 @@ class ActorBaseAgent:
 
         return partial_response, events
 
-    def _init_request_state(self, request_id: str) -> dict[str, Any]:
-        """Initialize state for a new request"""
-        state = {
-            'paused_context': None,
-            'debug': DebugLevel(False),
-            'depth': 0,
-            'run_context': None,
-            'init_history_len': len(self.history)  # Track where this request started
-        }
-        self.request_states[request_id] = state
-        return state
-
-    def _get_request_state(self, request_id: str) -> dict[str, Any]:
-        """Get state for a request, initializing if needed"""
-        return self.request_states.get(request_id) or self._init_request_state(request_id)
-
     def handlePromptOrResume(self, actor_message: Prompt | ResumeWithInput):
         request_id = getattr(actor_message, 'request_id', None)
         if not request_id:
+            print("Missing request id from actor_message: ", actor_message, " with type: ", type(actor_message))
             raise ValueError("Request ID is required")
                     
-        try:
-            for event in self._handlePromptOrResume(actor_message, request_id):
-                if self._callbacks.get('handle_event'):
-                    state = self._get_request_state(request_id)
-                    self._callbacks['handle_event'](event, state['run_context'])
-                yield event
-        finally:
-            # Only clean up transient state
-            if request_id in self.request_states:
-                del self.request_states[request_id]
+        for event in self._handlePromptOrResume(actor_message, request_id):
+            if self._callbacks.get('handle_event'):
+                self._callbacks['handle_event'](event, self.run_context)
+            yield event
 
     def _handlePromptOrResume(self, actor_message: Prompt | ResumeWithInput, request_id: str):
-        state = self._get_request_state(request_id)
+        #print(f"HandlePrompt {actor_message} for {self.name}, {hash(self)} with state: {state}")
         
         if isinstance(actor_message, Prompt):
-            # Middleware to modify the input prompt (or change agent context)
-            state['run_context'] = (
+            self.run_context = (
                 RunContext(
                     agent_name=self.name,
                     agent=self,
@@ -398,27 +389,28 @@ class ActorBaseAgent:
                 else self.run_context.update(actor_message.request_context)
             )
             
+            # Middleware to modify the input prompt (or change agent context)
             if self._callbacks.get('handle_turn_start'):
-                self._callbacks['handle_turn_start'](actor_message, state['run_context'])
+                self._callbacks['handle_turn_start'](actor_message, self.run_context)
                 
-            state['debug'] = actor_message.debug
             self.debug = actor_message.debug
-            state['depth'] = actor_message.depth
+            self.depth = actor_message.depth
             self.history.append({"role": "user", "content": actor_message.payload})
-            yield PromptStarted(self.name, actor_message.payload, state['depth'])
+            yield PromptStarted(self.name, actor_message.payload, self.depth)
 
         elif isinstance(actor_message, ResumeWithInput):
-            if not state['paused_context']:
-                state['run_context'].debug(
+            if not self.paused_context:
+                #print(f"Got a ResumeWithInput for {self.name}, {hash(self)}, request_id: {request_id}, but no paused_context, state: {state}")
+                self.run_context.debug(
                     "Ignoring ResumeWithInput event, parent not paused: ",
                     actor_message,
                 )
                 return
                 
-            init_len = state['paused_context'].orig_history_length
-            state['run_context'].update(actor_message.request_keys.copy())
+            init_len = self.paused_context.orig_history_length
+            self.run_context.update(actor_message.request_keys.copy())
             
-            tool_function = state['paused_context'].tool_function
+            tool_function = self.paused_context.tool_function
             if tool_function is None:
                 raise RuntimeError("Tool function not found on AgentResume event")
                 
@@ -428,15 +420,15 @@ class ActorBaseAgent:
                     function=tool_function,
                     type="function")],
                 self.functions,
-                state['run_context']
+                self.run_context
             )
             yield from events
             self.history.extend(partial_response.messages)
 
         # Main conversation loop
-        init_len = state['init_history_len']
+        init_len = len(self.history)
         while len(self.history) - init_len < 10:
-            for event in self._yield_completion_steps(state, request_id):
+            for event in self._yield_completion_steps(request_id):
                 yield event
 
             assert isinstance(event, FinishCompletion)
@@ -449,17 +441,18 @@ class ActorBaseAgent:
             partial_response, events = self._execute_tool_calls(
                 response.tool_calls,
                 self.functions,
-                state['run_context']
+                self.run_context
             )
             yield from events
 
             if partial_response.last_tool_result:
                 if isinstance(partial_response.last_tool_result, PauseForInputResult):
-                    state['paused_context'] = AgentPauseContext(
+                    self.paused_context = AgentPauseContext(
                         orig_history_length=init_len,
                         tool_partial_response=partial_response,
                         tool_function=partial_response.last_tool_result.tool_function
                     )
+                    #print(f"Sending WaitForInput event from {self.name}, {hash(self)}, request_id: {request_id}, we set paused_context, state: {state}")
                     yield WaitForInput(self.name, partial_response.last_tool_result.request_keys)
                     return
                 elif FinishAgentResult.matches_sentinel(partial_response.messages[-1]["content"]):
@@ -473,14 +466,15 @@ class ActorBaseAgent:
         # You can see it in TurnEnd.result which just returns the "content" part of the last message.
         yield TurnEnd(
             self.name,
-            self.history[init_len:],
-            state['run_context'],
-            state['depth']
+            # result_model gets applied when TurnEnd is processed. We dont want to alter the the text response in history
+            deepcopy(self.history[init_len:]),
+            self.run_context,
+            self.depth
         )
-        state['paused_context'] = None
+        self.paused_context = None
 
-    def _yield_completion_steps(self, state: dict[str, Any], request_id: str):
-        yield StartCompletion(self.name, state['depth'])
+    def _yield_completion_steps(self, request_id: str):
+        yield StartCompletion(self.name, self.depth)
 
         self._callback_params = {}
 
@@ -496,7 +490,7 @@ class ActorBaseAgent:
         try:
             completion = self._get_llm_completion(
                 history=self.history,
-                run_context=state['run_context'],
+                run_context=self.run_context,
                 model_override=None,
                 stream=True,
             )
@@ -508,7 +502,7 @@ class ActorBaseAgent:
                 0,
                 0,
                 timedelta(0),
-                state['depth']
+                self.depth
             )
             return
 
@@ -519,7 +513,7 @@ class ActorBaseAgent:
             if delta["role"] == "assistant":
                 delta["sender"] = self.name
             if not delta.get("tool_calls") and delta.get("content"):
-                yield ChatOutput(self.name, delta, state['depth'])
+                yield ChatOutput(self.name, delta, self.depth)
             delta.pop("role", None)
             delta.pop("sender", None)
 
@@ -553,7 +547,7 @@ class ActorBaseAgent:
             self._callback_params.get("input_tokens"),
             self._callback_params.get("output_tokens"),
             self._callback_params.get("elapsed"),
-            state['depth']
+            self.depth
         )
 
     def call_child(
@@ -563,14 +557,26 @@ class ActorBaseAgent:
         message,
     ):
         depth = self.depth if handoff else self.depth + 1
-        for remote_event in child_ref.handlePromptOrResume.remote(
-            Prompt(
-                self.name,
-                message,
-                depth=depth,
-                debug=self.debug,
+        if hasattr(child_ref.handlePromptOrResume, 'remote'):
+            remote_gen = child_ref.handlePromptOrResume.remote(
+                Prompt(
+                    self.name,
+                    message,
+                    depth=depth,
+                    debug=self.debug,
+                )
             )
-        ):
+        else:
+            remote_gen = child_ref.handlePromptOrResume(
+                Prompt(
+                    self.name,
+                    message,
+                    depth=depth,
+                    debug=self.debug,
+                )
+            )
+        
+        for remote_event in remote_gen:
             event = ray.get(remote_event)
             yield event
 
@@ -813,14 +819,16 @@ class ResumeWithInputRequest(BaseModel):
 
 from sse_starlette.sse import EventSourceResponse
 
+ActorHandleType = Union["ray.actor.ActorHandle", object]
+
 @serve.deployment
 @serve.ingress(app)
 class DynamicFastAPIHandler:
-    def __init__(self, actor_ref: ray.actor.ActorHandle, agent_facade: "RayFacadeAgent"):
+    def __init__(self, actor_ref: ActorHandleType, agent_proxy: "BaseAgentProxy"):
         self._agent = actor_ref
-        self.agent_facade = agent_facade
+        self.agent_proxy = agent_proxy
         self.debug = DebugLevel(os.environ.get("AGENTIC_DEBUG") or DebugLevel.OFF)
-        self.name = self.agent_facade.name
+        self.name = self.agent_proxy.name
         self.prompt: ProcessRequest = None
 
     @app.post("/process")
@@ -828,8 +836,8 @@ class DynamicFastAPIHandler:
         """Start a new request via the agent facade"""
         if prompt.debug and self.debug.is_off():
             self.debug = DebugLevel(prompt.debug)
-
-        return self.agent_facade.start_request(
+        
+        return self.agent_proxy.start_request(
             request=prompt.prompt,
             run_id=prompt.run_id,
             debug=self.debug
@@ -854,7 +862,7 @@ class DynamicFastAPIHandler:
         if not stream:
             # Non-streaming response - collect all events
             results = []
-            for event in self.agent_facade.get_events(request_id):
+            for event in self.agent_proxy.get_events(request_id):
                 if self._should_print(event):
                     print(str(event), end="")
                 
@@ -870,7 +878,7 @@ class DynamicFastAPIHandler:
         else:
             # Streaming response
             async def event_generator():
-                for event in self.agent_facade.get_events(request_id):
+                for event in self.agent_proxy.get_events(request_id):
                     if self._should_print(event):
                         print(str(event), end="")
 
@@ -911,12 +919,12 @@ class DynamicFastAPIHandler:
     
     @app.get('/runs')
     async def get_runs(self) -> list[dict]:
-        runs = self.agent_facade.get_runs()
+        runs = self.agent_proxy.get_runs()
         return [run.model_dump() for run in runs]
     
     @app.get('/runs/{run_id}/logs')
     async def get_run_logs(self, run_id=str) -> list[dict]:
-        run_logs = self.agent_facade.get_run_logs(run_id)
+        run_logs = self.agent_proxy.get_run_logs(run_id)
         return [run_log.model_dump() for run_log in run_logs]
     
     @app.post("/webhook/{run_id}/{callback_name}")
@@ -974,7 +982,7 @@ class DynamicFastAPIHandler:
             )
         else:
             remote_gen = self._agent.handlePromptOrResume.remote(
-                ResumeWithInput(self.name, continue_result),
+                ResumeWithInput(self.name, continue_result, request_id=request_id),
             )
         for remote_next in remote_gen:
             event = ray.get(remote_next)
@@ -983,9 +991,9 @@ class DynamicFastAPIHandler:
     @app.get("/describe")
     async def describe(self) -> AgentDescriptor:
         return AgentDescriptor(
-            name=self.agent_facade.name,
-            purpose=self.agent_facade.welcome,
-            tools=self.agent_facade.list_tools(),
+            name=self.agent_proxy.name,
+            purpose=self.agent_proxy.welcome,
+            tools=self.agent_proxy.list_tools(),
             endpoints=["/process", "/getevents", "/describe"],
             operations=["chat"],
             prompts=self.agent_facade.prompts,
@@ -1020,17 +1028,21 @@ base_serve_app = None
 depthLocal = threading.local()
 depthLocal.depth = -1
 
-# The abstract agent interface
+# The common agent proxy interface
 # The core of the interface is 'start_request' and 'get_events'. Use these in
 # pairs to request operation runs from the agent.
 # It is deprecated to call 'next_turn' directly now.
 #
 # Subclasses can override next_turn to do their own orchestration logic.
-class RayFacadeAgent:
-    """The facade agent is the object directly instantiated in code. It holds a reference to the remote
-    Ray agent object and proxies calls to it. The intention is that we should be able to build
-    other 'agent' implementations that don't require Ray, for example are based on threads in a single process.
+
+class BaseAgentProxy:
+    """Base agent proxy class with common functionality. Manages multiple parallel
+    requests, delegating each request to an instance of the agent class.
+    The proxy keeps a thread queue to dispatch agent events to the caller.
+    Subclasses will handle specific implementation details for different 
+    execution environments (Ray, local, etc.)
     """
+    _agent: Any
 
     def __init__(
         self,
@@ -1047,79 +1059,65 @@ class RayFacadeAgent:
         handle_turn_start: Callable[[Prompt, RunContext], None] = None,
         result_model: Type[BaseModel]|None = None,
         debug: DebugLevel = DebugLevel(os.environ.get("AGENTIC_DEBUG") or ""),
-        mock_settings: dict = None,  # Add mock_settings parameter
+        mock_settings: dict = None,
         prompts: Optional[dict[str, str]] = None,
     ):
         self.name = name
         self.welcome = welcome or f"Hello, I am {name}."
         self.model = model or "gpt-4o-mini"
-        self.prompts = prompts or {}  # Store the prompts dictionary
+        self.prompts = prompts or {}
+        self.cancelled = False
+        
+        # Setup template path
         caller_frame = inspect.currentframe()
-        self.cancelled: bool = False
         if caller_frame:
             caller_file = inspect.getframeinfo(caller_frame.f_back).filename
             directory = os.path.dirname(caller_file)
-            # Get just the filename without extension
             base = os.path.splitext(os.path.basename(caller_file))[0]
-
-            # Create new path with .prompts.yaml extension
             template_path = os.path.join(directory, f"{base}.prompts.yaml")
-
-        # Get the file where Agent() was called
         self.template_path = template_path
+        
+        # Setup tools and other properties
         self._tools = []
-        if tools: #ack! If we take the default list shit goes bad!
+        if tools:
             self._tools.extend(tools)
-
+            
         self.max_tokens = max_tokens
         self.memories = memories
         self.debug = debug
         self._handle_turn_start = handle_turn_start
-        self.request_queues: dict[str, Queue] = {}
+        self.request_queues = {}
         self.result_model = result_model
+        self.queue_done_sentinel = "QUEUE_DONE"
+        
+        # Track active agent instances by request ID
+        self.agent_instances = {}
+
+        # Process instructions
+        if instructions and instructions.strip():
+            template = Template(instructions, undefined=DebugUndefined)
+            self.instructions = template.render(**self.prompt_variables)
+            # Allow one level of nested references
+            self.instructions = Template(self.instructions, undefined=DebugUndefined).render(**self.prompt_variables)
+            if self.instructions.strip() == "":
+                raise ValueError(
+                    f"Instructions are required for {self.name}. Maybe interpolation failed from: {instructions}"
+                )
+        else:
+            self.instructions = "You are a helpful assistant."
 
         # Check we have all the secrets
         self._ensure_tool_secrets()
 
-        # Initialize the base actor
-        self._init_base_actor(instructions or "")
-
-        # Initialize adding runs to the agent
-        self.db_path = None
-        if enable_run_logs:
-            self.init_run_tracking(db_path)
-        else:
-            self.run_id = None
+        # Initialize run tracking
+        self.db_path = db_path
+        self.run_id = None  # This will be set per request
 
         # Ensure API key is set
         self.ensure_api_key_for_model(self.model)
-        _AGENT_REGISTRY.append(self)
-
-        # Handle mock settings if provided
-        if mock_settings and self.model and "mock" in self.model:
-            from agentic.models import mock_provider
-            
-            pattern = mock_settings.get("pattern", "")
-            response = mock_settings.get("response", "This is a mock response.")
-            tools_dict = mock_settings.get("tools", {})
-            
-            # Set in the local mock_provider directly
-            mock_provider.set_response(pattern, response)
-            mock_provider.clear_tools()
-            for tool_name, tool_func in tools_dict.items():
-                mock_provider.register_tool(tool_name, tool_func)
-            
-            # Pass to the remote agent (if we have an actor reference)
-            if hasattr(self, '_agent'):
-                try:
-                    ray.get(self._agent.set_mock_params.remote(pattern, response, tools_dict))
-                except Exception as e:
-                    print(f"Warning: Failed to set mock params on remote agent: {e}")
-
-    @property
-    def prompt(self) -> dict[str, str]:
-        """Dictionary of prompt templates that can be used for pre-defined interactions."""
-        return self.prompts
+        
+        # Handle mock settings - subclasses should implement this
+        self._handle_mock_settings(mock_settings)
 
     def _check_for_prompt_match(self, user_input: str) -> str:
         """Check if user input matches a prompt key and return the corresponding content if it does."""
@@ -1139,43 +1137,379 @@ class RayFacadeAgent:
         # No match found, return original input
         return user_input
 
-    def _init_base_actor(self, instructions: str):
-        # Process instructions if provided
-        if instructions.strip():
-            template = Template(instructions, undefined=DebugUndefined)
-            self.instructions = template.render(**self.prompt_variables)
-            # Allow one level of nested references
-            self.instructions = Template(self.instructions, undefined=DebugUndefined).render(**self.prompt_variables)
-            if self.instructions.strip() == "":
-                raise ValueError(
-                    f"Instructions are required for {self.name}. Maybe interpolation failed from: {instructions}"
-                )
+    def _handle_mock_settings(self, mock_settings):
+        """Handle mock settings - to be implemented by subclasses"""
+        pass
+        
+    def _ensure_tool_secrets(self):
+        """Ensure that all required secrets for tools are available"""
+        from .agentic_secrets import agentic_secrets
+
+        for tool in self._tools:
+            if hasattr(tool, "required_secrets"):
+                for key, help in tool.required_secrets().items():
+                    value = agentic_secrets.get_secret(
+                        agent_secret_key(self.name, key),
+                        agentic_secrets.get_secret(key, os.environ.get(key)),
+                    )
+                    if not value:
+                        value = input(f"{tool_name(tool)} requires {help}: ")
+                        if value:
+                            agentic_secrets.set_secret(
+                                agent_secret_key(self.name, key), value
+                            )
+                        else:
+                            raise ValueError(
+                                f"Secret {key} is required for tool {tool_name(tool)}"
+                            )
+
+    def cancel(self):
+        """Flag this agent to cancel whatever it is doing"""
+        self.cancelled = True
+
+    def is_cancelled(self):
+        """Check if this agent has been cancelled"""
+        return self.cancelled
+    
+    def uncancel(self):
+        """Reset the cancelled flag"""
+        self.cancelled = False
+
+    def add_tool(self, tool: Any):
+        """Add a tool to this agent"""
+        self._tools.append(tool)
+        self._update_state({"functions": self._get_funcs(self._tools)})
+
+    def add_child(self, child_agent):
+        """Add a child agent as a tool"""
+        self.add_tool(child_agent)
+
+    def set_model(self, model: str):
+        """Set the model to use for this agent"""
+        self.model = model
+        self._update_state({"model": model})
+
+    def set_debug_level(self, level: DebugLevel):
+        """Set the debug level for this agent"""
+        self.debug.raise_level(level)
+        self._set_agent_debug_level(self.debug)
+
+    def set_result_model(self, model: Type[BaseModel]):
+        """Set the result model for this agent"""
+        self.result_model = model
+        self._update_state({"result_model": model})
+
+    def reset_history(self):
+        """Reset the conversation history"""
+        self._reset_agent_history()
+
+    def get_history(self):
+        """Get the conversation history"""
+        return self._get_agent_history()
+
+    def init_run_tracking(self, agent, run_id: Optional[str] = None):
+        """Initialize run tracking"""
+        pass
+
+    def get_db_manager(self) -> DatabaseManager:
+        """Get the database manager for this agent"""
+        if self.db_path:
+            db_manager = DatabaseManager(self.db_path)
         else:
-            raise ValueError("Instructions are required")
+            db_manager = DatabaseManager()
+        return db_manager
 
-        self._agent: ActorBaseAgent = ActorBaseAgent.remote(name=self.name)
+    def get_runs(self) -> list[Run]:
+        """Get all runs for this agent"""
+        db_manager = self.get_db_manager()
+        
+        try:
+            return db_manager.get_runs_by_agent(self.name)
+        except Exception as e:
+            print(f"Error getting runs: {e}")
+            return []
+        
+    def get_run_logs(self, run_id: str) -> list[RunLog]:
+        """Get logs for a specific run"""
+        db_manager = self.get_db_manager()
+        
+        try:
+            return db_manager.get_run_logs(run_id)
+        except Exception as e:
+            print(f"Error getting run logs: {e}")
+            return []
 
-        # Set initial state. Small challenge is that a child agent might have been
-        # provided in tools. But we need to initialize ourselve
+    @property
+    def prompt_variables(self) -> dict:
+        """Dictionary of variables to make available to prompt templates."""
+        paths_to_search = [self.template_path]
 
-        obj_ref = self._agent.set_state.remote(
-            SetState(
-                self.name,
-                {
-                    "name": self.name,
-                    "instructions": self.instructions,
-                    "functions": self._get_funcs(self._tools),
-                    "model": self.model,
-                    "max_tokens": self.max_tokens,
-                    "memories": self.memories,
-                    "handle_turn_start": self._handle_turn_start,
-                    "result_model": self.result_model,
-                },
-            ),
+        for path in [Path(p) for p in paths_to_search]:
+            if path.exists():
+                with open(path, "r") as f:
+                    prompts = yaml.safe_load(f)
+                return prompts
+
+        return {"name": "John Doe"}
+
+    @property
+    def safe_name(self) -> str:
+        """Renders the Agent's name, but filesystem safe."""
+        return "".join(c if c.isalnum() else "_" for c in self.name).lower()
+
+    def ensure_api_key_for_model(self, model: str):
+        """Ensure the appropriate API key is set for the given model."""
+        from agentic.agentic_secrets import agentic_secrets
+
+        for key in agentic_secrets.list_secrets():
+            if key not in os.environ:
+                value = agentic_secrets.get_secret(key)
+                if value:
+                    os.environ[key] = value
+
+    def _get_funcs(self, thefuncs: list):
+        """Get the functions to provide to the agent implementation"""
+        useable = []
+        for func in thefuncs:
+            if callable(func):
+                tool_registry.ensure_dependencies(func)
+                useable.append(func)
+            elif isinstance(func, HandoffAgentWrapper):
+                # add a child agent as a tool
+                useable.append(
+                    AddChild(
+                        func.get_agent().name, 
+                        func.get_agent()._agent, 
+                        handoff=True
+                    )
+                )
+            elif isinstance(func, BaseAgentProxy):
+                useable.append(
+                    AddChild(
+                        func.name,
+                        func._agent,
+                    )
+                )
+            else:
+                tool_registry.ensure_dependencies(func)
+                useable.append(func)
+
+        return useable
+        
+    def _update_state(self, state: dict):
+        """Update the agent's state"""
+        # To be overridden by subclasses
+        pass
+
+    def _set_agent_debug_level(self, debug_level):
+        """Set the debug level on the agent implementation"""
+        # To be overridden by subclasses
+        pass
+
+    def _reset_agent_history(self):
+        """Reset the agent's conversation history"""
+        # To be overridden by subclasses
+        pass
+
+    def _get_agent_history(self):
+        """Get the agent's conversation history"""
+        # To be overridden by subclasses
+        pass
+
+    def _create_agent_instance(self, request_id: str):
+        """Create a new agent instance for a request"""
+        # This is implemented by the subclasses (e.g., RayAgentProxy, LocalAgentProxy)
+        raise NotImplementedError("Subclasses must implement _create_agent_instance")
+
+    def _get_agent_for_request(self, request_id: str):
+        """Get the agent instance for a request, creating it if needed"""
+        if request_id not in self.agent_instances:
+            self.agent_instances[request_id] = self._create_agent_instance(request_id)
+        return self.agent_instances[request_id]
+
+    def _cleanup_agent_instance(self, request_id: str):
+        """Clean up an agent instance after a request is complete"""
+        if request_id in self.agent_instances:
+            del self.agent_instances[request_id]
+
+    def start_request(self, request: str, request_context: dict = {}, 
+                     continue_result: dict = {}, run_id: Optional[str] = None,
+                     debug: DebugLevel = DebugLevel(DebugLevel.OFF)) -> StartRequestResponse:
+        """Start a new agent request"""
+        self.debug.raise_level(debug)
+
+        if not hasattr(depthLocal, 'depth'):
+            depthLocal.depth = 0
+        else:
+            depthLocal.depth += 1
+
+        if isinstance(request, str):
+            request = self._check_for_prompt_match(request)
+
+        # Create request ID if not provided in continue_result
+        request_id = continue_result.get("request_id") or str(uuid.uuid4())
+
+        # Initialize new request
+        request_obj = Prompt(
+            self.name,
+            request,
+            debug=self.debug,
+            depth=depthLocal.depth,
+            request_context=request_context,
+            request_id=request_id,
         )
-        ray.get(obj_ref)
+
+        # Re-initialize run tracking for this request
+        self.run_id = run_id
+
+        def producer(queue, request_obj, continue_result):
+            depthLocal.depth = request_obj.depth
+            for event in self.next_turn(request_obj, continue_result=continue_result, request_id=request_id):
+                queue.put(event)
+            queue.put(self.queue_done_sentinel)
+            # Cleanup the agent instance when done
+            self._cleanup_agent_instance(request_id)
+            
+        queue = Queue()
+        self.request_queues[request_id] = queue
+
+        t = threading.Thread(target=producer, args=(queue, request_obj, continue_result))
+        t.start()
+        return StartRequestResponse(request_id=request_id, run_id=self.run_id)
+
+    def get_events(self, request_id: str) -> Generator[Event, Any, Any]:
+        """Get events for a request"""
+        queue = self.request_queues[request_id]
+        while True:
+            event = queue.get()
+            if event == self.queue_done_sentinel:
+                break
+            yield event
+            time.sleep(0.01)
+        depthLocal.depth -= 1
+
+    def next_turn(self, request: str|Prompt, request_context: dict = {},
+                 request_id: str = None, continue_result: dict = {},
+                 debug: DebugLevel = DebugLevel(DebugLevel.OFF)) -> Generator[Event, Any, Any]:
+        """This is the key agent loop generator."""
+        self.cancelled = False
+        self.debug.raise_level(debug)
+        
+        # Get or create request ID
+        if not request_id:
+            request_id = continue_result.get("request_id") or str(uuid.uuid4())
+            if isinstance(request, Prompt):
+                request.request_id = request_id
+
+        # Get the agent instance for this request
+        agent_instance = self._get_agent_for_request(request_id)
+        if not self.run_id:
+            self.init_run_tracking(agent_instance)
+
+        # Prepare the prompt or resume input
+        if not continue_result:
+            prompt = (
+                request if isinstance(request, Prompt) 
+                else Prompt(
+                    self.name, 
+                    request, 
+                    debug=self.debug, 
+                    request_context=request_context,
+                    request_id=request_id
+                )
+            )
+            # Transmit depth through the Prompt
+            if depthLocal.depth > prompt.depth:
+                prompt.depth = depthLocal.depth
+                
+            # Get generator from agent
+            agent_gen = self._get_prompt_generator(agent_instance, prompt)
+        else:
+            # Handle resuming with input
+            resume_input = ResumeWithInput(
+                self.name, 
+                continue_result, 
+                request_id=request_id
+            )
+            agent_gen = self._get_resume_generator(agent_instance, resume_input)
+            
+        # Process events from generator
+        for event in self._process_generator(agent_gen):
+            if self.cancelled:
+                raise TurnCancelledError()
+                
+            # Process results if needed
+            if isinstance(event, TurnEnd):
+                event = self._process_turn_end(event)
+            yield event
+            
+    def _get_prompt_generator(self, agent_instance, prompt):
+        """Get generator for a new prompt - to be implemented by subclasses"""
+        pass
+        
+    def _get_resume_generator(self, agent_instance, resume_input):
+        """Get generator for resuming with input - to be implemented by subclasses"""
+        pass
+        
+    def _process_generator(self, generator):
+        """Process generator events - to be implemented by subclasses"""
+        pass
+        
+    def _process_turn_end(self, event):
+        """Process TurnEnd event to handle result model validation"""
+        if isinstance(event.result, str) and self.result_model:
+            try:
+                event.set_result(self.result_model.model_validate_json(event.result))
+            except Exception as e:
+                try:
+                    # Hack for LLM poorly parsing Claude structured outputs
+                    data = json.loads(event.result)
+                    if 'values' in data:
+                        event.set_result(self.result_model.model_validate(data['values']))
+                except Exception as e:
+                    # Create an error message event
+                    error_event = ChatOutput.assistant_message(
+                        self.name, 
+                        f"Error validating result: {e}", 
+                        depth=event.depth
+                    )
+                    # We'll yield this error event and then the original event
+                    return error_event
+        return event
+
+    def final_result(self, request: str, request_context: dict = {}, 
+                    event_handler: Callable[[Event], None] = None) -> Any:
+        """Get the final result of a request"""
+        request_id = self.start_request(
+            request, 
+            request_context=request_context, 
+            debug=self.debug
+        ).request_id
+        turn_end = None
+        for event in self.get_events(request_id):
+            if event_handler:
+                event_handler(event)
+            yield event
+            if isinstance(event, TurnEnd):
+                turn_end = event
+        if turn_end:
+            return turn_end.result
+        else:
+            return event
+
+    def grab_final_result(self, request: str, request_context: dict = {}) -> Any:
+        """Convenience method to get the final result of a request"""
+        try:
+            items = list(self.final_result(request, request_context))
+            if isinstance(items[-1], TurnEnd):
+                return items[-1].result
+            else:
+                return items[-1]
+        except StopIteration as e:
+            return e.value
 
     def _create_fastapi_endpoint(self, port: int = 8086):
+        """Create a FastAPI endpoint for this agent"""
         global base_serve_app
 
         serve.start(http_options={"host": "0.0.0.0", "port": port})
@@ -1200,328 +1534,266 @@ class RayFacadeAgent:
 
         return deployment, f"/{self.safe_name}"
 
-
     def start_api_server(self, port: int = 8086) -> str:
-        return self._create_fastapi_endpoint()[1]
+        """Start an API server for this agent"""
+        return self._create_fastapi_endpoint(port)[1]
 
-    def _ensure_tool_secrets(self):
-        from agentic.agentic_secrets import agentic_secrets
 
-        for tool in self._tools:
-            if hasattr(tool, "required_secrets"):
-                for key, help in tool.required_secrets().items():
-                    value = agentic_secrets.get_secret(
-                        agent_secret_key(self.name, key),
-                        agentic_secrets.get_secret(key, os.environ.get(key)),
-                    )
-                    if not value:
-                        value = input(f"{tool_name(tool)} requires {help}: ")
-                        if value:
-                            agentic_secrets.set_secret(
-                                agent_secret_key(self.name, key), value
-                            )
-                        else:
-                            raise ValueError(
-                                f"Secret {key} is required for tool {tool_name(tool)}"
-                            )
+class RayAgentProxy(BaseAgentProxy):
+    """Ray-based implementation of the agent proxy.
+    The actual agent is run as a remote actor on Ray.
+    """
 
-    def cancel(self):
-        # Flag this agent to cancel whatever it is doing
-        self.cancelled = True
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.agent_config = {
+            "name": self.name,
+            "instructions": self.instructions,
+            "model": self.model,
+            "max_tokens": self.max_tokens,
+            "memories": self.memories,
+            "debug": self.debug,
+            "result_model": self.result_model,
+            # Functions will be added when creating instances
+        }
+        _AGENT_REGISTRY.append(self)
+        self._create_agent_instance()
 
-    def is_cancelled(self):
-        return self.cancelled
-    
-    def uncancel(self):
-        self.cancelled = False
+    def _create_agent_instance(self, request_id: str|None=None):
+        """Initialize the Ray actor"""
+        agent = ActorBaseAgent.remote(name=self.name)
+        
+        # Set initial state
+        obj_ref = agent.set_state.remote(
+            SetState(
+                self.name,
+                {
+                    "name": self.name,
+                    "instructions": self.instructions,
+                    "functions": self._get_funcs(self._tools),
+                    "model": self.model,
+                    "max_tokens": self.max_tokens,
+                    "memories": self.memories,
+                    "handle_turn_start": self._handle_turn_start,
+                    "result_model": self.result_model,
+                },
+            ),
+        )
+        ray.get(obj_ref)
+        if self._handle_turn_start:
+            agent.set_callback.remote("handle_turn_start", self._handle_turn_start)
 
-    def list_tools(self) -> list[str]:
-        """Gets the current tool list from the running agent"""
-        return ray.get(self._agent.list_tools.remote())
+        if request_id is None:
+            self._agent = agent
 
-    def list_functions(self) -> list[str]:
-        """Gets the current list of functions from the running agent"""
-        return ray.get(self._agent.list_functions.remote())
+    def init_run_tracking(self, agent, run_id: Optional[str] = None):
+        """Initialize run tracking"""
+        from .run_manager import init_run_tracking
+        self.run_id, callback = init_run_tracking(self, db_path=self.db_path, resume_run_id=run_id)
+        agent.set_callback.remote('handle_event', callback)
 
-    def add_tool(self, tool: Any):
-        self._tools.append(tool)
-        self._update_state({"functions": self._get_funcs(self._tools)})
+    def _handle_mock_settings(self, mock_settings):
+        """Handle mock settings for Ray implementation"""
+        if mock_settings and self.model and "mock" in self.model:
+            from agentic.models import mock_provider
+            
+            pattern = mock_settings.get("pattern", "")
+            response = mock_settings.get("response", "This is a mock response.")
+            tools_dict = mock_settings.get("tools", {})
+            
+            # Set in the local mock_provider directly
+            mock_provider.set_response(pattern, response)
+            mock_provider.clear_tools()
+            for tool_name, tool_func in tools_dict.items():
+                mock_provider.register_tool(tool_name, tool_func)
+            
+            # Pass to the remote agent
+            try:
+                ray.get(self._agent.set_mock_params.remote(pattern, response, tools_dict))
+            except Exception as e:
+                print(f"Warning: Failed to set mock params on remote agent: {e}")
 
     def _update_state(self, state: dict):
+        """Update the Ray agent's state"""
         obj_ref = self._agent.set_state.remote(SetState(self.name, state))
         ray.get(obj_ref)
 
-    def set_model(self, model: str):
-        self.model = model
-        self._update_state({"model": model})
+    def _set_agent_debug_level(self, debug_level):
+        """Set the debug level on the Ray agent"""
+        ray.get(self._agent.set_debug_level.remote(debug_level))
 
-    def _get_funcs(self, thefuncs: list):
-        useable = []
-        for func in thefuncs:
-            if callable(func):
-                tool_registry.ensure_dependencies(func)
-                useable.append(func)
-            elif isinstance(func, RayFacadeAgent):
-                # add a child agent as a tool
-                useable.append(
-                    AddChild(
-                        func.name,
-                        func._agent,
-                    )
-                )
-            elif isinstance(func, HandoffAgentWrapper):
-                # add a child agent as a tool
-                useable.append(
-                    AddChild(
-                        func.get_agent().name,
-                        func.get_agent()._agent,
-                        handoff=True,
-                    )
-                )
-            else:
-                tool_registry.ensure_dependencies(func)
-                useable.append(func)
-
-        return useable
-
-    def add_child(self, child_agent):
-        self.add_tool(child_agent)
-
-    @property
-    def prompt_variables(self) -> dict:
-        """Dictionary of variables to make available to prompt templates."""
-        paths_to_search = [self.template_path]
-
-        for path in [Path(p) for p in paths_to_search]:
-            if path.exists():
-                with open(path, "r") as f:
-                    prompts = yaml.safe_load(f)
-                return prompts
-
-        return {"name": "John Doe"}
-
-    @property
-    def safe_name(self) -> str:
-        """Renders the ActorAgent's name, but filesystem safe."""
-        return "".join(c if c.isalnum() else "_" for c in self.name).lower()
-
-    def ensure_api_key_for_model(self, model: str):
-        """Ensure the appropriate API key is set for the given model."""
-        from agentic.agentic_secrets import agentic_secrets
-
-        for key in agentic_secrets.list_secrets():
-            if key not in os.environ:
-                value = agentic_secrets.get_secret(key)
-                if value:
-                    os.environ[key] = value
-
-    # Start a new agent request. We spawn a thread to actually iterate the agent loop, and
-    # it queues events coming back from the agent. Then our caller can keep calling "get_events"
-    # to retrieve from the queue. This lets them run multiple requests by making separate "get_events"                    
-    # calls for separate requests.
-    def start_request(
-        self, 
-        request: str, 
-        request_context: dict = {},
-        continue_result: dict = {},
-        run_id: Optional[str] = None,
-        debug: DebugLevel = DebugLevel(DebugLevel.OFF),
-    ) -> StartRequestResponse: # returns the request_id and run_id
-        self.debug.raise_level(debug)
-        self.queue_done_sentinel = "QUEUE_DONE"
-
-        if not hasattr(depthLocal, 'depth'):
-            depthLocal.depth = 0
-        else:
-            depthLocal.depth += 1
-
-        if isinstance(request, str):            
-            request = self._check_for_prompt_match(request)
-
-        # Initialize new request
-        request_obj = Prompt(
-            self.name,
-            request,
-            debug=self.debug,
-            depth=depthLocal.depth,
-            request_context=request_context,
-        )
-
-        # Re-initialize run tracking
-        self.init_run_tracking(self.db_path, run_id)
-
-        def producer(queue, request_obj, continue_result):
-            depthLocal.depth = request_obj.depth
-            for event in self.next_turn(request_obj, continue_result=continue_result):
-                queue.put(event)
-            queue.put(self.queue_done_sentinel)
-        queue = Queue()
-        self.request_queues[request_obj.request_id] = queue
-
-        t = threading.Thread(target=producer, args=(queue, request_obj, continue_result))
-        t.start()
-        return StartRequestResponse(request_id=request_obj.request_id, run_id=self.run_id)
-
-    def get_events(self, request_id: str) -> Generator[Event, Any, Any]:
-        queue = self.request_queues[request_id]
-        while True:
-            event = queue.get()
-            if event == self.queue_done_sentinel:
-                break
-            yield event
-            time.sleep(0.01)
-        depthLocal.depth -= 1
-    
-    def init_run_tracking(self, db_path: Optional[str] = None, run_id: Optional[str] = None):
-        from .run_manager import init_run_tracking
-        if db_path:
-            self.db_path = db_path
-            self.run_id = init_run_tracking(self, db_path=db_path, resume_run_id=run_id)
-        else:
-            self.run_id = init_run_tracking(self, resume_run_id=run_id)
-
-    def get_db_manager(self) -> DatabaseManager:
-        if self.db_path:
-            db_manager = DatabaseManager(self.db_path)
-        else:
-            db_manager = DatabaseManager()
-        return db_manager
-
-    def get_runs(self) -> list[Run]:
-        db_manager = self.get_db_manager()
-        
-        try:
-            return db_manager.get_runs_by_agent(self.name)
-        except Exception as e:
-            print(f"Error getting runs: {e}")
-            return []
-        
-    def get_run_logs(self, run_id: str) -> list[RunLog]:
-        db_manager = self.get_db_manager()
-        
-        try:
-            return db_manager.get_run_logs(run_id)
-        except Exception as e:
-            print(f"Error getting run logs: {e}")
-            return []
-   
-    def next_turn(
-        self,
-        request: str|Prompt,
-        request_context: dict = {},
-        request_id: str = None,
-        continue_result: dict = {},
-        debug: DebugLevel = DebugLevel(DebugLevel.OFF),
-    ) -> Generator[Event, Any, Any]:
-        """This is the key agent loop generator. It runs the agent for a single turn and
-        emits events as it goes. If a WaitForInput event is emitted, then you should
-        gather human input and call this function again with _continue_result_ to
-        continue the turn. If you call 'cancel' on the agent then this method will
-        raise a TurnCancelledError exception."""
-        self.cancelled = False
-        self.debug.raise_level(debug)
-
-        event: Event
-        if not continue_result:
-            prompt = (
-                request if isinstance(request, Prompt) 
-                else Prompt(
-                    self.name, 
-                    request, 
-                    debug=self.debug, 
-                    request_context=request_context
-                )
-            )
-            # Transmit depth through the Prompt to the remote agent
-            if depthLocal.depth > prompt.depth:
-                prompt.depth = depthLocal.depth
-
-            remote_gen = self._agent.handlePromptOrResume.remote(
-                prompt
-            )
-        else:
-            request_id = request.request_id if isinstance(request, Prompt) else ""
-            remote_gen = self._agent.handlePromptOrResume.remote(
-                ResumeWithInput(self.name, continue_result, request_id),
-            )
-        for remote_next in remote_gen:
-            if self.cancelled:
-                raise TurnCancelledError()
-            event = ray.get(remote_next)
-            if isinstance(event, TurnEnd):
-                if isinstance(event.result, str) and self.result_model:
-                    try:
-                        event.set_result(self.result_model.model_validate_json(event.result))
-                    except Exception as e:
-                        try:
-                            # Hack for LLM poorly parsing Claude structured outputs
-                            data = json.loads(event.result)
-                            if 'values' in data:
-                                event.set_result(self.result_model.model_validate(data['values']))
-                        except Exception as e:
-                            yield ChatOutput.assistant_message(
-                                self.name, 
-                                f"Error validating result: {e}", 
-                                depth=event.depth
-                            )
-            yield event
-
-    def final_result(
-            self, 
-            request: str, 
-            request_context: dict = {}, 
-            event_handler: Callable[[Event], None] = None
-        ) -> Any:
-        request_id = self.start_request(
-            request, 
-            request_context=request_context, 
-            debug=self.debug
-        ).request_id
-        turn_end = None
-        for event in self.get_events(request_id):
-            if event_handler:
-                event_handler(event)
-            yield event
-            if isinstance(event, TurnEnd):
-                turn_end = event
-        if turn_end:
-            return turn_end.result
-        else:
-            return event
-
-    def grab_final_result(self, request: str, request_context: dict = {}) -> Any:
-        # Iterate over generator and get the return value
-        try:
-            # Consume all yielded values
-            items = list(self.final_result(request, request_context))
-            if isinstance(items[-1], TurnEnd):
-                return items[-1].result
-            else:
-                return items[-1]
-        except StopIteration as e:
-            # The return value is stored in the exception's value attribute
-            return e.value
-    
-    def set_debug_level(self, level: DebugLevel):
-        self.debug.raise_level(level)
-        ray.get(self._agent.set_debug_level.remote(self.debug))
-
-    def set_result_model(self, model: Type[BaseModel]):
-        self.result_model = model
-        self._update_state({"result_model": model})
-
-    def reset_history(self):
+    def _reset_agent_history(self):
+        """Reset the Ray agent's conversation history"""
         ray.get(self._agent.reset_history.remote())
 
-    def get_history(self):
+    def _get_agent_history(self):
+        """Get the Ray agent's conversation history"""
         return ray.get(self._agent.get_history.remote())
+
+    def list_tools(self) -> list[str]:
+        """Gets the current tool list from the running Ray agent"""
+        return ray.get(self._agent.list_tools.remote())
+
+    def list_functions(self) -> list[str]:
+        """Gets the current list of functions from the running Ray agent"""
+        return ray.get(self._agent.list_functions.remote())
         
-    def set_run_tracking(self, enabled: bool, user_id: str = "default") -> None: #TODO: create a real user_id
-        """Enable or disable run tracking for this agent"""
-        if enabled and not self.run_id:
-            from .run_manager import init_run_tracking
-            self.run_id = init_run_tracking(self, user_id)
-        elif not enabled and self.run_id:
-            from .run_manager import disable_run_tracking
-            disable_run_tracking(self)
-            self.run_id = None
+    def _get_prompt_generator(self, agent, prompt):
+        """Get generator for a new prompt from a Ray agent"""
+        return agent.handlePromptOrResume.remote(prompt)
+
+    def _get_resume_generator(self, agent, resume_input):
+        """Get generator for resuming with input from a Ray agent"""
+        return agent.handlePromptOrResume.remote(resume_input)
+        
+    def _process_generator(self, generator):
+        """Process generator events - Ray implementation"""
+        for remote_next in generator:
+            yield ray.get(remote_next)
+
+
+class LocalAgentProxy(BaseAgentProxy):
+    """Local dispatch implementation of the agent proxy.
+    This version makes calls directly to a local agent object.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.agent_config = {
+            "name": self.name,
+            "instructions": self.instructions,
+            "model": self.model,
+            "max_tokens": self.max_tokens,
+            "memories": self.memories,
+            "debug": self.debug,
+            "result_model": self.result_model,
+            # Functions will be added when creating instances
+        }
+        _AGENT_REGISTRY.append(self)
+        self._create_agent_instance()
+
+    def _create_agent_instance(self, request_id: str|None=None):
+        """Create a new local agent instance for a request"""
+        agent = ActorBaseAgent(name=self.name)
+        
+        # Set initial state
+        agent.set_state(
+            SetState(
+                self.name,
+                {
+                    "name": self.name,
+                    "instructions": self.instructions,
+                    "functions": self._get_funcs(self._tools),
+                    "model": self.model,
+                    "max_tokens": self.max_tokens,
+                    "memories": self.memories,
+                    "handle_turn_start": self._handle_turn_start,
+                    "result_model": self.result_model,
+                },
+            ),
+        )        
+        if self._handle_turn_start:
+            agent.set_callback("handle_turn_start", self._handle_turn_start)
+
+        if request_id is None:
+            self._agent = agent
+
+        return agent
+            
+    def init_run_tracking(self, agent, run_id: Optional[str] = None):
+        """Initialize run tracking"""
+        from .run_manager import init_run_tracking
+        self.run_id, callback = init_run_tracking(self, db_path=self.db_path, resume_run_id=run_id)
+        agent.set_callback('handle_event', callback)
+
+    def _handle_mock_settings(self, mock_settings):
+        """Handle mock settings for local implementation"""
+        if mock_settings and self.model and "mock" in self.model:
+            from agentic.models import mock_provider
+            
+            pattern = mock_settings.get("pattern", "")
+            response = mock_settings.get("response", "This is a mock response.")
+            tools_dict = mock_settings.get("tools", {})
+            
+            # Set in the local mock_provider directly
+            mock_provider.set_response(pattern, response)
+            mock_provider.clear_tools()
+            for tool_name, tool_func in tools_dict.items():
+                mock_provider.register_tool(tool_name, tool_func)
+            
+            # Pass to the local agent
+            try:
+                self._agent.set_mock_params(pattern, response, tools_dict)
+            except Exception as e:
+                print(f"Warning: Failed to set mock params on local agent: {e}")
+
+    def _update_state(self, state: dict):
+        """Update the local agent's state"""
+        self._agent.set_state(SetState(self.name, state))
+
+    def _set_agent_debug_level(self, debug_level):
+        """Set the debug level on the local agent"""
+        self._agent.set_debug_level(debug_level)
+
+    def _reset_agent_history(self):
+        """Reset the local agent's conversation history"""
+        self._agent.reset_history()
+
+    def _get_agent_history(self):
+        """Get the local agent's conversation history"""
+        return self._agent.get_history()
+
+    def list_tools(self) -> list[str]:
+        """Gets the current tool list from the local agent"""
+        return self._agent.list_tools()
+
+    def list_functions(self) -> list[str]:
+        """Gets the current list of functions from the local agent"""
+        return self._agent.list_functions()
+
+    def NO_create_fastapi_endpoint(self, port: int = 8086):
+        """Create a FastAPI endpoint for this agent"""
+        global base_serve_app
+
+        # Local implementation of FastAPI endpoint
+        from fastapi import FastAPI
+        import uvicorn
+        
+        app = FastAPI()
+        
+        # Create API endpoint similar to Ray implementation
+        # This would need to be expanded for a real implementation
+        
+        api_endpoint = f"http://0.0.0.0:{port}/{self.safe_name}"
+        self._update_state({"api_endpoint": api_endpoint})
+        
+        # Start server in a separate thread
+        def run_server():
+            uvicorn.run(app, host="0.0.0.0", port=port)
+            
+        t = threading.Thread(target=run_server, daemon=True)
+        t.start()
+        
+        return app, f"/{self.safe_name}"
+
+    def NOstart_api_server(self, port: int = 8086) -> str:
+        """Start an API server for this agent"""
+        return self._create_fastapi_endpoint(port)[1]
+
+    def _get_prompt_generator(self, agent, prompt):
+        """Get generator for a new prompt - Local implementation"""
+        return agent.handlePromptOrResume(prompt)
+        
+    def _get_resume_generator(self, agent, resume_input):
+        """Get generator for resuming with input - Local implementation"""
+        return agent.handlePromptOrResume(resume_input)
+        
+    def _process_generator(self, generator):
+        """Process generator events - Local implementation"""
+        for event in generator:
+            yield event
+
+if os.environ.get("AGENTIC_USE_RAY"):
+    AgentProxyClass = RayAgentProxy
+else:
+    AgentProxyClass = LocalAgentProxy

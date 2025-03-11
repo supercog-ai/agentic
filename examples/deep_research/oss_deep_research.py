@@ -6,7 +6,7 @@ from pydantic import BaseModel, Field
 from datetime import datetime
 
 from agentic.common import Agent, AgentRunner, cached_call, RunContext
-from agentic.actor_agents import RayFacadeAgent
+from agentic.actor_agents import BaseAgentProxy
 from agentic.events import Prompt, TurnEnd
 
 from agentic.agentic_secrets import agentic_secrets
@@ -40,7 +40,7 @@ class Sections(BaseModel):
     )
 
 
-class DeepResearchAgent(RayFacadeAgent):
+class DeepResearchAgent(BaseAgentProxy):
     sections: Sections|None = None
     topic: str = ""
 
