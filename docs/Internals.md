@@ -30,7 +30,7 @@ Any instance of `BaseAgentProxy` can be used as a tool by another agent.
 ## Choosing the runtime engine
 
 There are two agent runtimes: one uses basic threads, and the other runs your agent via the
-[Ray] distributed processing system. The thread runtime, implemented via `LocalAgentProxy`,
+[Ray](https://github.com/ray-project/ray) distributed processing system. The thread runtime, implemented via `LocalAgentProxy`,
 is chosen by default. Set `AGENTIC_USE_RAY` to enable the Ray runtime:
 
     AGENTIC_USE_RAY=1 python examples/basic_agent.py
@@ -39,7 +39,7 @@ The import `agentic.common.Agent` will reference the active runtime proxy class,
 `LocalAgentProxy` or `RayAgentProxy`.
 
 One big difference when using the `Ray` engine is that all events and data in and out of
-your agent must be serializable.
+your agent must be picklable.
 
 # Agent processing flow
 
