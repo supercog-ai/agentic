@@ -19,7 +19,7 @@ import uvicorn
 console = ConsoleWithInputBackspaceFixed()
 
 
-from .actor_agents import RayFacadeAgent, _AGENT_REGISTRY
+from .actor_agents import BaseAgentProxy, _AGENT_REGISTRY
 from agentic.events import (
     DebugLevel,
     Event,
@@ -60,7 +60,7 @@ import signal
 import threading
 from .colors import Colors
 class RayAgentRunner:
-    def __init__(self, agent: RayFacadeAgent, debug: str | bool = False) -> None:
+    def __init__(self, agent: BaseAgentProxy, debug: str | bool = False) -> None:
         self.facade = agent
         if debug:
             self.debug = DebugLevel(debug)
@@ -171,6 +171,7 @@ class RayAgentRunner:
                                 print(f"\n{value}\n")
                                 replies[key] = input(":> ")
                         continue_result = replies
+                        continue_result["request_id"] = request_id
                     elif isinstance(event, FinishCompletion):
                         saved_completions.append(event)
                     if self._should_print(event):

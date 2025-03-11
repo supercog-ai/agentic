@@ -1,3 +1,46 @@
+# Agentic Internals
+
+## Core data model
+
+The base **ReAct** agent is implemented by the `ActorBaseAgent` class in `actor_agents.py`. 
+It manages the agent loop and the current LLM context, via its `history` attribute. This
+class calls the `completion` API from `Litellm` to generate LLM completions for each
+step when running an agent.
+
+External callers operate agents via a _proxy_ class which provides the interface to the agent.
+Generally the proxy keeps track of multiple requests, and it creates an instance of `ActorBaseAgent`
+to hold the state and process operations for each (parallel) request. The proxy runs the agent
+via a separate thread, and dispatches events from a Queue from the caller's thread.
+
+The proxy class manages these concerns:
+
+- creates separate agent instances to manage parallel operations
+- dispatches events to the RunManager for persistence
+- binds tools properly to the underlying agent instance
+- manages an event queue for dispatching agent events to the caller
+- parses a JSON string result from the LLM into the requsted result model
+- manages running the FastAPI app for the agent
+
+You can implement custom agents by subclassing `BaseAgentProxy`. You should call the base
+constructor in your `__init__` method, then implement the `next_turn` method to process
+operation requests. That method should `yield` events as your agent runs.
+
+Any instance of `BaseAgentProxy` can be used as a tool by another agent.
+
+## Choosing the runtime engine
+
+There are two agent runtimes: one uses basic threads, and the other runs your agent via the
+[Ray] distributed processing system. The thread runtime, implemented via `LocalAgentProxy`,
+is chosen by default. Set `AGENTIC_USE_RAY` to enable the Ray runtime:
+
+    AGENTIC_USE_RAY=1 python examples/basic_agent.py
+
+The import `agentic.common.Agent` will reference the active runtime proxy class, either
+`LocalAgentProxy` or `RayAgentProxy`.
+
+One big difference when using the `Ray` engine is that all events and data in and out of
+your agent must be serializable.
+
 # Agent processing flow
 
 Forward direction processing happens by sending events to agent, which may send

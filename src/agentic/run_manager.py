@@ -1,4 +1,4 @@
-from typing import Optional, Dict
+from typing import Optional, Dict, Callable
 from uuid import uuid4
 from litellm import Message
 from .events import (
@@ -106,11 +106,11 @@ class RunManager:
             self.usage_data = {}
 
 def init_run_tracking(
-        agent: Agent,
+        agent,
         user_id: str = "default",
         db_path: str = "./runtime/agent_runs.db",
         resume_run_id: Optional[str] = None
-    ) -> RunManager:
+    ) -> tuple[str,Callable]:
     """Helper function to set up run tracking for an agent"""
     run_id = str(uuid4()) if resume_run_id is None else resume_run_id
     run_manager = RunManager(
@@ -119,10 +119,8 @@ def init_run_tracking(
         user_id=user_id,
         db_path=db_path
     )
-    agent._agent.set_callback.remote('handle_event', run_manager.handle_event)
-    return run_id
+    return run_id, run_manager.handle_event
 
-def disable_run_tracking(agent: Agent) -> None:
+def disable_run_tracking(agent) -> None:
     """Helper function to disable run tracking for an agent"""
-    if agent._agent.get_callback.remote('handle_event'):
-        agent._agent.set_callback.remote('handle_event', None)
+    agent.set_callback('handle_event', None)
