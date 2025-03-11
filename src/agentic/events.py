@@ -421,3 +421,41 @@ class SSEDecoder:
             pass  # Field is ignored.
 
         return None
+
+class OauthFlowRequest(Event):
+    """Event requesting OAuth authorization flow"""
+    authorize_url: str
+    auth_code_name: str
+    message: str
+    scope: str = ""
+    
+    def __init__(
+        self,
+        agent: str,
+        message: str,
+        authorize_url: str, 
+        auth_code_name: str,
+        scope: str = "",
+        depth: int = 0
+    ):
+        # First initialize the base Event fields
+        data = {
+            "agent": agent,
+            "type": "oauth_flow_request",
+            "payload": {
+                "message": message,
+                "authorize_url": authorize_url,
+                "auth_code_name": auth_code_name,
+                "scope": scope
+            },
+            "depth": depth,
+            # Add required OauthFlowRequest fields
+            "authorize_url": authorize_url,
+            "auth_code_name": auth_code_name,
+            "message": message,
+            "scope": scope
+        }
+        super().__init__(**data)
+
+    def __str__(self):
+        return f"[OAUTH] {self.message}\nAuthorize URL: {self.authorize_url}"

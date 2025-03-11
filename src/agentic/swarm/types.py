@@ -163,7 +163,8 @@ class RunContext:
             # Fallback to default if not set
             host = "localhost"
             port = 8086
-            base_url = f"http://{host}:{port}/{self.agent_name}" 
+            safe_agent_name = "".join(c if c.isalnum() else "_" for c in self.agent_name).lower()
+            base_url = f"http://{host}:{port}/{safe_agent_name}" 
         else:
             base_url = self.api_endpoint
 
@@ -175,6 +176,39 @@ class RunContext:
             return f"{webhook_url}?{query_params}"
         
         return webhook_url
+
+    def get_oauth_callback_url(self, tool_name: str) -> str:
+        """Get the static OAuth callback URL for a tool"""
+        if not self.api_endpoint:
+            # Fallback to default if not set
+            host = "localhost" 
+            port = 8086
+            safe_agent_name = "".join(c if c.isalnum() else "_" for c in self.agent_name).lower()
+            base_url = f"http://{host}:{port}/{safe_agent_name}"
+        else:
+            base_url = self.api_endpoint
+            
+        return f"{base_url}/oauth/callback/{tool_name}"
+
+    def get_oauth_auth_code(self, tool_name: str) -> Optional[str]:
+        """Get OAuth authorization code for a tool if available"""
+        auth_key = f"{tool_name}_auth_code"
+        return self.get_secret(auth_key)
+
+    def set_oauth_auth_code(self, tool_name: str, auth_code: str):
+        """Store OAuth authorization code for a tool using secure storage"""
+        auth_key = f"{tool_name}_auth_code"
+        self.set_secret(auth_key, auth_code)
+
+    def set_oauth_token(self, tool_name: str, token: str):
+        """Store OAuth token for a tool securely"""
+        token_key = f"{tool_name}_oauth_token"
+        self.set_secret(token_key, token)
+        
+    def get_oauth_token(self, tool_name: str) -> Optional[str]:
+        """Get OAuth token for a tool if available"""
+        token_key = f"{tool_name}_oauth_token"
+        return self.get_secret(token_key)
 
 
 class SwarmAgent(BaseModel):
