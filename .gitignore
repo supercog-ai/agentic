@@ -1,21 +1,35 @@
+# Python cache files and build artifacts
+__pycache__/
 *.pyc
 **.egg-info
-build
-.venv
-__pycache__
+build/
+.pytest_cache/
 
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Environment and version files
 .envrc
 .env
 .python-version
 
-.vscode
+# Editor settings
+.vscode/
+
+# Project-specific directories
 site/
 runtime/
-
-venv/
-env/
-.DS_Store
-
+logs/
 node_modules/
 .next/
-logs/
+
+# Package manager files
+uv.lock
+
+# Logs
+*.log
+
+# System files
+.DS_Store
