@@ -973,7 +973,6 @@ class DynamicFastAPIHandler:
                 )
             )
         else:
-            print("WE ARE HERE 1", request, continue_result)
             remote_gen = self._agent.handlePromptOrResume.remote(
                 ResumeWithInput(self.name, continue_result),
             )
@@ -1364,7 +1363,6 @@ class RayFacadeAgent:
         return StartRequestResponse(request_id=request_obj.request_id, run_id=self.run_id)
 
     def get_events(self, request_id: str) -> Generator[Event, Any, Any]:
-        print(self.request_queues)
         queue = self.request_queues[request_id]
         while True:
             event = queue.get()
@@ -1443,7 +1441,6 @@ class RayFacadeAgent:
             )
         else:
             request_id = request.request_id if isinstance(request, Prompt) else ""
-            print("WE ARE HERE 2", request_id, continue_result)
             remote_gen = self._agent.handlePromptOrResume.remote(
                 ResumeWithInput(self.name, continue_result, request_id),
             )
