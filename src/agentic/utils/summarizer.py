@@ -60,3 +60,35 @@ def _truncate_for_model(text: str, model: str, max_tokens: int) -> str:
         return litellm.decode(model=model, tokens=tokens[:max_tokens])
     except:
         return text[:int(max_tokens*4)]
+
+def summarize_chat_history(messages: list, model: str, max_tokens: int = None) -> str:
+    """Summarize conversation history with token limit control"""
+    try:
+        chat_content = "\n".join(f"{m['role']}: {m['content']}" for m in messages)
+        
+        model_info = litellm.get_model_info(model)
+        context_window = model_info.get("max_input_tokens", 128000)
+        
+        # Use provided max_tokens or default to 25% of context window
+        summary_tokens = max_tokens or int(context_window * 0.25)
+        
+        truncated = _truncate_for_model(
+            text=chat_content,
+            model=model,
+            max_tokens=summary_tokens
+        )
+        
+        response = completion(
+            model=model,
+            messages=[{
+                "role": "system",
+                "content": "Condense this conversation history into a concise summary preserving key facts, decisions, and context."
+            }, {
+                "role": "user",
+                "content": truncated
+            }],
+            max_tokens=summary_tokens
+        )
+        return response.choices[0].message.content
+    except Exception as e:
+        return f"Conversation summary unavailable: {str(e)}"

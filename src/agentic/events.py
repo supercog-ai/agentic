@@ -245,7 +245,11 @@ class TurnEnd(Event):
 
     @property
     def result(self):
-        return self.messages[-1]["content"]
+        """Safe result access with fallback"""
+        try:
+            return self.messages[-1]["content"] if self.messages else "No response generated"
+        except (IndexError, KeyError):
+            return "Error: Malformed response"
 
     def set_result(self, result: Any):
         self.messages[-1]['content'] = result

@@ -196,9 +196,48 @@ class ActorBaseAgent:
                 f["function"]["name"] for f in debug_params["tools"]
             ]
 
-        debug_completion_start(self.debug, self.model, debug_params)
+        # Get model context window
+        model_name = model_override or self.model
+        model_info = litellm.get_model_info(model_name)
+        context_window = model_info.get("max_input_tokens", 128000)
+        safety_margin = int(context_window * 0.30)  # 30% buffer
 
-        # Use LiteLLM's completion
+        # Proactive token check before first completion call
+        current_input_tokens = self._callback_params.get("input_tokens")
+        if current_input_tokens is None:  # First call, estimate tokens
+            current_input_tokens = sum(
+                litellm.token_counter(model=model_name, text=m["content"])
+                for m in messages
+            )
+
+        if current_input_tokens > (context_window - safety_margin):
+            from agentic.utils.summarizer import summarize_chat_history
+            
+            # Calculate reduction needed with buffer
+            excess_tokens = current_input_tokens - (context_window - safety_margin)
+            reduce_by = int(excess_tokens * 1.2)  # 20% buffer
+            
+            # Summarize oldest messages first while preserving last 3 interactions
+            summary = summarize_chat_history(
+                messages[:-3],  # Include instructions (index 0) and older messages
+                model=model_name,
+                max_tokens=reduce_by
+            )
+            
+            # Maintain conversation flow with summary and recent context
+            truncated_messages = [
+                messages[0],  # Original instructions
+                {"role": "system", "content": f"Context summary (preserving instructions): {summary}"},
+                *messages[-2:]  # Keep last 2 messages
+            ]
+            
+            # Update params and history
+            completion_params["messages"] = truncated_messages
+            self.history = messages[-2:]  # Maintain last 2 actual messages
+
+        # Existing debug and completion call
+        debug_completion_start(self.debug, self.model, debug_params)
+        
         try:
             return litellm.completion(**completion_params)
         except Exception as e:
