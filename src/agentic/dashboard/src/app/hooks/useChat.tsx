@@ -1,8 +1,8 @@
-import { useCallback, useEffect,useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { mutate } from 'swr';
 
 import { useRunLogs } from '@/hooks/useAgentData';
-import { AgentEventType,agenticApi } from '@/lib/api';
+import { AgentEventType, agenticApi } from '@/lib/api';
 import { convertFromUTC, isUserTurn } from '@/lib/utils';
 
 /**
@@ -312,28 +312,49 @@ export function useChat(agentPath: string, agentName: string, _currentRunId: str
     cleanupStream();
   }, [cleanupStream]);
   
-  // Derive messages from events for chat display, the should be filtered on the following conditions:
-  // 1. The event is not a background event
-  // 2. The event is a prompt_started or chat_output event
-  // 3. The event was sent by the calling agent, not one of the subagents
+  // Derive messages from events for chat display
   const messages = events
     .filter(event => (
       !event.isBackground &&
-      (event.type === AgentEventType.PROMPT_STARTED || event.type === AgentEventType.CHAT_OUTPUT || event.type === AgentEventType.WAIT_FOR_INPUT) &&
+      (event.type === AgentEventType.PROMPT_STARTED || 
+       event.type === AgentEventType.CHAT_OUTPUT || 
+       event.type === AgentEventType.WAIT_FOR_INPUT) &&
       event.agentName === agentName
     ))
-    .map(event => {
+    .map((event, index, filteredEvents) => {
       if (event.type === AgentEventType.PROMPT_STARTED) {
+        // Check if the previous message was a WAIT_FOR_INPUT
+        const prevEvent = index > 0 ? filteredEvents[index - 1] : null;
+        const isFormSubmission = prevEvent?.type === AgentEventType.WAIT_FOR_INPUT;
+        
+        // TODO: Maybe don't show this since it is already in the form
+        let content = typeof event.payload === 'string' ? event.payload : event.payload?.content || '';
+        if (isFormSubmission && typeof event.payload === 'object' && event.payload.content) {
+          content = Object.values(JSON.parse(event.payload.content)).join('\n');
+        }
+        
         return {
           role: 'user' as const,
-          content: typeof event.payload === 'string' 
-            ? event.payload 
-            : event.payload?.content || ''
+          content,
         };
       } else if (event.type === AgentEventType.WAIT_FOR_INPUT) {
+        // Check if there's a PROMPT_STARTED event after this WAIT_FOR_INPUT event
+        // This would contain the user's form submission
+        const promptStartedIndex = filteredEvents.findIndex((e, i) => 
+          i > index && 
+          e.type === AgentEventType.PROMPT_STARTED && 
+          e.agentName === event.agentName
+        );
+        
+        const hasSubmission = promptStartedIndex !== -1;
+        const submissionEvent = hasSubmission ? filteredEvents[promptStartedIndex] : null;
+        const submissionValues = submissionEvent?.payload;
+        
         return {
           role: 'agent' as const,
-          inputKeys: event.payload
+          inputKeys: event.payload,
+          resumeValues: hasSubmission ? submissionValues : undefined,
+          formDisabled: hasSubmission
         };
       } else {
         return {

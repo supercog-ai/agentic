@@ -1,4 +1,4 @@
-import { Bot, CircleDashed,History, ListTodo, PlayCircle, Send, User, MessageSquarePlus } from 'lucide-react';
+import { Bot, CircleDashed,History, ListTodo, MessageSquarePlus,PlayCircle, Send, User } from 'lucide-react';
 import React, { useEffect, useRef,useState } from 'react';
 
 import BackgroundTasks from '@/components/BackgroundTasks';
@@ -235,9 +235,11 @@ const handleSubmit = async (e: React.FormEvent, isBackground: boolean = false, c
                   {msg.role === 'user' ? ( // If user message, show the content as normal
                     <p className="whitespace-pre-wrap">{msg.content}</p>
                   ) : (
-                    !msg.content && msg.inputKeys ? ( // If inputKeys, show the inputKeys as input
+                    !msg.content && msg.inputKeys ? ( // If inputKeys, show the inputKeys as input form
                       <ChatInputForm 
                         inputKeys={msg.inputKeys}
+                        resumeValues={msg.resumeValues}
+                        formDisabled={msg.formDisabled}
                         runId={currentRunId || ''}
                         resumeWithInput={resumeWithInput}
                         onRunComplete={onRunComplete}

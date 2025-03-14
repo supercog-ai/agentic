@@ -39,6 +39,9 @@ const MarkdownComponents: Components = {
   h3({ children, ...props }) {
     return <h3 className="text-lg font-bold my-2" {...props}>{children}</h3>;
   },
+  hr({ ...props }) {
+    return <hr className="my-4" {...props} />;
+  }
 };
 
 interface MarkdownRendererProps {

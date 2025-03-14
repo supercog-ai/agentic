@@ -93,6 +93,8 @@ declare namespace Ui {
     role: 'user' | 'agent';
     content?: string;
     inputKeys?: Record<string, string>;
+    resumeValues?: Record<string, string>;
+    formDisabled?: boolean;
   }
 
   interface Event {
