@@ -56,7 +56,7 @@ class Meeting(Base):
 class MEETING_BAAS_Tool(BaseAgenticTool):
 
     def __init__(self):
-        self.db_path = "meetings.db"
+        self.db_path = "./runtime/meetings.db"
         # Do not initialize engine here, will be done when needed.
         self.Session = None
         self._engine = None
