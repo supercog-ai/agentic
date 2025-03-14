@@ -806,6 +806,11 @@ class ProcessRequest(BaseModel):
     debug: Optional[str] = None
     run_id: Optional[str] = None
 
+class ResumeWithInputRequest(BaseModel):
+    continue_result: dict[str, str]
+    debug: Optional[str] = None
+    run_id: Optional[str] = None
+
 from sse_starlette.sse import EventSourceResponse
 
 @serve.deployment
@@ -823,9 +828,22 @@ class DynamicFastAPIHandler:
         """Start a new request via the agent facade"""
         if prompt.debug and self.debug.is_off():
             self.debug = DebugLevel(prompt.debug)
-        
+
         return self.agent_facade.start_request(
             request=prompt.prompt,
+            run_id=prompt.run_id,
+            debug=self.debug
+        )
+    
+    @app.post("/resume")
+    async def handle_post(self, prompt: ResumeWithInputRequest) -> StartRequestResponse:
+        """Resume an input request via the agent facade"""
+        if prompt.debug and self.debug.is_off():
+            self.debug = DebugLevel(prompt.debug)
+                
+        return self.agent_facade.start_request(
+            request=json.dumps(prompt.continue_result),
+            continue_result=prompt.continue_result,
             run_id=prompt.run_id,
             debug=self.debug
         )
@@ -1422,8 +1440,9 @@ class RayFacadeAgent:
                 prompt
             )
         else:
+            request_id = request.request_id if isinstance(request, Prompt) else ""
             remote_gen = self._agent.handlePromptOrResume.remote(
-                ResumeWithInput(self.name, continue_result),
+                ResumeWithInput(self.name, continue_result, request_id),
             )
         for remote_next in remote_gen:
             if self.cancelled:

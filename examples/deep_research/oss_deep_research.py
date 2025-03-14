@@ -44,7 +44,7 @@ class DeepResearchAgent(RayFacadeAgent):
     sections: Sections|None = None
     topic: str = ""
 
-    def __init__(self, name: str="OSS Deep Research", model: str=GPT_4O_MINI, playwright_fallback: bool = False):
+    def __init__(self, name: str="OSS Deep Research", model: str=GPT_4O_MINI, playwright_fallback: bool = False, verbose: bool = False):
         super().__init__(
             name, 
             welcome="I am the OSS Deep Research agent. Please provide me with a topic to research.",
@@ -56,6 +56,7 @@ class DeepResearchAgent(RayFacadeAgent):
         self.num_queries = 4
         self.playwright_fallback: bool = playwright_fallback
         self.sections_limit: Optional[int] = None  # For testing, limit the number of sections generated
+        self.verbose = verbose
         
         if self.playwright_fallback:
             self.playwright_tool = PlaywrightTool()
@@ -138,8 +139,10 @@ class DeepResearchAgent(RayFacadeAgent):
                     "num_queries": self.num_queries
                 }
             )
-            msg = f"Initial research queries:\n" + "\n".join([q.search_query for q in queries.queries]) + "\n\n"
-            yield ChatOutput(self.query_planner.name, {"content": msg})
+
+            if self.verbose:
+                msg = f"Initial research queries:\n" + "\n".join([q.search_query for q in queries.queries]) + "\n\n"
+                yield ChatOutput(self.query_planner.name, {"content": msg})
 
             # Get initial web content
             content = self.query_web_content(queries, run_context=RunContext(self.name))
@@ -156,9 +159,14 @@ class DeepResearchAgent(RayFacadeAgent):
             )
 
             msg = f"""
-            Please provide feedback on the following report plan. \n\n{preview_report(self.sections.sections)}\n
-            Does the report plan meet your needs? Pass 'true' to approve the report plan or provide feedback to regenerate the report plan:
-            """
+Please provide feedback on the following report plan. If the report meets your needs respond with 'true'.
+Otherwise provide feedback to regenerate the report plan.\n
+---
+\n{preview_report(self.sections.sections)}\n
+---
+\nDoes the report plan meet your needs? Respond with 'true' to approve the report plan or
+provide feedback to regenerate the report plan:\n
+"""
 
             yield WaitForInput(
                self.name, 
@@ -175,7 +183,8 @@ class DeepResearchAgent(RayFacadeAgent):
 
         # Format complete report
         draft_report = format_sections(self.sections.sections)
-        yield ChatOutput(self.name, {"content": f"REPORT DRAFT:\n{draft_report}\n\nWriting final report...\n"})
+        if self.verbose:
+            yield ChatOutput(self.name, {"content": f"REPORT DRAFT:\n{draft_report}\n\nWriting final report...\n"})
 
         # Rewrite the report sections with hindsight of the entire content of the report
         finals = []
@@ -199,10 +208,11 @@ class DeepResearchAgent(RayFacadeAgent):
         )
 
         report = "\n".join(finals) + "\n\n" + sources
+        content = "\n## Here is your completed report:\n\n" + report + "\n\n" if self.verbose else report
         yield ChatOutput(
             self.name, 
             {
-                "content": "\n## Here is your completed report:\n\n" + report + "\n\n"
+                "content": content
             }
         )
 
@@ -291,12 +301,9 @@ def preview_report(sections: list[Section]) -> str:
     formatted_str = ""
     for idx, section in enumerate(sections, 1):
         formatted_str += f"""
-{'='*30}
-Section {idx}: {section.name}
-{'='*30}
-Description:
-{section.description}
-Requires Research: {section.research}
+### Section {idx}: {section.name}
+**Description**: {section.description}
+{' *Requires Research*' if section.research else ''}
 """
     return formatted_str
 
