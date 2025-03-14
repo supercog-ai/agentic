@@ -42,7 +42,7 @@ export const agenticApi = {
   },
 
   resumeWithInput: async (agentPath: string, continueResult: Record<string, string>, runId?: string): Promise<Api.SendPromptResponse> => {
-    const response = await fetch(`/api${agentPath}/resume_with_input`, {
+    const response = await fetch(`/api${agentPath}/resume`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

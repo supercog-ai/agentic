@@ -835,7 +835,7 @@ class DynamicFastAPIHandler:
             debug=self.debug
         )
     
-    @app.post("/resume_with_input")
+    @app.post("/resume")
     async def handle_post(self, prompt: ResumeWithInputRequest) -> StartRequestResponse:
         """Resume an input request via the agent facade"""
         if prompt.debug and self.debug.is_off():
