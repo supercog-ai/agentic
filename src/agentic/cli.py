@@ -588,6 +588,30 @@ app.add_typer(models_app)
 app.add_typer(index_app)
 index_app.add_typer(index_document_app)
 
+import importlib.util
+import inspect
+import time
+
+def find_agent_instances(file_path):
+    """Find Agent instances in a module file."""
+    # Load the module from file path
+    spec = importlib.util.spec_from_file_location("dynamic_module", file_path)
+    if spec:
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+
+        # Find all Agent instances in the module
+        agent_instances = []
+        for name, obj in inspect.getmembers(module):
+            # Check if object is an instance of Agent class
+            if isinstance(
+                obj, module.Agent
+            ):  # Assumes Agent class is defined in the module
+                agent_instances.append(obj)
+        return agent_instances
+    else:
+        return []
+
 @app.command()
 def models():
     typer.echo(
@@ -650,6 +674,33 @@ def serve(filename: str = typer.Argument(default="", show_default=False)):
 
     while True:
         time.sleep(1)
+
+@app.command()
+def thread(
+    agent_path: str = typer.Argument(..., help="Path to the agent file"),
+):
+    """Start an interactive CLI session with an agent."""
+    from agentic.common import AgentRunner
+    console = Console()
+
+    try:
+        agent_instances = find_agent_instances(agent_path)
+        if len(agent_instances) == 0:
+            console.print(f"[red]No agent instance found in {agent_path}[/red]")
+            console.print("[yellow]Make sure you create an Agent instance in your script[/yellow]")
+            raise typer.Exit(1)
+            
+        agent = agent_instances[0]
+        runner = AgentRunner(agent)
+        
+        console.print(f"[green]Starting interactive session with agent from {agent_path}[/green]")
+        console.print("[yellow]Enter your messages (Ctrl+C or Ctrl+D to exit)[/yellow]\n")
+        
+        runner.repl_loop()
+        
+    except Exception as e:
+        console.print(f"[red]Error: {str(e)}[/red]")
+        raise typer.Exit(1)
 
 
 def copy_examples(src_path: Path, dest_path: Path, console: Console) -> None:
@@ -793,59 +844,6 @@ def build():
 # Add the dashboard app to the main app
 app.add_typer(dashboard_app)
 
-@app.command()
-def thread(
-    agent_path: str = typer.Argument(..., help="Path to the agent file"),
-    model: str = typer.Option(
-        GPT_DEFAULT_MODEL, "--model", help="The model to use for the agent"
-    ),
-):
-    """Start an interactive CLI session with an agent."""
-    from agentic.common import AgentRunner
-    from rich.prompt import Prompt
-
-    console = Console()
-
-    try:
-        # Load the module from file path
-        spec = importlib.util.spec_from_file_location("dynamic_module", agent_path)
-        if not spec:
-            console.print(f"[red]Could not load agent from {agent_path}[/red]")
-            raise typer.Exit(1)
-            
-        module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(module)
-
-        # Find first Agent instance
-        agent = None
-        for name, obj in inspect.getmembers(module):
-            if isinstance(obj, module.Agent):
-                agent = obj
-                break
-
-        if not agent:
-            console.print(f"[red]No agent instance found in {agent_path}[/red]")
-            raise typer.Exit(1)
-
-        console.print(f"[green]Starting interactive session with agent from {agent_path}[/green]")
-        console.print("[yellow]Enter your messages (Ctrl+C or Ctrl+D to exit)[/yellow]\n")
-
-        while True:
-            try:
-                user_input = Prompt.ask("\n[bold blue]You")
-                with Status("[bold green]Agent is thinking...", console=console):
-                    response = agent.run(user_input, model=model)
-                console.print(f"\n[bold green]Agent:[/bold green] {response}")
-            except (KeyboardInterrupt, EOFError):
-                console.print("\n[yellow]Ending interactive session[/yellow]")
-                break
-            except Exception as e:
-                console.print(f"\n[red]Error: {str(e)}[/red]")
-                continue
-
-    except Exception as e:
-        console.print(f"[red]Error loading agent: {str(e)}[/red]")
-        raise typer.Exit(1)
 
 if __name__ == "__main__":
     app()
