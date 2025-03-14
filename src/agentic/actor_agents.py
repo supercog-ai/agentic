@@ -1042,10 +1042,31 @@ class BaseAgentProxy:
         # Setup template path
         caller_frame = inspect.currentframe()
         if caller_frame:
-            caller_file = inspect.getframeinfo(caller_frame.f_back).filename
-            directory = os.path.dirname(caller_file)
-            base = os.path.splitext(os.path.basename(caller_file))[0]
-            template_path = os.path.join(directory, f"{base}.prompts.yaml")
+            current_file = inspect.getframeinfo(caller_frame).filename
+            frame = caller_frame.f_back
+                
+            # Traverse up the call stack until we find a frame from a different file
+            while frame:
+                frame_info = inspect.getframeinfo(frame)
+                frame_file = frame_info.filename
+                
+                # If we've found a frame from a different file, use it
+                if frame_file != current_file:
+                    directory = os.path.dirname(frame_file)
+                    base = os.path.splitext(os.path.basename(frame_file))[0]
+                    template_path = os.path.join(directory, f"{base}.prompts.yaml")
+                    break
+                
+                # Move up the call stack
+                frame = frame.f_back
+            
+            # If we didn't find a frame from a different file, fall back to the immediate caller
+            if not template_path:
+                caller_file = inspect.getframeinfo(caller_frame.f_back).filename
+                directory = os.path.dirname(caller_file)
+                base = os.path.splitext(os.path.basename(caller_file))[0]
+                template_path = os.path.join(directory, f"{base}.prompts.yaml")
+
         self.template_path = template_path
         
         # Setup tools and other properties
