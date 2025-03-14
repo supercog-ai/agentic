@@ -236,8 +236,13 @@ def index_list():
             client.close()
 
 @index_app.command("rename")
-def index_rename(source: str, target: str, confirm: bool = typer.Option(False, "--yes", "-y")):
-    """Rename an index."""
+def index_rename(
+    source: str = typer.Argument(..., help="Source index name"),
+    target: str = typer.Argument(..., help="Target index name"),
+    confirm: bool = typer.Option(False, "--yes", "-y", help="Skip confirmation prompt"),
+    overwrite: bool = typer.Option(False, "--overwrite", help="Overwrite existing target index"),
+):
+    """Rename a Weaviate index/collection"""
     from agentic.utils.rag_helper import (
         init_weaviate,
         rename_collection,
@@ -257,7 +262,7 @@ def index_rename(source: str, target: str, confirm: bool = typer.Option(False, "
             console.print(f"[red]⚠️ Will rename index '{source}' to '{target}'[/red]")
             typer.confirm("Are you sure?", abort=True)
             
-        success = rename_collection(client, source, target)
+        success = rename_collection(client, source, target, overwrite=overwrite)
         if success:
             console.print(f"[green]✅ Successfully renamed index to '{target}'[/green]")
         else:
