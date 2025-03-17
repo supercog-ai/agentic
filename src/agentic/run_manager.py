@@ -10,25 +10,26 @@ from .events import (
     ToolCall,
     ToolResult
 )
-from .common import Agent, RunContext
+from agentic.common import RunContext
 from agentic.utils.json import make_json_serializable
 from agentic.db.db_manager import DatabaseManager
+from agentic.utils.directory_management import get_runtime_filepath
 
 class RunManager:
     """
     Context manager that tracks agent runs and logs events to the database.
-    This is automatically initialized for all agents unless disabled with enable_run_logs=False.
+    This is automatically initialized for all agents unless disabled with db_path=None.
     """
     
-    def __init__(self, initial_run_id: Optional[str] = None, current_run_id: Optional[str] = None, user_id: str = "default", db_path: str = "./runtime/agent_runs.db"):
+    def __init__(self, initial_run_id: Optional[str] = None, current_run_id: Optional[str] = None, user_id: str = "default", db_path: str = "agent_runs.db"):
         self.user_id = user_id
         self.initial_run_id: Optional[str] = initial_run_id
         self.current_run_id: Optional[str] = current_run_id
         self.usage_data: Dict = {}
-        self.db_path = db_path
+        self.db_path = get_runtime_filepath(db_path)
     
     def handle_event(self, event: Event, run_context: RunContext) -> None:
-        """Generic event handler that processes all events and logs them appropriately"""      
+        """Generic event handler that processes all events and logs them appropriately"""
         db_manager = DatabaseManager(db_path=self.db_path)
         # Initialize a new run when we see a Prompt event
 
@@ -108,7 +109,7 @@ class RunManager:
 def init_run_tracking(
         agent,
         user_id: str = "default",
-        db_path: str = "./runtime/agent_runs.db",
+        db_path: str = "agent_runs.db",
         resume_run_id: Optional[str] = None
     ) -> tuple[str,Callable]:
     """Helper function to set up run tracking for an agent"""

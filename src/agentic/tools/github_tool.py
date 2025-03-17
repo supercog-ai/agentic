@@ -8,10 +8,11 @@ import base64
 import pandas as pd
 
 from agentic.common import RunContext
+from agentic.utils.directory_management import get_runtime_filepath
 
 
 class GithubTool:
-    repo_dir: str = "./runtime/git_tool"  # Local path to store the git repos
+    repo_dir: str = get_runtime_filepath("git_tool")  # Local path to store the git repos
 
     def __init__(self, api_key: str = None, default_repo: str = None):
         self.api_key = api_key

@@ -12,6 +12,7 @@ from .base import BaseAgenticTool
 from .registry import tool_registry, Dependency, ConfigRequirement
 from agentic.agentic_secrets import agentic_secrets
 from agentic.common import RunContext
+from agentic.utils.directory_management import get_runtime_directory
 from agentic.utils.rag_helper import init_weaviate, create_collection, init_embedding_model, init_chunker
 import logging  
 
@@ -56,7 +57,7 @@ class Meeting(Base):
 class MEETING_BAAS_Tool(BaseAgenticTool):
 
     def __init__(self):
-        self.db_path = "./runtime/meetings.db"
+        self.db_path = os.path.join(get_runtime_directory(), "meetings.db")
         # Do not initialize engine here, will be done when needed.
         self.Session = None
         self._engine = None

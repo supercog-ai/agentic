@@ -1,32 +1,24 @@
-import asyncio
 import time
 import os
 import readline
 import traceback
+import signal
 from dataclasses import dataclass
 from typing import Any, Dict, List, Type
 import importlib.util
 import inspect
 import sys
 from .fix_console import ConsoleWithInputBackspaceFixed
-from fastapi import FastAPI, Request
-from ray import serve
-from threading import Thread
 from rich.live import Live
 from rich.markdown import Markdown
-import uvicorn
-# Global console for Rich
-console = ConsoleWithInputBackspaceFixed()
 
-
-from .actor_agents import BaseAgentProxy, _AGENT_REGISTRY
+from agentic.actor_agents import BaseAgentProxy, _AGENT_REGISTRY
+from agentic.utils.directory_management import get_runtime_directory
 from agentic.events import (
     DebugLevel,
     Event,
     FinishCompletion,
-    Prompt,
     PromptStarted,
-    ResumeWithInput,
     StartCompletion,
     ToolCall,
     ToolResult,
@@ -35,6 +27,8 @@ from agentic.events import (
     ToolError,
 )
 
+# Global console for Rich
+console = ConsoleWithInputBackspaceFixed()
 
 @dataclass
 class Modelcost:
@@ -45,20 +39,11 @@ class Modelcost:
     cost: float
     time: float
 
-
-def print_italic(*args):
-    print(*args)
-
-
 @dataclass
 class Aggregator:
     total_cost: float = 0.0
     context_size: int = 0
 
-
-import signal
-import threading
-from .colors import Colors
 class RayAgentRunner:
     def __init__(self, agent: BaseAgentProxy, debug: str | bool = False) -> None:
         self.facade = agent
@@ -66,13 +51,12 @@ class RayAgentRunner:
             self.debug = DebugLevel(debug)
         else:
             self.debug = DebugLevel(os.environ.get("AGENTIC_DEBUG") or "")
-        if not os.getcwd().endswith("runtime"):
-            os.makedirs("runtime", exist_ok=True)
-        if not os.getcwd().endswith("runtime"):
-            try:
-                os.chdir("runtime")
-            except:
-                pass
+        
+        runtime_directory = get_runtime_directory()
+        try:
+            os.chdir(runtime_directory)
+        except:
+            pass
 
     def turn(self, request: str, print_all_events: bool = False) -> str:
         """Runs the agent and waits for the turn to finish, then returns the results
@@ -248,7 +232,7 @@ class RayAgentRunner:
                     break
         elif line == ".agent":
             print(self.facade.name)
-            print_italic(self.facade.instructions)
+            print(self.facade.instructions)
             print("model: ", self.facade.model)
             print("tools:")
             for tool in self.facade.list_tools():

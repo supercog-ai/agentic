@@ -323,6 +323,18 @@ def init(
             console.print(f"Error initializing project: {str(e)}", style="red")
             raise typer.Exit(1)
 
+@app.command()
+def init_runtime_directory(
+    path: str = typer.Argument(
+        "./runtime", help="Directory to initial your project (defaults to ./runtime)"
+    ),
+):
+    """Initialize runtime directory for agents to store state, adds its path as a setting"""
+    absolute_path = Path(path).resolve()
+    os.makedirs(absolute_path, exist_ok=True)
+    
+    # Add to settings
+    settings.set("AGENTIC_RUNTIME_DIR", absolute_path)
 
 # make a "run" command which executes a shell with all the args
 @app.command()

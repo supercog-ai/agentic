@@ -6,14 +6,12 @@ from copy import deepcopy
 
 from agentic.db.models import Run, RunLog
 from agentic.events import FinishCompletion
+from agentic.utils.directory_management import get_runtime_filepath
 
 # Database setup and management
 class DatabaseManager:
-    def __init__(self, db_path: str = "./runtime/agent_runs.db"):
-        if db_path is None:
-            db_path = "./runtime/agent_runs.db"
-        self.db_path = Path(db_path).expanduser()
-        self.db_path.parent.mkdir(parents=True, exist_ok=True)
+    def __init__(self, db_path: str = "agent_runs.db"):
+        self.db_path = get_runtime_filepath(db_path)
         self.engine = create_engine(f"sqlite:///{self.db_path}", echo=False)
         self.create_db_and_tables()
 
