@@ -136,8 +136,12 @@ def init_runtime_directory(
 @app.command()
 def thread(
     agent_path: str = typer.Argument(..., help="Path to the agent file"),
+    use_ray: bool = typer.Option(False, "--ray", help="Use Ray for parallel execution"),
 ):
     """Start an interactive CLI session with an agent"""
+    if use_ray:
+        os.environ["AGENTIC_USE_RAY"] = "True"
+
     from agentic.common import AgentRunner
     console = Console()
 
@@ -152,7 +156,7 @@ def thread(
         runner = AgentRunner(agent)
         
         console.print(f"[green]Starting interactive session with agent from {agent_path}[/green]")
-        console.print("[yellow]Enter your messages (Ctrl+C or Ctrl+D to exit)[/yellow]\n")
+        console.print("[yellow]Enter your messages (Ctrl+D to exit)[/yellow]\n")
         
         runner.repl_loop()
         
@@ -196,6 +200,14 @@ dashboard_app = typer.Typer(name="dashboard", help="Manage the dashboard UI")
 index_app = typer.Typer(name="index", help="Manage vector indexes")
 index_document_app = typer.Typer(name="document", help="Manage documents in indexes")
 models_app = typer.Typer(name="models", help="Work with LLM models")
+
+# Register command groups
+app.add_typer(secrets_app)
+app.add_typer(settings_app)
+app.add_typer(dashboard_app)
+app.add_typer(index_app)
+index_app.add_typer(index_document_app)
+app.add_typer(models_app)
 
 # Secrets commands
 @secrets_app.command("set")
@@ -252,7 +264,7 @@ def dashboard_callback():
     """Manage the dashboard UI"""
     # Check if the dashboard package is installed
     try:
-        importlib.import_module("agentic.dashboard")
+        import_module("agentic.dashboard")
     except ImportError:
         typer.echo("Dashboard package not installed. Install with 'pip install agentic-framework[dashboard]'")
         raise typer.Exit(1)
@@ -263,7 +275,7 @@ def start(
     dev: bool = typer.Option(False, "--dev", help="Run in development mode"),
     agent_path: str = typer.Option(None, "--agent-path", help="Path to the agent configuration file, will start the agent if provided"),
 ):
-    """Start the dashboard server."""
+    """Start the dashboard server"""
     import threading
     
     if agent_path:
@@ -888,18 +900,6 @@ def search(
     """Deprecated: Use 'index search' instead"""
     show_deprecation_warning("search", "index search")
     return index_search(index_name, query, embedding_model, limit, filter, hybrid, alpha)
-
-# Register command groups
-app.add_typer(secrets_app)
-app.add_typer(settings_app)
-app.add_typer(dashboard_app)
-app.add_typer(index_app)
-index_app.add_typer(index_document_app)
-app.add_typer(models_app)
-
-import importlib.util
-import inspect
-import time
 
 def find_agent_instances(file_path):
     """Find Agent instances in a module file"""

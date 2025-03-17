@@ -6,7 +6,6 @@
     thread          - Start interactive CLI session with an agent
     serve           - Runs the FastAPI server for an agent
     shell           - Copies secrets into the Environment and Runs a shell command
-    dashboard       - Manage the dashboard UI
     streamlit       - Run the Streamlit UI
 
 ## Secrets Management
@@ -25,7 +24,7 @@
 
 ## Dashboard Commands
 
-    dashboard start  - Start the dashboard server
+    dashboard start - Start the dashboard server
     dashboard build - Build the dashboard for production
 
 ## Index Management
