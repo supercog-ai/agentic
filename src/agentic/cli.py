@@ -68,34 +68,134 @@ def main(
     """
     state.no_cache = no_cache
 
+@app.command()
+def init(
+    path: str = typer.Argument(
+        ".", help="Directory to initial your project (defaults to current directory)"
+    ),
+    force: bool = typer.Option(
+        False,
+        "--force",
+        "-f",
+        help="Overwrite existing files in the destination directory",
+    ),
+):
+    """Initialize a new project by copying example files from the package"""
+    console = Console()
+    dest_path = Path(path + "/examples").resolve()
+    runtime_path = Path(path + "/runtime").resolve()
+
+    # Go to the path and create subdirectories
+    os.chdir(path)
+    os.makedirs(os.path.join(path, "agents"), exist_ok=True)
+    os.makedirs(os.path.join(path, "tools"), exist_ok=True)
+    os.makedirs(os.path.join(path, "tests"), exist_ok=True)
+    init_runtime_directory(runtime_path)
+    console.print(f"✓ Runtime directory set up at: {runtime_path}", style="green")
+
+    # Check if destination exists and is not empty
+    if dest_path.exists() and any(dest_path.iterdir()) and not force:
+        console.print(
+            "⚠️  Destination directory is not empty. Use --force to overwrite existing files.",
+            style="yellow",
+        )
+        raise typer.Exit(1)
+
+    with Status("[bold green]Copying example files...", console=console):
+        try:
+            # Get the package's examples directory using importlib.resources
+            # Replace 'your_package_name' with your actual package name
+            with resources.path("agentic_examples", "") as examples_path:
+                copy_examples(examples_path, dest_path, console)
+
+            console.print("\n✨ Examples copied successfully!", style="bold green")
+            console.print(f"📁 Location: {dest_path}", style="blue")
+
+        except ModuleNotFoundError:
+            console.print(
+                "Error: Could not find examples directory in package.", style="red"
+            )
+            raise typer.Exit(1)
+        except Exception as e:
+            console.print(f"Error initializing project: {str(e)}", style="red")
+            raise typer.Exit(1)
+
+@app.command()
+def init_runtime_directory(
+    path: str = typer.Argument(
+        "./runtime", help="Directory to initial your project (defaults to ./runtime)"
+    ),
+):
+    """Initialize runtime directory for agents to store state, adds its path as a setting"""
+    absolute_path = Path(path).resolve()
+    os.makedirs(absolute_path, exist_ok=True)
+    
+    # Add to settings
+    settings.set("AGENTIC_RUNTIME_DIR", absolute_path)
+
+@app.command()
+def thread(
+    agent_path: str = typer.Argument(..., help="Path to the agent file"),
+):
+    """Start an interactive CLI session with an agent."""
+    from agentic.common import AgentRunner
+    console = Console()
+
+    try:
+        agent_instances = find_agent_instances(agent_path)
+        if len(agent_instances) == 0:
+            console.print(f"[red]No agent instance found in {agent_path}[/red]")
+            console.print("[yellow]Make sure you create an Agent instance in your script[/yellow]")
+            raise typer.Exit(1)
+            
+        agent = agent_instances[0]
+        runner = AgentRunner(agent)
+        
+        console.print(f"[green]Starting interactive session with agent from {agent_path}[/green]")
+        console.print("[yellow]Enter your messages (Ctrl+C or Ctrl+D to exit)[/yellow]\n")
+        
+        runner.repl_loop()
+        
+    except Exception as e:
+        console.print(f"[red]Error: {str(e)}[/red]")
+        raise typer.Exit(1)
+    
+@app.command()
+def serve(filename: str = typer.Argument(default="", show_default=False)):
+    """Runs the FastAPI server for an agent"""
+    # Set AGENTIC_USE_RAY = True to use Ray for parallel processing
+    os.environ["AGENTIC_USE_RAY"] = "True"
+
+    from agentic.common import AgentRunner
+
+    agent_instances = find_agent_instances(filename)
+    if len(agent_instances) == 0:
+        typer.echo(f"No agent instances found in {filename}. Make sure to create at least one agent at module scope.")
+        raise typer.Exit(1)
+    for agent in agent_instances:
+        runner = AgentRunner(agent)
+        path = runner.serve()
+
+    # Busy loop until ctrl-c or ctrl-d
+    #os.system(f"open http://0.0.0.0:8086{path}/docs")
+
+    while True:
+        time.sleep(1)
+
+# make a "run" command which executes a shell with all the args
+@app.command()
+def run(args: List[str]):
+    """Copies secrets into the Environment and Runs a shell command"""
+    secrets.copy_secrets_to_env()
+    os.execvp("sh", ["sh", "-c", " ".join(args)])
 
 # Create command groups
-settings_app = typer.Typer(name="settings", help="Manage settings")
 secrets_app = typer.Typer(name="secrets", help="Manage secrets")
-models_app = typer.Typer(name="models", help="Work with LLM models")
+settings_app = typer.Typer(name="settings", help="Manage settings")
+dashboard_app = typer.Typer(name="dashboard", help="Manage the dashboard UI")
 index_app = typer.Typer(name="index", help="Manage vector indexes")
 index_document_app = typer.Typer(name="document", help="Manage documents in indexes")
-
-# Settings commands
-@settings_app.command("set")
-def settings_set(name: str, value: str):
-    """Set a setting value."""
-    typer.echo(settings.set(name, value))
-
-@settings_app.command("list")
-def settings_list():
-    """List all settings."""
-    typer.echo("\n".join(sorted(settings.list_settings())))
-
-@settings_app.command("get")
-def settings_get(name: str):
-    """Get a setting."""
-    typer.echo(settings.get(name))
-
-@settings_app.command("delete")
-def settings_delete(name: str):
-    """Delete a setting."""
-    typer.echo(settings.delete_setting(name))
+models_app = typer.Typer(name="models", help="Work with LLM models")
 
 # Secrets commands
 @secrets_app.command("set")
@@ -125,93 +225,54 @@ def secrets_delete(name: str):
     """Delete a secret."""
     typer.echo(secrets.delete_secret(name))
 
-# Models commands
-@models_app.command("list")
-def models_list():
-    """List available LLM models."""
-    typer.echo(
-        "Visit https://docs.litellm.ai/docs/providers for the full list of models"
-    )
-    typer.echo(
-        """
-Popular models:
-    openai/o1-mini
-    openai/o1-preview
-    openai/gpt-4o
-    openai/gpt-4o-mini
-    anthropic/claude-3-5-sonnet-20240620
-    anthropic/claude-3-5-haiku-20241022
-    lm_studio/qwen2.5-7b-instruct-1m
-    lm_studio/deepseek-r1-distill-qwen-7B
-     """
-    )
+# Settings commands
+@settings_app.command("set")
+def settings_set(name: str, value: str):
+    """Set a setting value."""
+    typer.echo(settings.set(name, value))
 
-@models_app.command("ollama")
-def models_ollama():
-    """List popular Ollama models."""
-    from .llm import llm_generate, LLMUsage, CLAUDE_DEFAULT_MODEL, GPT_DEFAULT_MODEL
-    from bs4 import BeautifulSoup
+@settings_app.command("list")
+def settings_list():
+    """List all settings."""
+    typer.echo("\n".join(sorted(settings.list_settings())))
 
-    # Download the web page from ollama.com/library
+@settings_app.command("get")
+def settings_get(name: str):
+    """Get a setting."""
+    typer.echo(settings.get(name))
 
-    url = "https://ollama.com/library"
-    response = requests.get(url)
-    html_content = response.content
+@settings_app.command("delete")
+def settings_delete(name: str):
+    """Delete a setting."""
+    typer.echo(settings.delete_setting(name))
 
-    def extract_models(html_page: bytes) -> tuple[str, LLMUsage]:
-        # Parse the HTML content using BeautifulSoup
-        soup = BeautifulSoup(html_content, "html.parser")
+# Dashboard commands
+@dashboard_app.callback()
+def dashboard_callback():
+    """Manage the dashboard UI."""
+    # Check if the dashboard package is installed
+    try:
+        importlib.import_module("agentic.dashboard")
+    except ImportError:
+        typer.echo("Dashboard package not installed. Install with 'pip install agentic-framework[dashboard]'")
+        raise typer.Exit(1)
 
-        usage = LLMUsage()
-        response = llm_generate(
-            """
-Get the names and descriptions from the top 20 models in this list:
-{{models}}
-            """,
-            models=(soup.get_text() or ""),
-            usage=usage,
-        )
-        return response, usage
-
-    typer.echo("Current popular Ollama models:")
-
-    usage: LLMUsage | None = None
-    if state.no_cache:
-        listing, usage = extract_models(html_content)
-    else:
-        listing = file_cache.get(
-            url, ttl_seconds=60 * 12, fetch_fn=lambda: extract_models(html_content)
-        )
-
-    console = Console()
-    md = Markdown(listing or "")
-    console.print(md)
-    if usage:
-        quiet_log(usage)
-
-@models_app.command("claude")
-def models_claude(prompt: str):
-    """Run completion with Claude."""
-    from .llm import llm_generate, LLMUsage, CLAUDE_DEFAULT_MODEL, GPT_DEFAULT_MODEL
-
-    usage = LLMUsage()
-    typer.echo(llm_generate(prompt, model=CLAUDE_DEFAULT_MODEL, usage=usage))
-    quiet_log(usage)
-
-@models_app.command("gpt")
-def models_gpt(
-    prompt: str,
-    model: str = typer.Option(
-        GPT_DEFAULT_MODEL, "--model", help="The model to use for completion"
-    ),
+@dashboard_app.command()
+def start(
+    port: int = typer.Option(3000, "--port", "-p", help="Port to run the dashboard on"),
+    dev: bool = typer.Option(False, "--dev", help="Run in development mode")
 ):
-    """Run completion with GPT."""
-    from .llm import llm_generate, LLMUsage, CLAUDE_DEFAULT_MODEL, GPT_DEFAULT_MODEL
+    """Start the dashboard server."""
+    from agentic.dashboard.setup import start_command
+    start_command(port=port, dev=dev)
 
-    usage = LLMUsage()
-    typer.echo(llm_generate(prompt, model=model, usage=usage))
-    quiet_log(usage)
+@dashboard_app.command()
+def build():
+    """Build the dashboard for production."""
+    from agentic.dashboard.setup import build_command
+    build_command()
 
+# index commands
 @index_app.command("list")
 def index_list():
     """List all available Weaviate indexes"""
@@ -552,6 +613,98 @@ def document_delete(
         if client:
             client.close()
 
+# Models commands
+@models_app.command("list")
+def models_list():
+    """List available LLM models."""
+    typer.echo(
+        "Visit https://docs.litellm.ai/docs/providers for the full list of models"
+    )
+    typer.echo(
+        """
+Popular models:
+    openai/o1-mini
+    openai/o1-preview
+    openai/gpt-4o
+    openai/gpt-4o-mini
+    anthropic/claude-3-5-sonnet-20240620
+    anthropic/claude-3-5-haiku-20241022
+    lm_studio/qwen2.5-7b-instruct-1m
+    lm_studio/deepseek-r1-distill-qwen-7B
+     """
+    )
+
+@models_app.command("ollama")
+def models_ollama():
+    """List popular Ollama models."""
+    from .llm import llm_generate, LLMUsage, CLAUDE_DEFAULT_MODEL, GPT_DEFAULT_MODEL
+    from bs4 import BeautifulSoup
+
+    # Download the web page from ollama.com/library
+
+    url = "https://ollama.com/library"
+    response = requests.get(url)
+    html_content = response.content
+
+    def extract_models(html_page: bytes) -> tuple[str, LLMUsage]:
+        # Parse the HTML content using BeautifulSoup
+        soup = BeautifulSoup(html_content, "html.parser")
+
+        usage = LLMUsage()
+        response = llm_generate(
+            """
+Get the names and descriptions from the top 20 models in this list:
+{{models}}
+            """,
+            models=(soup.get_text() or ""),
+            usage=usage,
+        )
+        return response, usage
+
+    typer.echo("Current popular Ollama models:")
+
+    usage: LLMUsage | None = None
+    if state.no_cache:
+        listing, usage = extract_models(html_content)
+    else:
+        listing = file_cache.get(
+            url, ttl_seconds=60 * 12, fetch_fn=lambda: extract_models(html_content)
+        )
+
+    console = Console()
+    md = Markdown(listing or "")
+    console.print(md)
+    if usage:
+        quiet_log(usage)
+
+@models_app.command("claude")
+def models_claude(prompt: str):
+    """Run completion with Claude."""
+    from .llm import llm_generate, LLMUsage, CLAUDE_DEFAULT_MODEL, GPT_DEFAULT_MODEL
+
+    usage = LLMUsage()
+    typer.echo(llm_generate(prompt, model=CLAUDE_DEFAULT_MODEL, usage=usage))
+    quiet_log(usage)
+
+@models_app.command("gpt")
+def models_gpt(
+    prompt: str,
+    model: str = typer.Option(
+        GPT_DEFAULT_MODEL, "--model", help="The model to use for completion"
+    ),
+):
+    """Run completion with GPT."""
+    from .llm import llm_generate, LLMUsage, CLAUDE_DEFAULT_MODEL, GPT_DEFAULT_MODEL
+
+    usage = LLMUsage()
+    typer.echo(llm_generate(prompt, model=model, usage=usage))
+    quiet_log(usage)
+
+@app.command()
+def streamlit():
+    """Runs the Streamlit UI"""
+    os.execvp("streamlit", ["streamlit", "run", "src/agentic/ui/app.py"])
+
 # Hidden deprecated commands that map to new structure
 @app.command(hidden=True)
 def list_settings():
@@ -715,11 +868,12 @@ def search(
     return index_search(index_name, query, embedding_model, limit, filter, hybrid, alpha)
 
 # Register command groups
-app.add_typer(settings_app)
 app.add_typer(secrets_app)
-app.add_typer(models_app)
+app.add_typer(settings_app)
+app.add_typer(dashboard_app)
 app.add_typer(index_app)
 index_app.add_typer(index_document_app)
+app.add_typer(models_app)
 
 import importlib.util
 import inspect
@@ -745,97 +899,6 @@ def find_agent_instances(file_path):
     else:
         return []
 
-@app.command()
-def models():
-    typer.echo(
-        "Visit https://docs.litellm.ai/docs/providers for the full list of models"
-    )
-    typer.echo(
-        """
-Popular models:
-    openai/o1-mini
-    openai/o1-preview
-    openai/gpt-4o
-    openai/gpt-4o-mini
-    anthropic/claude-3-5-sonnet-20240620
-    anthropic/claude-3-5-haiku-20241022
-    lm_studio/qwen2.5-7b-instruct-1m
-    lm_studio/deepseek-r1-distill-qwen-7B
-     """
-    )
-
-def streamlit():
-    """Runs the Streamlit UI"""
-    os.execvp("streamlit", ["streamlit", "run", "src/agentic/ui/app.py"])
-
-@app.command()
-def serve(filename: str = typer.Argument(default="", show_default=False)):
-    """Runs the FastAPI server for an agent"""
-    # Set AGENTIC_USE_RAY = True to use Ray for parallel processing
-    os.environ["AGENTIC_USE_RAY"] = "True"
-    from agentic.common import AgentRunner
-    
-    def find_agent_instances(file_path):
-        # Load the module from file path
-        spec = importlib.util.spec_from_file_location("dynamic_module", file_path)
-        if spec:
-            module = importlib.util.module_from_spec(spec)
-            spec.loader.exec_module(module)
-
-            # Find all Agent instances in the module
-            agent_instances = []
-            for name, obj in inspect.getmembers(module):
-                # Check if object is an instance of Agent class
-                if isinstance(
-                    obj, module.Agent
-                ):  # Assumes Agent class is defined in the module
-                    agent_instances.append(obj)
-            return agent_instances
-        else:
-            return []
-
-    agent_instances = find_agent_instances(filename)
-    if len(agent_instances) == 0:
-        typer.echo(f"No agent instances found in {filename}. Make sure to create at least one agent at module scope.")
-        raise typer.Exit(1)
-    for agent in agent_instances:
-        runner = AgentRunner(agent)
-        path = runner.serve()
-
-    # Busy loop until ctrl-c or ctrl-d
-    #os.system(f"open http://0.0.0.0:8086{path}/docs")
-
-    while True:
-        time.sleep(1)
-
-@app.command()
-def thread(
-    agent_path: str = typer.Argument(..., help="Path to the agent file"),
-):
-    """Start an interactive CLI session with an agent."""
-    from agentic.common import AgentRunner
-    console = Console()
-
-    try:
-        agent_instances = find_agent_instances(agent_path)
-        if len(agent_instances) == 0:
-            console.print(f"[red]No agent instance found in {agent_path}[/red]")
-            console.print("[yellow]Make sure you create an Agent instance in your script[/yellow]")
-            raise typer.Exit(1)
-            
-        agent = agent_instances[0]
-        runner = AgentRunner(agent)
-        
-        console.print(f"[green]Starting interactive session with agent from {agent_path}[/green]")
-        console.print("[yellow]Enter your messages (Ctrl+C or Ctrl+D to exit)[/yellow]\n")
-        
-        runner.repl_loop()
-        
-    except Exception as e:
-        console.print(f"[red]Error: {str(e)}[/red]")
-        raise typer.Exit(1)
-
-
 def copy_examples(src_path: Path, dest_path: Path, console: Console) -> None:
     """Copy example files from source to destination, maintaining directory structure."""
     try:
@@ -856,127 +919,6 @@ def copy_examples(src_path: Path, dest_path: Path, console: Console) -> None:
     except Exception as e:
         console.print(f"Error copying examples: {str(e)}", style="red")
         raise typer.Exit(1)
-
-@app.command()
-def init(
-    path: str = typer.Argument(
-        ".", help="Directory to initial your project (defaults to current directory)"
-    ),
-    force: bool = typer.Option(
-        False,
-        "--force",
-        "-f",
-        help="Overwrite existing files in the destination directory",
-    ),
-):
-    """Initialize a new project by copying example files from the package."""
-    console = Console()
-    dest_path = Path(path + "/examples").resolve()
-    runtime_path = Path(path + "/runtime").resolve()
-
-    # Go to the path and create subdirectories
-    os.chdir(path)
-    os.makedirs(os.path.join(path, "agents"), exist_ok=True)
-    os.makedirs(os.path.join(path, "tools"), exist_ok=True)
-    os.makedirs(os.path.join(path, "tests"), exist_ok=True)
-    init_runtime_directory(runtime_path)
-    console.print(f"✓ Runtime directory set up at: {runtime_path}", style="green")
-
-    # Check if destination exists and is not empty
-    if dest_path.exists() and any(dest_path.iterdir()) and not force:
-        console.print(
-            "⚠️  Destination directory is not empty. Use --force to overwrite existing files.",
-            style="yellow",
-        )
-        raise typer.Exit(1)
-
-    with Status("[bold green]Copying example files...", console=console):
-        try:
-            # Get the package's examples directory using importlib.resources
-            # Replace 'your_package_name' with your actual package name
-            with resources.path("agentic_examples", "") as examples_path:
-                copy_examples(examples_path, dest_path, console)
-
-            console.print("\n✨ Examples copied successfully!", style="bold green")
-            console.print(f"📁 Location: {dest_path}", style="blue")
-
-        except ModuleNotFoundError:
-            console.print(
-                "Error: Could not find examples directory in package.", style="red"
-            )
-            raise typer.Exit(1)
-        except Exception as e:
-            console.print(f"Error initializing project: {str(e)}", style="red")
-            raise typer.Exit(1)
-
-@app.command()
-def init_runtime_directory(
-    path: str = typer.Argument(
-        "./runtime", help="Directory to initial your project (defaults to ./runtime)"
-    ),
-):
-    """Initialize runtime directory for agents to store state, adds its path as a setting"""
-    absolute_path = Path(path).resolve()
-    os.makedirs(absolute_path, exist_ok=True)
-    
-    # Add to settings
-    settings.set("AGENTIC_RUNTIME_DIR", absolute_path)
-
-# make a "run" command which executes a shell with all the args
-@app.command()
-def run(args: List[str]):
-    """Copies secrets into the Environment and Runs a shell command"""
-    secrets.copy_secrets_to_env()
-    os.execvp("sh", ["sh", "-c", " ".join(args)])
-
-
-# Create a dashboard command group
-dashboard_app = typer.Typer(name="dashboard", help="Manage the dashboard UI")
-
-@dashboard_app.callback()
-def dashboard_callback():
-    """Manage the dashboard UI."""
-    # Check if the dashboard package is installed
-    try:
-        import_module("agentic.dashboard")
-    except ImportError:
-        typer.echo("Dashboard package not installed. Install with 'pip install agentic-framework[dashboard]'")
-        raise typer.Exit(1)
-
-@dashboard_app.command()
-def start(
-    port: int = typer.Option(None, "--port", "-p", help="Port to run the dashboard on"),
-    dev: bool = typer.Option(False, "--dev", help="Run in development mode"),
-    agent_path: str = typer.Option(None, "--agent-path", help="Path to the agent configuration file, will start the agent if provided"),
-):
-    """Start the dashboard server."""
-    import threading
-    
-    if agent_path:
-        # Start the agent in a separate thread
-        typer.echo(f"Starting agent from {agent_path} in a background thread...")
-        agent_thread = threading.Thread(
-            target=serve, 
-            args=(agent_path,),
-            daemon=True  # This ensures the thread exits when the main program exits
-        )
-        agent_thread.start()
-        typer.echo("Agent thread started")
-    
-    # Start the dashboard in the main thread
-    from agentic.dashboard.setup import start_command
-    typer.echo("Starting dashboard...")
-    start_command(port=port, dev=dev)
-
-@dashboard_app.command()
-def build():
-    """Build the dashboard for production."""
-    from agentic.dashboard.setup import build_command
-    build_command()
-
-# Add the dashboard app to the main app
-app.add_typer(dashboard_app)
-
 
 if __name__ == "__main__":
     app()
