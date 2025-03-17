@@ -8,13 +8,7 @@
     streamlit       - Run the Streamlit UI
     thread          - Start interactive CLI session with an agent
     dashboard       - Manage the dashboard UI
-
-## Settings Management
-
-    settings set    - Set a setting value
-    settings list   - List all settings
-    settings get    - Get a setting value
-    settings delete - Delete a setting
+    streamlit       - Run the Streamlit UI
 
 ## Secrets Management
 
@@ -22,13 +16,18 @@
     secrets list    - List all secrets (use --values to show values)
     secrets get     - Get a secret value
     secrets delete  - Delete a secret
+    
+## Settings Management
 
-## Model Operations
+    settings set    - Set a setting value
+    settings list   - List all settings
+    settings get    - Get a setting value
+    settings delete - Delete a setting
 
-    models gpt      - Run completion with GPT (use --model to override)
-    models claude   - Run completion with Claude
-    models list     - List available LLM models
-    models ollama   - List popular Ollama models
+## Dashboard Commands
+
+    dashboard start  - Start the dashboard server
+    dashboard build - Build the dashboard for production
 
 ## Index Management
 
@@ -43,9 +42,11 @@
     index document show   - Show document details
     index document delete - Delete a document from an index
 
-## Dashboard Commands
+## Model Operations
 
-    dashboard start  - Start the Next.js dashboard UI
-    dashboard build  - Build the Next.js dashboard UI for production
+    models gpt      - Run completion with GPT (use --model to override)
+    models claude   - Run completion with Claude
+    models list     - List available LLM models
+    models ollama   - List popular Ollama models
 
 
