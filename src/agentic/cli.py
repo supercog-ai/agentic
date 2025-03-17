@@ -182,9 +182,9 @@ def serve(filename: str = typer.Argument(default="", show_default=False)):
     while True:
         time.sleep(1)
 
-# make a "run" command which executes a shell with all the args
+# executes a shell with all the args
 @app.command()
-def run(args: List[str]):
+def shell(args: List[str]):
     """Copies secrets into the environment and executes a shell command"""
     secrets.copy_secrets_to_env()
     os.execvp("sh", ["sh", "-c", " ".join(args)])
@@ -706,6 +706,12 @@ def streamlit():
     os.execvp("streamlit", ["streamlit", "run", "src/agentic/ui/app.py"])
 
 # Hidden deprecated commands that map to new structure
+@app.command(hidden=True)
+def run(args: List[str]):
+    """Deprecated: Use 'shell' instead"""
+    show_deprecation_warning("run", "shell")
+    return shell(args)
+
 @app.command(hidden=True)
 def list_settings():
     """Deprecated: Use 'settings list' instead"""
