@@ -214,7 +214,7 @@ def models_gpt(
 
 @index_app.command("list")
 def index_list():
-    """List all available indexes."""
+    """List all available Weaviate indexes"""
     from agentic.utils.rag_helper import (
         init_weaviate,
         list_collections,
@@ -237,8 +237,8 @@ def index_list():
 
 @index_app.command("rename")
 def index_rename(
-    source: str = typer.Argument(..., help="Source index name"),
-    target: str = typer.Argument(..., help="Target index name"),
+    source_name: str,
+    target_name: str,
     confirm: bool = typer.Option(False, "--yes", "-y", help="Skip confirmation prompt"),
     overwrite: bool = typer.Option(False, "--overwrite", help="Overwrite existing target index"),
 ):
@@ -254,19 +254,19 @@ def index_rename(
             client = init_weaviate()
         
         # Check if source exists first
-        if not client.collections.exists(source):
-            console.print(f"[yellow]⚠️ Source index '{source}' does not exist[/yellow]")
+        if not client.collections.exists(source_name):
+            console.print(f"[yellow]⚠️ Source index '{source_name}' does not exist[/yellow]")
             raise typer.Exit(0)
             
         if not confirm:
-            console.print(f"[red]⚠️ Will rename index '{source}' to '{target}'[/red]")
+            console.print(f"[red]⚠️ Will rename index '{source_name}' to '{target_name}'[/red]")
             typer.confirm("Are you sure?", abort=True)
             
-        success = rename_collection(client, source, target, overwrite=overwrite)
+        success = rename_collection(client, source_name, target_name, overwrite=overwrite)
         if success:
-            console.print(f"[green]✅ Successfully renamed index to '{target}'[/green]")
+            console.print(f"[green]✅ Successfully renamed index to '{target_name}'[/green]")
         else:
-            if client.collections.exists(target):
+            if client.collections.exists(target_name):
                 console.print("[yellow]⚠️ Target index already exists, use --overwrite to replace it[/yellow]")
             else:
                 console.print("[red]❌ Failed to rename index[/red]")
@@ -277,8 +277,11 @@ def index_rename(
             client.close()
 
 @index_app.command("delete")
-def index_delete(name: str, confirm: bool = typer.Option(False, "--yes", "-y")):
-    """Delete an index."""
+def index_delete(
+    index_name: str,
+    confirm: bool = typer.Option(False, "--yes", "-y", help="Skip confirmation prompt")
+):
+    """Delete entire Weaviate index (collection)"""
     from agentic.utils.rag_helper import (
         init_weaviate,
     )
@@ -288,19 +291,85 @@ def index_delete(name: str, confirm: bool = typer.Option(False, "--yes", "-y")):
         with Status("[bold green]Initializing Weaviate...", console=console):
             client = init_weaviate()
             
-        if not client.collections.exists(name):
-            console.print(f"[yellow]⚠️ Index '{name}' does not exist[/yellow]")
+        if not client.collections.exists(index_name):
+            console.print(f"[yellow]⚠️ Index '{index_name}' does not exist[/yellow]")
             raise typer.Exit(0)
             
         if not confirm:
-            console.print(f"[red]⚠️ Will delete ENTIRE index '{name}'[/red]")
+            console.print(f"[red]⚠️ Will delete ENTIRE index '{index_name}'[/red]")
             typer.confirm("Are you sure?", abort=True)
             
         with Status("[bold green]Deleting index...", console=console):
-            client.collections.delete(name)
+            client.collections.delete(index_name)
             
-        console.print(f"[green]✅ Successfully deleted index '{name}'[/green]")
+        console.print(f"[green]✅ Successfully deleted index '{index_name}'[/green]")
         
+    except Exception as e:
+        console.print(f"[bold red]Error: {str(e)}[/bold red]")
+    finally:
+        if client:
+            client.close()
+
+@index_app.command("search")
+def index_search(
+    index_name: str,
+    query: str,
+    embedding_model: str = typer.Option(
+        "BAAI/bge-small-en-v1.5",
+        help="FastEmbed model name matching the index's embedding model"
+    ),
+    limit: int = typer.Option(5, min=1, max=100),
+    filter: Optional[str] = typer.Option(None, help="Filter in key:value format"),
+    hybrid: bool = typer.Option(False, "--hybrid", help="Enable hybrid search combining vector and keyword"),
+    alpha: float = typer.Option(0.5, min=0.0, max=1.0, help="Weight between vector (1.0) and keyword (0.0) search")
+):
+    """Search documents with hybrid search support"""
+    from agentic.utils.rag_helper import (
+        init_weaviate,
+        init_embedding_model,
+        search_collection
+    )
+    console = Console()
+    try:
+        with Status("[bold green]Initializing Weaviate...", console=console):
+            client = init_weaviate()
+            
+        if not client.collections.exists(index_name):
+            console.print(f"[yellow]⚠️ Index '{index_name}' does not exist[/yellow]")
+            raise typer.Exit(0)
+            
+        collection = client.collections.get(index_name)
+        filters = {}
+        if filter:
+            if ":" not in filter:
+                console.print(f"[red]❌ Invalid filter format: '{filter}'. Use key:value[/red]")
+                raise typer.Exit(1)
+            key, value = filter.split(":", 1)
+            filters[key.strip()] = value.strip()
+        
+        with Status("[bold green]Initializing model...", console=console):
+            embed_model = init_embedding_model(embedding_model)
+            
+        with Status("[bold green]Searching...", console=console):
+            results = search_collection(
+                collection=collection,
+                query=query,
+                embed_model=embed_model,
+                limit=limit,
+                filters=filters,
+                hybrid=hybrid,
+                alpha=alpha
+            )
+            
+        console.print(Markdown(f"## Search Results ({len(results)})"))
+        for idx, result in enumerate(results, 1):
+            console.print(Markdown(f"### Result {idx} - {result['filename']}"))
+            console.print(f"- Source: {result['source_url']}")
+            console.print(f"- Date: {result['timestamp']}")
+            console.print(f"- Distance: {result.get('distance', 'N/A') if result.get('distance') is not None else 'N/A'}")
+            console.print(f"- Score: {result.get('score', 'N/A') if result.get('score') is not None else 'N/A'}")
+            console.print(Markdown("\n**Content:**\n" + result["content"][:500] + "...\n"))
+            
     except Exception as e:
         console.print(f"[bold red]Error: {str(e)}[/bold red]")
     finally:
@@ -345,7 +414,7 @@ def document_add(
 
 @index_document_app.command("list")
 def document_list(index_name: str):
-    """List documents in an index."""
+    """List all documents in an index with basic info"""
     from agentic.utils.rag_helper import (
         init_weaviate,
         list_documents_in_collection,
@@ -376,7 +445,7 @@ def document_list(index_name: str):
 
 @index_document_app.command("show")
 def document_show(index_name: str, document_identifier: str):
-    """Show document details."""
+    """Show detailed metadata for a specific document using its ID or filename/path"""
     from agentic.utils.rag_helper import (
         init_weaviate,
         get_document_id_from_path,
@@ -423,10 +492,10 @@ def document_show(index_name: str, document_identifier: str):
 @index_document_app.command("delete")
 def document_delete(
     index_name: str,
-    document_identifier: str,
-    confirm: bool = typer.Option(False, "--yes", "-y")
+    document_identifier: str,  # Changed from file_path to accept both
+    confirm: bool = typer.Option(False, "--yes", "-y", help="Skip confirmation prompt")
 ):
-    """Delete a document from an index."""
+    """Delete a document using its ID or filename/path"""
     from agentic.utils.rag_helper import (
         init_weaviate,
         delete_document_from_index,
