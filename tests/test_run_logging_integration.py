@@ -102,7 +102,7 @@ def test_run_logging_disabled(db_manager):
         Always explain your work before using a tool.""",
         tools=[SimpleCalculator()],
         model="gpt-4o-mini",
-        enable_run_logs=False
+        db_path=None
     )
     runner = AgentRunner(no_logging_agent)
     

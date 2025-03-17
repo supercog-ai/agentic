@@ -28,7 +28,7 @@ Then call agent B once with the request 'run'
             Agent(
                 name="Agent B",
                 instructions="Only print 'I am agent B. My secret number is 99'.",
-                enable_run_logs=False,
+                db_path=None,
             )
         ],
         model="openai/gpt-4o",
@@ -50,7 +50,7 @@ Then call agent B once with the request 'run'
             Agent(
                 name="Agent B",
                 instructions="Only print 'I am agent B. My secret number is 99'.",
-                enable_run_logs=False,
+                db_path=None,
             )
         ],
         model="openai/gpt-4o",

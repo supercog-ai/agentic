@@ -19,7 +19,7 @@ def parent():
                 name="TheChild",
                 model=CLAUDE,
                 tools=[UnitTestingTool(child_story_log)],
-                enable_run_logs=False,
+                db_path=None,
             )
         ]
     )

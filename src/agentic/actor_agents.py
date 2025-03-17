@@ -1,7 +1,6 @@
 import asyncio
 import time
 from pydantic import BaseModel, ConfigDict
-import typing
 from typing import Any, Optional, Generator, Literal, Type, Union
 from dataclasses import dataclass
 from pathlib import Path
@@ -1048,8 +1047,7 @@ class BaseAgentProxy:
         model: str | None = None,
         template_path: str | Path = None,
         max_tokens: int = None,
-        enable_run_logs: bool = True,
-        db_path: Optional[str | Path] = None,
+        db_path: Optional[str | Path] = "./agent_runs.db",
         memories: list[str] = [],
         handle_turn_start: Callable[[Prompt, RunContext], None] = None,
         result_model: Type[BaseModel]|None = None,
@@ -1062,7 +1060,6 @@ class BaseAgentProxy:
         self.model = model or "gpt-4o-mini"
         self.prompts = prompts or {}
         self.cancelled = False
-        self.enable_run_logs = enable_run_logs
         self.mock_settings = mock_settings
 
         # Setup template path
@@ -1409,9 +1406,8 @@ class BaseAgentProxy:
 
         # Get the agent instance for this request
         agent_instance = self._get_agent_for_request(request_id)
-        if not self.run_id:
-            if self.enable_run_logs:
-                self.init_run_tracking(agent_instance)
+        if not self.run_id and self.db_path:
+            self.init_run_tracking(agent_instance)
 
         # Prepare the prompt or resume input
         if not continue_result:
