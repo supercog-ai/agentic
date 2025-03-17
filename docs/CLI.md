@@ -3,10 +3,9 @@
 ## Global Commands
 
     init            - Initialize a new project by copying example files from the package
+    thread          - Start interactive CLI session with an agent
     serve           - Runs the FastAPI server for an agent
     shell           - Copies secrets into the Environment and Runs a shell command
-    streamlit       - Run the Streamlit UI
-    thread          - Start interactive CLI session with an agent
     dashboard       - Manage the dashboard UI
     streamlit       - Run the Streamlit UI
 
@@ -44,9 +43,9 @@
 
 ## Model Operations
 
-    models gpt      - Run completion with GPT (use --model to override)
-    models claude   - Run completion with Claude
     models list     - List available LLM models
     models ollama   - List popular Ollama models
+    models claude   - Run completion with Claude
+    models gpt      - Run completion with GPT (use --model to override)
 
 
