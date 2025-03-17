@@ -66,11 +66,7 @@ github = [
 ]
 
 all = [
-    "google-news",
-    "database",
-    "image-generator",
-    "github",
-    "dashboard",
+    "agentic-framework[google-news,database,image-generator,github,dashboard]",
 ]
 
 dev = [
