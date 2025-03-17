@@ -47,7 +47,7 @@ def quiet_log(*args):
 
 
 def show_deprecation_warning(old_cmd: str, new_cmd: str):
-    """Show a warning about deprecated commands."""
+    """Show a warning about deprecated commands"""
     typer.secho(
         f"Warning: '{old_cmd}' is deprecated and will be removed in a future version.\n"
         f"Please use '{new_cmd}' instead.",
@@ -64,7 +64,7 @@ def main(
     )
 ):
     """
-    Agentic CLI with various commands for managing secrets and running services.
+    Agentic CLI with various commands for managing secrets and running services
     """
     state.no_cache = no_cache
 
@@ -137,7 +137,7 @@ def init_runtime_directory(
 def thread(
     agent_path: str = typer.Argument(..., help="Path to the agent file"),
 ):
-    """Start an interactive CLI session with an agent."""
+    """Start an interactive CLI session with an agent"""
     from agentic.common import AgentRunner
     console = Console()
 
@@ -185,7 +185,7 @@ def serve(filename: str = typer.Argument(default="", show_default=False)):
 # make a "run" command which executes a shell with all the args
 @app.command()
 def run(args: List[str]):
-    """Copies secrets into the Environment and Runs a shell command"""
+    """Copies secrets into the environment and executes a shell command"""
     secrets.copy_secrets_to_env()
     os.execvp("sh", ["sh", "-c", " ".join(args)])
 
@@ -200,7 +200,7 @@ models_app = typer.Typer(name="models", help="Work with LLM models")
 # Secrets commands
 @secrets_app.command("set")
 def secrets_set(name: str, value: str | None = None):
-    """Set a secret."""
+    """Set a secret"""
     if "=" in name and value is None:
         name, value = name.split("=", 1)
     typer.echo(secrets.set_secret(name, value))
@@ -209,7 +209,7 @@ def secrets_set(name: str, value: str | None = None):
 def secrets_list(
     values: bool = typer.Option(False, "--values", help="Show secret values")
 ):
-    """List all secrets."""
+    """List all secrets"""
     if values:
         typer.echo(secrets.get_all_secrets())
     else:
@@ -217,39 +217,39 @@ def secrets_list(
 
 @secrets_app.command("get")
 def secrets_get(name: str):
-    """Get a secret."""
+    """Get a secret"""
     typer.echo(secrets.get_secret(name))
 
 @secrets_app.command("delete")
 def secrets_delete(name: str):
-    """Delete a secret."""
+    """Delete a secret"""
     typer.echo(secrets.delete_secret(name))
 
 # Settings commands
 @settings_app.command("set")
 def settings_set(name: str, value: str):
-    """Set a setting value."""
+    """Set a setting value"""
     typer.echo(settings.set(name, value))
 
 @settings_app.command("list")
 def settings_list():
-    """List all settings."""
+    """List all settings"""
     typer.echo("\n".join(sorted(settings.list_settings())))
 
 @settings_app.command("get")
 def settings_get(name: str):
-    """Get a setting."""
+    """Get a setting"""
     typer.echo(settings.get(name))
 
 @settings_app.command("delete")
 def settings_delete(name: str):
-    """Delete a setting."""
+    """Delete a setting"""
     typer.echo(settings.delete_setting(name))
 
 # Dashboard commands
 @dashboard_app.callback()
 def dashboard_callback():
-    """Manage the dashboard UI."""
+    """Manage the dashboard UI"""
     # Check if the dashboard package is installed
     try:
         importlib.import_module("agentic.dashboard")
@@ -262,13 +262,13 @@ def start(
     port: int = typer.Option(3000, "--port", "-p", help="Port to run the dashboard on"),
     dev: bool = typer.Option(False, "--dev", help="Run in development mode")
 ):
-    """Start the dashboard server."""
+    """Start the dashboard server"""
     from agentic.dashboard.setup import start_command
     start_command(port=port, dev=dev)
 
 @dashboard_app.command()
 def build():
-    """Build the dashboard for production."""
+    """Build the dashboard for production"""
     from agentic.dashboard.setup import build_command
     build_command()
 
@@ -457,7 +457,7 @@ def document_add(
         help="Comma-separated delimiters for fallback chunk splitting"
     ),
 ):
-    """Add a document to an index."""
+    """Add a document to an index"""
     from agentic.utils.rag_helper import rag_index_file
     console = Console()
 
@@ -616,7 +616,7 @@ def document_delete(
 # Models commands
 @models_app.command("list")
 def models_list():
-    """List available LLM models."""
+    """List available LLM models"""
     typer.echo(
         "Visit https://docs.litellm.ai/docs/providers for the full list of models"
     )
@@ -636,7 +636,7 @@ Popular models:
 
 @models_app.command("ollama")
 def models_ollama():
-    """List popular Ollama models."""
+    """List popular Ollama models"""
     from .llm import llm_generate, LLMUsage, CLAUDE_DEFAULT_MODEL, GPT_DEFAULT_MODEL
     from bs4 import BeautifulSoup
 
@@ -679,7 +679,7 @@ Get the names and descriptions from the top 20 models in this list:
 
 @models_app.command("claude")
 def models_claude(prompt: str):
-    """Run completion with Claude."""
+    """Run completion with Claude"""
     from .llm import llm_generate, LLMUsage, CLAUDE_DEFAULT_MODEL, GPT_DEFAULT_MODEL
 
     usage = LLMUsage()
@@ -693,7 +693,7 @@ def models_gpt(
         GPT_DEFAULT_MODEL, "--model", help="The model to use for completion"
     ),
 ):
-    """Run completion with GPT."""
+    """Run completion with GPT"""
     from .llm import llm_generate, LLMUsage, CLAUDE_DEFAULT_MODEL, GPT_DEFAULT_MODEL
 
     usage = LLMUsage()
@@ -708,79 +708,79 @@ def streamlit():
 # Hidden deprecated commands that map to new structure
 @app.command(hidden=True)
 def list_settings():
-    """Deprecated: Use 'settings list' instead."""
+    """Deprecated: Use 'settings list' instead"""
     show_deprecation_warning("list-settings", "settings list")
     return settings_list()
 
 @app.command(hidden=True)
 def list_secrets():
-    """Deprecated: Use 'secrets list' instead."""
+    """Deprecated: Use 'secrets list' instead"""
     show_deprecation_warning("list-secrets", "secrets list")
     return secrets_list()
 
 @app.command(hidden=True)
 def set(name: str, value: str):
-    """Deprecated: Use 'settings set' instead."""
+    """Deprecated: Use 'settings set' instead"""
     show_deprecation_warning("set", "settings set")
     return settings_set(name, value)
 
 @app.command(hidden=True)
 def set_secret(name: str, value: str | None = None):
-    """Deprecated: Use 'secrets set' instead."""
+    """Deprecated: Use 'secrets set' instead"""
     show_deprecation_warning("set-secret", "secrets set")
     return secrets_set(name, value)
 
 @app.command(hidden=True)
 def get(name: str):
-    """Deprecated: Use 'settings get' instead."""
+    """Deprecated: Use 'settings get' instead"""
     show_deprecation_warning("get", "settings get")
     return settings_get(name)
 
 @app.command(hidden=True)
 def get_secret(name: str):
-    """Deprecated: Use 'secrets get' instead."""
+    """Deprecated: Use 'secrets get' instead"""
     show_deprecation_warning("get-secret", "secrets get")
     return secrets_get(name)
 
 @app.command(hidden=True)
 def get_all_secrets():
-    """Deprecated: Use 'secrets list --values' instead."""
+    """Deprecated: Use 'secrets list --values' instead"""
     show_deprecation_warning("get-all-secrets", "secrets list --values")
     return secrets_list(values=True)
 
 @app.command(hidden=True)
 def delete(name: str):
-    """Deprecated: Use 'settings delete' instead."""
+    """Deprecated: Use 'settings delete' instead"""
     show_deprecation_warning("delete", "settings delete")
     return settings_delete(name)
 
 @app.command(hidden=True)
 def delete_secret(name: str):
-    """Deprecated: Use 'secrets delete' instead."""
+    """Deprecated: Use 'secrets delete' instead"""
     show_deprecation_warning("delete-secret", "secrets delete")
     return secrets_delete(name)
 
 @app.command(hidden=True)
 def ollama():
-    """Deprecated: Use 'models ollama' instead."""
+    """Deprecated: Use 'models ollama' instead"""
     show_deprecation_warning("ollama", "models ollama")
     return models_ollama()
 
 @app.command(hidden=True)
 def claude(prompt: str):
-    """Deprecated: Use 'models claude' instead."""
+    """Deprecated: Use 'models claude' instead"""
     show_deprecation_warning("claude", "models claude")
     return models_claude(prompt)
 
 @app.command(hidden=True)
 def gpt(prompt: str, model: str = typer.Option(GPT_DEFAULT_MODEL)):
-    """Deprecated: Use 'models gpt' instead."""
+    """Deprecated: Use 'models gpt' instead"""
     show_deprecation_warning("gpt", "models gpt")
     return models_gpt(prompt, model)
 
 @app.command(hidden=True)
 def models():
-    """Deprecated: Use 'models list' instead."""
+    """Deprecated: Use 'models list' instead"""
     show_deprecation_warning("models", "models list")
     return models_list()
 
@@ -792,7 +792,7 @@ def index_file(
     chunk_threshold: float = typer.Option(0.5, min=0.1, max=1.0),
     chunk_delimiters: str = typer.Option(". ,! ,? ,\n"),
 ):
-    """Deprecated: Use 'index document add' instead."""
+    """Deprecated: Use 'index document add' instead"""
     show_deprecation_warning("index-file", "index document add")
     return document_add(
         index_name,
@@ -804,7 +804,7 @@ def index_file(
 
 @app.command(hidden=True)
 def ui():
-    """Deprecated: Use 'streamlit' instead."""
+    """Deprecated: Use 'streamlit' instead"""
     show_deprecation_warning("ui", "streamlit")
     return streamlit()
 
@@ -814,19 +814,19 @@ def delete_document(
     document_identifier: str,
     confirm: bool = typer.Option(False, "--yes", "-y")
 ):
-    """Deprecated: Use 'index document delete' instead."""
+    """Deprecated: Use 'index document delete' instead"""
     show_deprecation_warning("delete-document", "index document delete")
     return document_delete(index_name, document_identifier, confirm)
 
 @app.command(hidden=True)
 def delete_index(name: str, confirm: bool = typer.Option(False, "--yes", "-y")):
-    """Deprecated: Use 'index delete' instead."""
+    """Deprecated: Use 'index delete' instead"""
     show_deprecation_warning("delete-index", "index delete")
     return index_delete(name, confirm)
 
 @app.command(hidden=True)
 def list_indexes():
-    """Deprecated: Use 'index list' instead."""
+    """Deprecated: Use 'index list' instead"""
     show_deprecation_warning("list-indexes", "index list")
     return index_list()
 
@@ -837,19 +837,19 @@ def rename_index(
     confirm: bool = typer.Option(False, "--yes", "-y"),
     overwrite: bool = typer.Option(False, "--overwrite")
 ):
-    """Deprecated: Use 'index rename' instead."""
+    """Deprecated: Use 'index rename' instead"""
     show_deprecation_warning("rename-index", "index rename")
     return index_rename(source_name, target_name, confirm, overwrite)
 
 @app.command(hidden=True)
 def list_documents(index_name: str):
-    """Deprecated: Use 'index document list' instead."""
+    """Deprecated: Use 'index document list' instead"""
     show_deprecation_warning("list-documents", "index document list")
     return document_list(index_name)
 
 @app.command(hidden=True)
 def show_document(index_name: str, document_identifier: str):
-    """Deprecated: Use 'index document show' instead."""
+    """Deprecated: Use 'index document show' instead"""
     show_deprecation_warning("show-document", "index document show")
     return document_show(index_name, document_identifier)
 
@@ -863,7 +863,7 @@ def search(
     hybrid: bool = typer.Option(False, "--hybrid"),
     alpha: float = typer.Option(0.5, min=0.0, max=1.0)
 ):
-    """Deprecated: Use 'index search' instead."""
+    """Deprecated: Use 'index search' instead"""
     show_deprecation_warning("search", "index search")
     return index_search(index_name, query, embedding_model, limit, filter, hybrid, alpha)
 
@@ -880,7 +880,7 @@ import inspect
 import time
 
 def find_agent_instances(file_path):
-    """Find Agent instances in a module file."""
+    """Find Agent instances in a module file"""
     # Load the module from file path
     spec = importlib.util.spec_from_file_location("dynamic_module", file_path)
     if spec:
@@ -900,7 +900,7 @@ def find_agent_instances(file_path):
         return []
 
 def copy_examples(src_path: Path, dest_path: Path, console: Console) -> None:
-    """Copy example files from source to destination, maintaining directory structure."""
+    """Copy example files from source to destination, maintaining directory structure"""
     try:
         if not dest_path.exists():
             dest_path.mkdir(parents=True)
