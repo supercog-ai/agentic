@@ -214,8 +214,10 @@ Popular models:
 @app.command()
 def serve(filename: str = typer.Argument(default="", show_default=False)):
     """Runs the FastAPI server for an agent"""
+    # Set AGENTIC_USE_RAY = True to use Ray for parallel processing
+    os.environ["AGENTIC_USE_RAY"] = "True"
     from agentic.common import AgentRunner
-
+    
     def find_agent_instances(file_path):
         # Load the module from file path
         spec = importlib.util.spec_from_file_location("dynamic_module", file_path)
@@ -342,7 +344,6 @@ def run(args: List[str]):
     """Copies secrets into the Environment and Runs a shell command"""
     secrets.copy_secrets_to_env()
     os.execvp("sh", ["sh", "-c", " ".join(args)])
-
 
 @app.command()
 def index_file(
