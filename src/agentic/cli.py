@@ -1,12 +1,13 @@
 import typer
 import os
 import requests
+import inspect
+import time
 from rich.markdown import Markdown
 from rich.console import Console
-from typing import Optional, List, Dict
+from typing import Optional, List
 from .file_cache import file_cache
 from .colors import Colors
-
 
 import agentic.quiet_warnings
 from agentic.agentic_secrets import agentic_secrets as secrets
@@ -15,6 +16,7 @@ from agentic.settings import settings
 import shutil
 from pathlib import Path
 from importlib import resources, import_module
+import importlib.util
 from rich.status import Status
 
 import warnings
@@ -209,12 +211,6 @@ Popular models:
      """
     )
 
-
-import importlib.util
-import inspect
-import time
-
-
 @app.command()
 def serve(filename: str = typer.Argument(default="", show_default=False)):
     """Runs the FastAPI server for an agent"""
@@ -275,7 +271,6 @@ def copy_examples(src_path: Path, dest_path: Path, console: Console) -> None:
         console.print(f"Error copying examples: {str(e)}", style="red")
         raise typer.Exit(1)
 
-
 @app.command()
 def init(
     path: str = typer.Argument(
@@ -291,10 +286,15 @@ def init(
     """Initialize a new project by copying example files from the package."""
     console = Console()
     dest_path = Path(path + "/examples").resolve()
-    os.mkdir("agents")
-    os.mkdir("tools")
-    os.mkdir("tests")
-    os.mkdir("runtime")
+    runtime_path = Path(path + "/runtime").resolve()
+
+    # Go to the path and create subdirectories
+    os.chdir(path)
+    os.makedirs(os.path.join(path, "agents"), exist_ok=True)
+    os.makedirs(os.path.join(path, "tools"), exist_ok=True)
+    os.makedirs(os.path.join(path, "tests"), exist_ok=True)
+    init_runtime_directory(runtime_path)
+    console.print(f"✓ Runtime directory set up at: {runtime_path}", style="green")
 
     # Check if destination exists and is not empty
     if dest_path.exists() and any(dest_path.iterdir()) and not force:
@@ -694,7 +694,7 @@ def dashboard_callback():
     """Manage the dashboard UI."""
     # Check if the dashboard package is installed
     try:
-        importlib.import_module("agentic.dashboard")
+        import_module("agentic.dashboard")
     except ImportError:
         typer.echo("Dashboard package not installed. Install with 'pip install agentic-framework[dashboard]'")
         raise typer.Exit(1)
