@@ -655,6 +655,65 @@ def ui():
     show_deprecation_warning("ui", "streamlit")
     return streamlit()
 
+@app.command(hidden=True)
+def delete_document(
+    index_name: str,
+    document_identifier: str,
+    confirm: bool = typer.Option(False, "--yes", "-y")
+):
+    """Deprecated: Use 'index document delete' instead."""
+    show_deprecation_warning("delete-document", "index document delete")
+    return document_delete(index_name, document_identifier, confirm)
+
+@app.command(hidden=True)
+def delete_index(name: str, confirm: bool = typer.Option(False, "--yes", "-y")):
+    """Deprecated: Use 'index delete' instead."""
+    show_deprecation_warning("delete-index", "index delete")
+    return index_delete(name, confirm)
+
+@app.command(hidden=True)
+def list_indexes():
+    """Deprecated: Use 'index list' instead."""
+    show_deprecation_warning("list-indexes", "index list")
+    return index_list()
+
+@app.command(hidden=True)
+def rename_index(
+    source_name: str,
+    target_name: str,
+    confirm: bool = typer.Option(False, "--yes", "-y"),
+    overwrite: bool = typer.Option(False, "--overwrite")
+):
+    """Deprecated: Use 'index rename' instead."""
+    show_deprecation_warning("rename-index", "index rename")
+    return index_rename(source_name, target_name, confirm, overwrite)
+
+@app.command(hidden=True)
+def list_documents(index_name: str):
+    """Deprecated: Use 'index document list' instead."""
+    show_deprecation_warning("list-documents", "index document list")
+    return document_list(index_name)
+
+@app.command(hidden=True)
+def show_document(index_name: str, document_identifier: str):
+    """Deprecated: Use 'index document show' instead."""
+    show_deprecation_warning("show-document", "index document show")
+    return document_show(index_name, document_identifier)
+
+@app.command(hidden=True)
+def search(
+    index_name: str,
+    query: str,
+    embedding_model: str = typer.Option("BAAI/bge-small-en-v1.5"),
+    limit: int = typer.Option(5, min=1, max=100),
+    filter: Optional[str] = typer.Option(None),
+    hybrid: bool = typer.Option(False, "--hybrid"),
+    alpha: float = typer.Option(0.5, min=0.0, max=1.0)
+):
+    """Deprecated: Use 'index search' instead."""
+    show_deprecation_warning("search", "index search")
+    return index_search(index_name, query, embedding_model, limit, filter, hybrid, alpha)
+
 # Register command groups
 app.add_typer(settings_app)
 app.add_typer(secrets_app)
