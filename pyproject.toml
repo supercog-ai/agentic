@@ -68,9 +68,7 @@ rag = [
     "extract-msg<=0.29.0",
 ]
 
-all = [
-    "agentic-framework[google-news,database,image-generator,github,dashboard,rag]",
-]
+all = google-news + database + image-generator + github + dashboard + rag
 
 dev = [
     "pytest",
