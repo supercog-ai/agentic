@@ -1,5 +1,7 @@
 from agentic.common import Agent, AgentRunner
+import pytest
 
+@pytest.mark.requires_llm
 def test_handle_turn_start():
     agent = Agent(
         name="Agent A",

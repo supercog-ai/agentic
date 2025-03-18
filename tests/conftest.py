@@ -10,6 +10,7 @@ def pytest_addoption(parser):
 
 def pytest_configure(config):
     config.addinivalue_line("markers", "rag: mark test as RAG integration test")
+    config.addinivalue_line("markers", "requires_llm: marks tests that require calls to an llm to execute")
     
 def pytest_collection_modifyitems(config, items):
     if not config.getoption("--runrag"):

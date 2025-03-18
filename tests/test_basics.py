@@ -38,7 +38,7 @@ Then call agent B once with the request 'run'
     response = agent_runnner.turn("run your instructions")
     assert "99" in response.lower(), response
 
-
+@pytest.mark.requires_llm
 def test_event_depth():
     agent = Agent(
         name="Agent A",
@@ -68,7 +68,7 @@ def read_file() -> str:
     """Reads the current file"""
     return "Hello world, i am in a file."
 
-
+@pytest.mark.requires_llm
 def test_simple_tool_use():
     global read_file_was_called
 
