@@ -41,19 +41,14 @@ dependencies = [
     "sqlmodel>=0.0.22"
 ]
 
-[project.optional-dependencies]
-
-# Dashboard package
-dashboard = []
-
-# Tool groups
+[tool.poetry.group.optional.dependencies]
 google-news = [
     "google-news-feed>=1.1.0",
     "googlenewsdecoder>=0.1.7",
 ]
 
 database = [
-    "psycopg2-binary>=2.9.9",
+    "psycopg2-binary>=2.9.9", 
     "sqlalchemy>=2.0.26",
 ]
 
@@ -65,7 +60,11 @@ github = [
     "gitpython>=3.1.44",
 ]
 
-all = google-news + database + image-generator + github + dashboard
+dashboard = []
+
+all = [
+    { group = "optional", markers = ["google-news", "database", "image-generator", "github", "dashboard"] }
+]
 
 dev = [
     "pytest",
