@@ -70,7 +70,7 @@ rag = [
 ]
 
 all = [
-    { group = "optional", markers = ["google-news", "database", "image-generator", "github", "dashboard"] }
+    { group = "optional", markers = ["google-news", "database", "image-generator", "github"] }
 ]
 
 dev = [
