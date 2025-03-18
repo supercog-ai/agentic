@@ -64,9 +64,38 @@ def _truncate_for_model(text: str, model: str, max_tokens: int) -> str:
 def summarize_chat_history(messages: list, model: str, max_tokens: int = None) -> str:
     """Summarize conversation history with token limit control"""
     try:
-        chat_content = "\n".join(f"{m['role']}: {m['content']}" for m in messages)
+        # Filter out any messages with None or missing content
+        non_empty_messages = []
+        for m in messages:
+            if "content" in m and m["content"] is not None and m["content"].strip():
+                non_empty_messages.append(m)
+            elif "tool_calls" in m and m["tool_calls"]:
+                # Create a representation of tool calls
+                tool_call_content = []
+                for tc in m["tool_calls"]:
+                    if "function" in tc:
+                        func_name = tc["function"].get("name", "unknown")
+                        args = tc["function"].get("arguments", "{}")
+                        tool_call_content.append(f"Called tool: {func_name} with arguments: {args}")
+                
+                if tool_call_content:
+                    non_empty_messages.append({
+                        "role": m["role"],
+                        "content": " | ".join(tool_call_content)
+                    })
         
-        model_info = litellm.get_model_info(model)
+        if not non_empty_messages:
+            return "No prior conversation history."
+            
+        chat_content = "\n".join(
+            f"{m['role']}: {m['content']}" 
+            for m in non_empty_messages
+        )
+        
+        # Use a model that's not Claude for summarization for formatting reasons
+        summary_model = "gpt-3.5-turbo" if "claude" in model.lower() else model
+        
+        model_info = litellm.get_model_info(summary_model)
         context_window = model_info.get("max_input_tokens", 128000)
         
         # Use provided max_tokens or default to 25% of context window
@@ -74,12 +103,12 @@ def summarize_chat_history(messages: list, model: str, max_tokens: int = None) -
         
         truncated = _truncate_for_model(
             text=chat_content,
-            model=model,
+            model=summary_model,
             max_tokens=summary_tokens
         )
         
         response = completion(
-            model=model,
+            model=summary_model,
             messages=[{
                 "role": "system",
                 "content": "Condense this conversation history into a concise summary preserving key facts, decisions, and context."
@@ -89,6 +118,9 @@ def summarize_chat_history(messages: list, model: str, max_tokens: int = None) -
             }],
             max_tokens=summary_tokens
         )
-        return response.choices[0].message.content
+        
+        summary = response.choices[0].message.content
+        return summary if summary.strip() else "Previous conversation contained relevant context."
+        
     except Exception as e:
-        return f"Conversation summary unavailable: {str(e)}"
+        return f"Previous conversation contained relevant context. (Summarization error: {str(e)})"

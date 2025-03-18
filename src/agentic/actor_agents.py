@@ -205,10 +205,24 @@ class ActorBaseAgent:
         # Proactive token check before first completion call
         current_input_tokens = self._callback_params.get("input_tokens")
         if current_input_tokens is None:  # First call, estimate tokens
-            current_input_tokens = sum(
-                litellm.token_counter(model=model_name, text=m["content"])
-                for m in messages
-            )
+            current_input_tokens = 0
+            for m in messages:
+                # Check for missing or None content
+                if "content" in m and m["content"] is not None:
+                    current_input_tokens += litellm.token_counter(model=model_name, text=m["content"])
+                # Handle tool calls if present (which may have no content)
+                elif "tool_calls" in m and m["tool_calls"]:
+                    # Estimate tokens for tool calls
+                    for tool_call in m["tool_calls"]:
+                        if "function" in tool_call:
+                            func_tokens = litellm.token_counter(
+                                model=model_name, 
+                                text=tool_call["function"].get("name", "") + " " + 
+                                     tool_call["function"].get("arguments", "{}")
+                            )
+                            current_input_tokens += func_tokens
+                # Count role overhead for all message types
+                current_input_tokens += 4  # Token overhead for message formatting
 
         if current_input_tokens > (context_window - safety_margin):
             from agentic.utils.summarizer import summarize_chat_history
@@ -217,23 +231,44 @@ class ActorBaseAgent:
             excess_tokens = current_input_tokens - (context_window - safety_margin)
             reduce_by = int(excess_tokens * 1.2)  # 20% buffer
             
-            # Summarize oldest messages first while preserving last 3 interactions
-            summary = summarize_chat_history(
-                messages[:-3],  # Include instructions (index 0) and older messages
-                model=model_name,
-                max_tokens=reduce_by
-            )
+            # Ensure we have messages to summarize
+            messages_to_summarize = messages[:-3] if len(messages) > 3 else messages[:-1]
             
-            # Maintain conversation flow with summary and recent context
-            truncated_messages = [
-                messages[0],  # Original instructions
-                {"role": "system", "content": f"Context summary (preserving instructions): {summary}"},
-                *messages[-2:]  # Keep last 2 messages
-            ]
-            
-            # Update params and history
-            completion_params["messages"] = truncated_messages
-            self.history = messages[-2:]  # Maintain last 2 actual messages
+            if len(messages_to_summarize) > 0:
+                # Summarize oldest messages first
+                summary = summarize_chat_history(
+                    messages_to_summarize,
+                    model=model_name,
+                    max_tokens=reduce_by
+                )
+                
+                # Ensure summary is not empty
+                if not summary or summary.strip() == "":
+                    summary = "Previous conversation discussed relevant context."
+                
+                # Get recent messages, ensuring none are empty
+                recent_messages = []
+                for msg in messages[-3:]:
+                    if msg.get("content") and msg["content"].strip():
+                        recent_messages.append(msg)
+                
+                # Maintain conversation flow with summary and recent context
+                truncated_messages = [
+                    messages[0],  # Original instructions
+                    {"role": "system", "content": f"Context summary: {summary}"}
+                ]
+                
+                # Add non-empty recent messages
+                truncated_messages.extend(recent_messages)
+                
+                # Update params and history
+                completion_params["messages"] = truncated_messages
+                self.history = recent_messages
+            else:
+                # If no messages to summarize, just keep recent non-empty messages
+                non_empty_messages = [msg for msg in messages if msg.get("content") and msg["content"].strip()]
+                completion_params["messages"] = non_empty_messages
+                self.history = non_empty_messages[-3:] if len(non_empty_messages) > 3 else non_empty_messages
 
         # Existing debug and completion call
         debug_completion_start(self.debug, self.model, debug_params)
