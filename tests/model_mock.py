@@ -169,6 +169,7 @@ class TestYourLLMCode(unittest.TestCase):
         return self.mock_response_generator.get_response()
 
     @patch('litellm.completion')
+    @pytest.mark.requires_llm
     def test_basic_completion(self, mock_completion):
         """Test basic text completion without functions"""
         # Setup the mock
@@ -188,6 +189,7 @@ class TestYourLLMCode(unittest.TestCase):
         self.assertIn("content", response["choices"][0]["message"])
 
     @patch('litellm.completion')
+    @pytest.mark.requires_llm
     def test_function_calling(self, mock_completion):
         """Test completion with function calling"""
         # Setup the mock with forced function call response
@@ -214,6 +216,7 @@ class TestYourLLMCode(unittest.TestCase):
         )
 
     @patch('litellm.completion')
+    @pytest.mark.requires_llm
     def test_completion_error(self, mock_completion):
         """Test handling of LiteLLM errors"""
         # Setup mock to raise an exception

@@ -10,6 +10,7 @@ model = GPT_4O_MINI
 
 
 @pytest.fixture
+@pytest.mark.requires_llm
 def parent():
     story_log = "This is the log from the parent. The sun sets over the horizon."
     child_story_log = "I am just a child in this crazy, agentic world."
@@ -28,6 +29,7 @@ def parent():
         ]
     )
 
+@pytest.mark.requires_llm
 def test_sync_logging(parent):
     tool_outputs = []
     turn_end = None
@@ -40,6 +42,7 @@ def test_sync_logging(parent):
     print("Turn end: ", turn_end)
     assert len(tool_outputs) > 0
 
+@pytest.mark.requires_llm
 def test_async_logging(parent):
     tool_outputs = []
     turn_end = None
@@ -54,6 +57,7 @@ def test_async_logging(parent):
     assert tool_outputs[0].payload == "async_function_with_logging"
     assert "ASYNC" in tool_outputs[0].result
 
+@pytest.mark.requires_llm
 def test_direct_logging(parent):
     tool_outputs = []
     turn_end = None

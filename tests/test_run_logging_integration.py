@@ -32,6 +32,7 @@ def db_manager(temp_db_path):
     return DatabaseManager(db_path=temp_db_path)
 
 @pytest.fixture
+@pytest.mark.requires_llm
 def test_agent(temp_db_path):
     """Create a simple test agent with basic math capabilities."""
     agent = Agent(
@@ -93,6 +94,7 @@ def test_run_logging_enabled(test_agent, db_manager):
     assert len(runs) == 1
     assert new_run_logs_count > initial_run_logs_count
 
+@pytest.mark.requires_llm
 def test_run_logging_disabled(db_manager):
     """Test that no logging occurs when run logging is disabled."""
     # Disable run tracking

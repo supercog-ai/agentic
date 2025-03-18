@@ -7,6 +7,7 @@ from pydantic import BaseModel
 # Assuming these are imported from your module
 from agentic.llm import llm_generate, llm_generate_with_format
 
+@pytest.mark.requires_llm
 def test_llm_generate_return_format():
     """Test different return format types"""
     class CalendarEvent(BaseModel):

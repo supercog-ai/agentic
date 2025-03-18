@@ -6,6 +6,7 @@ from agentic.models import CLAUDE, GPT_4O_MINI
 model = GPT_4O_MINI
 
 @pytest.fixture
+@pytest.mark.requires_llm
 def parent():
     story_log = "This is the log from the parent. The sun sets over the horizon."
     child_story_log = "I am just a child in this crazy, agentic world."
@@ -23,7 +24,8 @@ def parent():
             )
         ]
     )
-
+    
+@pytest.mark.requires_llm
 def test_tool_use(parent):
     res = AgentRunner(parent).turn("Please read the story log")
     print(res)

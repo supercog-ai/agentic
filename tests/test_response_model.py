@@ -16,6 +16,7 @@ class Queries(BaseModel):
         description="List of search queries.",
     )
 
+@pytest.mark.requires_llm
 def test_response_model():
     
     agent = Agent(
@@ -33,6 +34,7 @@ def test_response_model():
     assert isinstance(result, Queries)
     print("GPT queries: ", result)
 
+@pytest.mark.requires_llm
 def test_claude_response_model():
     if agentic_secrets.get_secret("ANTHROPIC_API_KEY") is None:
         print("Skipping Claude response model test, NO API key")
