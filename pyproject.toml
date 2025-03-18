@@ -39,21 +39,19 @@ dependencies = [
 dashboard = []
 
 # Tool groups
-[tool.poetry.group.optional.dependencies]
 google-news = [
     "google-news-feed>=1.1.0",
     "googlenewsdecoder>=0.1.7",
 ]
 
 database = [
-    "psycopg2-binary>=2.9.9", 
+    "psycopg2-binary>=2.9.9",
     "sqlalchemy>=2.0.26",
 ]
 
 image-generator = [
    "boto3>=1.36.19",
 ]
-
 github = [
     "gitpython>=3.1.44",
 ]
@@ -70,7 +68,7 @@ rag = [
 ]
 
 all = [
-    { group = "optional", markers = ["google-news", "database", "image-generator", "github"] }
+    "agentic-framework[google-news,database,image-generator,github,dashboard]",
 ]
 
 dev = [
