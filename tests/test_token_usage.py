@@ -51,7 +51,7 @@ class MockCompletion:
         if with_usage:
             self.usage = MockUsage(prompt_tokens, completion_tokens)
 
-
+@pytest.mark.requires_llm
 def test_usage_extraction_from_response():
     """Test that token usage is extracted from the LiteLLM response when available"""
     # Create mock completion response with usage data
@@ -81,7 +81,7 @@ def test_usage_extraction_from_response():
     assert finish_event.metadata[FinishCompletion.INPUT_TOKENS_KEY] == 150
     assert finish_event.metadata[FinishCompletion.OUTPUT_TOKENS_KEY] == 75
 
-
+@pytest.mark.requires_llm
 def test_usage_fallback_calculation():
     """Test that token usage falls back to manual calculation when not available in response"""
     # Create mock completion response without usage data
@@ -113,7 +113,7 @@ def test_usage_fallback_calculation():
         assert finish_event.metadata[FinishCompletion.INPUT_TOKENS_KEY] == 120
         assert finish_event.metadata[FinishCompletion.OUTPUT_TOKENS_KEY] == 60
 
-
+@pytest.mark.requires_llm
 def test_empty_response_handling():
     """Test handling of empty response content"""
     # Create mock completion with empty content
@@ -131,7 +131,7 @@ def test_empty_response_handling():
         assert callback_params["input_tokens"] == 120
         assert "output_tokens" not in callback_params
 
-
+@pytest.mark.requires_llm
 def test_missing_history_handling():
     """Test handling when history is empty"""
     # Create mock completion
@@ -149,7 +149,7 @@ def test_missing_history_handling():
         assert "input_tokens" not in callback_params
         assert callback_params["output_tokens"] == 60
 
-
+@pytest.mark.requires_llm
 def test_token_counter_error_handling():
     """Test handling of errors in token counter"""
     mock_completion = MockCompletion(with_usage=False)
@@ -166,7 +166,7 @@ def test_token_counter_error_handling():
             # Verify the exception was properly raised
             assert str(e) == "Token counting failed"
 
-
+@pytest.mark.requires_llm
 def test_real_llm_usage_tracking():
     """Test token usage tracking with actual LLM API call"""
     from agentic.llm import llm_generate, LLMUsage
