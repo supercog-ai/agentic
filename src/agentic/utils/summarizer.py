@@ -93,7 +93,7 @@ def summarize_chat_history(messages: list, model: str, max_tokens: int = None) -
         )
         
         # Use a model that's not Claude for summarization for formatting reasons
-        summary_model = model
+        summary_model = "gpt-3.5-turbo" if "claude" in model.lower() else model
         
         model_info = litellm.get_model_info(summary_model)
         context_window = model_info.get("max_input_tokens", 128000)
