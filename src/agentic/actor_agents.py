@@ -196,84 +196,56 @@ class ActorBaseAgent:
                 f["function"]["name"] for f in debug_params["tools"]
             ]
 
-        # Get model context window
+        # Get model name
         model_name = model_override or self.model
-        model_info = litellm.get_model_info(model_name)
-        context_window = model_info.get("max_input_tokens", 128000)
-        safety_margin = int(context_window * 0.30)  # 30% buffer
+        
+        # Import token estimation utilities
+        from agentic.utils.token_estimation import (
+            should_compress_context,
+            create_compressed_messages
+        )
+        
+        # Check if we need to compress context
+        needs_compression, current_tokens, max_allowed = should_compress_context(
+            messages=messages, 
+            model=model_name,
+            safety_factor=0.3  # Use 30% safety margin
+        )
+        
+        # Debug logging for token count
+        if self.debug.debug_all():
+            print(f"[Token Count] Model: {model_name}, Current tokens: {current_tokens}, Max: {max_allowed}")
 
-        # Proactive token check before first completion call
-        current_input_tokens = self._callback_params.get("input_tokens")
-        if current_input_tokens is None:  # First call, estimate tokens
-            current_input_tokens = 0
-            for m in messages:
-                # Check for missing or None content
-                if "content" in m and m["content"] is not None:
-                    current_input_tokens += litellm.token_counter(model=model_name, text=m["content"])
-                # Handle tool calls if present (which may have no content)
-                elif "tool_calls" in m and m["tool_calls"]:
-                    # Estimate tokens for tool calls
-                    for tool_call in m["tool_calls"]:
-                        if "function" in tool_call:
-                            func_tokens = litellm.token_counter(
-                                model=model_name, 
-                                text=tool_call["function"].get("name", "") + " " + 
-                                     tool_call["function"].get("arguments", "{}")
-                            )
-                            current_input_tokens += func_tokens
-                # Count role overhead for all message types
-                current_input_tokens += 4  # Token overhead for message formatting
+        # Compress context if needed
+        if needs_compression:
+            # Create compressed messages
+            truncated_messages = create_compressed_messages(
+                messages=messages,
+                model=model_name,
+                current_tokens=current_tokens,
+                debug=self.debug.debug_all()
+            )
+            
+            # Update completion params with compressed messages
+            completion_params["messages"] = truncated_messages
+            
+            # Update history but preserve system message
+            self.history = [messages[0]] + truncated_messages[2:]
 
-        if current_input_tokens > (context_window - safety_margin):
-            from agentic.utils.summarizer import summarize_chat_history
-            
-            # Calculate reduction needed with buffer
-            excess_tokens = current_input_tokens - (context_window - safety_margin)
-            reduce_by = int(excess_tokens * 1.2)  # 20% buffer
-            
-            # Ensure we have messages to summarize
-            messages_to_summarize = messages[:-3] if len(messages) > 3 else messages[:-1]
-            
-            if len(messages_to_summarize) > 0:
-                # Summarize oldest messages first
-                summary = summarize_chat_history(
-                    messages_to_summarize,
-                    model=model_name,
-                    max_tokens=reduce_by
-                )
-                
-                # Ensure summary is not empty
-                if not summary or summary.strip() == "":
-                    summary = "Previous conversation discussed relevant context."
-                
-                # Get recent messages, ensuring none are empty
-                recent_messages = []
-                for msg in messages[-3:]:
-                    if msg.get("content") and msg["content"].strip():
-                        recent_messages.append(msg)
-                
-                # Maintain conversation flow with summary and recent context
-                truncated_messages = [
-                    messages[0],  # Original instructions
-                    {"role": "system", "content": f"Context summary: {summary}"}
-                ]
-                
-                # Add non-empty recent messages
-                truncated_messages.extend(recent_messages)
-                
-                # Update params and history
-                completion_params["messages"] = truncated_messages
-                self.history = recent_messages
-            else:
-                # If no messages to summarize, just keep recent non-empty messages
-                non_empty_messages = [msg for msg in messages if msg.get("content") and msg["content"].strip()]
-                completion_params["messages"] = non_empty_messages
-                self.history = non_empty_messages[-3:] if len(non_empty_messages) > 3 else non_empty_messages
-
-        # Existing debug and completion call
         debug_completion_start(self.debug, self.model, debug_params)
         
         try:
+            return litellm.completion(**completion_params)
+        except litellm.exceptions.ContextWindowExceededError as e:
+            # Emergency fallback
+            print(f"Emergency fallback: {str(e)}")
+            
+            # Keep only the system message and most recent message
+            emergency_messages = [messages[0], messages[-1]]
+            completion_params["messages"] = emergency_messages
+            self.history = emergency_messages
+            
+            # Try one more time with minimal context
             return litellm.completion(**completion_params)
         except Exception as e:
             traceback.print_exc()
