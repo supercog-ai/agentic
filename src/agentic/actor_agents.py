@@ -843,7 +843,7 @@ class DynamicFastAPIHandler:
         if prompt.debug and self.debug.is_off():
             self.debug = DebugLevel(prompt.debug)
                 
-        return self.agent_facade.start_request(
+        return self.agent_proxy.start_request(
             request=json.dumps(prompt.continue_result),
             continue_result=prompt.continue_result,
             run_id=prompt.run_id,
@@ -990,7 +990,7 @@ class DynamicFastAPIHandler:
             tools=self.agent_proxy.list_tools(),
             endpoints=["/process", "/getevents", "/describe"],
             operations=["chat"],
-            prompts=self.agent_facade.prompts,
+            prompts=self.agent_proxy.prompts,
         )
 
     # FIXME: DRY this with Runner

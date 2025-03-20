@@ -1,11 +1,10 @@
 import asyncio
 from typing import Generator, Optional
-from pprint import pprint
-from typing import Any, Generator, Dict, List
+from typing import Any, Generator, List, Optional
 from pydantic import BaseModel, Field
 from datetime import datetime
 
-from agentic.common import Agent, AgentRunner, cached_call, RunContext
+from agentic.common import Agent, AgentRunner, RunContext
 from agentic.actor_agents import BaseAgentProxy
 from agentic.events import Prompt, TurnEnd
 
@@ -40,7 +39,7 @@ class Sections(BaseModel):
     )
 
 
-class DeepResearchAgent(BaseAgentProxy):
+class DeepResearchAgent(Agent):
     sections: Sections|None = None
     topic: str = ""
 
