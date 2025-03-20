@@ -1,3 +1,4 @@
+import json
 from typing import Any, Generator, List
 from pydantic import BaseModel, Field
 from datetime import datetime
@@ -211,53 +212,6 @@ TEAMS_LIST = TeamList(teams=[
     TeamBase(name="Norfolk State Spartans", seed=16, region="West")
 ])
 
-# Sample data for team stats (simplified for testing purposes)
-def create_mock_team_stats(team: TeamBase) -> TeamStats:
-    """Create mock team statistics for testing"""
-    record = f"{20 + randint(-5, 5)}-{5 + randint(0, 10)}"
-    conference = "Sample Conference"
-    key_players = [f"Player {i}: {randint(10, 20)} PPG, {randint(3, 10)} RPG" for i in range(1, 4)]
-    
-    return TeamStats(
-        name=team.name,
-        seed=team.seed,
-        region=team.region,
-        record=record,
-        conference=conference,
-        key_players=key_players,
-        offensive_stats=f"Averages {randint(65, 85)} points per game with {randint(40, 50)}% FG",
-        defensive_stats=f"Allows {randint(60, 75)} points per game, {randint(5, 9)} steals per game",
-        tournament_history="Recent tournament appearances",
-        notable_wins_losses="Notable wins against top teams",
-        strengths=["Strong offense", "Good coaching"],
-        weaknesses=["Inconsistent shooting", "Depth issues"]
-    )
-
-# Random prediction helper function
-from random import choice, random, randint
-import json
-
-def random_winner(team1, team2, region, round) -> Matchup:
-    """
-    Randomly select a winner between two teams, with slight upset probability.
-    
-    Args:
-        team1: First team name
-        team2: Second team name
-    
-    Returns:
-        Name of winning team
-    """    
-    return Matchup(
-        team1=team1,
-        team2=team2,
-        region=region,
-        round=round,
-        predicted_winner=choice([team1, team2]),
-        confidence=randint(1,10),
-        reasoning="Because I said so"
-    )
-
 class MarchMadnessAgent(Agent):
     tournament: Tournament | None = None
     
@@ -339,11 +293,10 @@ class MarchMadnessAgent(Agent):
         
         # 2. Research each team in depth
         for team in teams_list.teams:
-            team_stats = create_mock_team_stats(team)
-            # team_stats = yield from self.team_researcher.final_result(
-            #     f"Research detailed statistics for {team.name} basketball team",
-            #     request_context={"name": team.name, "year": tournament_year}
-            # )
+            team_stats = yield from self.team_researcher.final_result(
+                f"Research detailed statistics for {team.name} basketball team",
+                request_context={"name": team.name, "year": tournament_year}
+            )
             self.tournament.teams.append(team_stats)
             if self.verbose:
                 yield ChatOutput(self.team_researcher.name, {"content": f"Completed research on {team.name}"})
@@ -363,16 +316,15 @@ class MarchMadnessAgent(Agent):
             
             for matchup in current_matchups:
                 # Analyze matchup and predict winner
-                # prediction: Matchup = yield from self.matchup_analyzer.final_result(
-                #     f"Analyze the {round_name} matchup between {matchup['team1']} and {matchup['team2']}",
-                #     request_context={
-                #         "team1": self.get_team_stats(matchup["team1"]),
-                #         "team2": self.get_team_stats(matchup["team2"]),
-                #         "round": round_name,
-                #         "region": matchup["region"]
-                #     }
-                # )
-                prediction: Matchup = random_winner(matchup["team1"], matchup["team2"], matchup["region"], round_name)
+                prediction: Matchup = yield from self.matchup_analyzer.final_result(
+                    f"Analyze the {round_name} matchup between {matchup['team1']} and {matchup['team2']}",
+                    request_context={
+                        "team1": self.get_team_stats(matchup["team1"]),
+                        "team2": self.get_team_stats(matchup["team2"]),
+                        "round": round_name,
+                        "region": matchup["region"]
+                    }
+                )
                 self.tournament.matchups.append(prediction)
                 
                 # Create next round matchup if not final
