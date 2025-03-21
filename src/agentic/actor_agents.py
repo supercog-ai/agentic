@@ -81,6 +81,8 @@ from .events import (
     ToolError,
     AgentDescriptor,
     StartRequestResponse,
+    OAuthFlow,
+    OAuthFlowResult,
 )
 from agentic.db.models import Run, RunLog
 from agentic.utils.json import make_json_serializable
@@ -384,7 +386,7 @@ class ActorBaseAgent:
                 if self.run_context is None
                 else self.run_context.update(actor_message.request_context)
             )
-            
+
             # Middleware to modify the input prompt (or change agent context)
             if self._callbacks.get('handle_turn_start'):
                 self._callbacks['handle_turn_start'](actor_message, self.run_context)
@@ -449,6 +451,27 @@ class ActorBaseAgent:
                     )
                     yield WaitForInput(self.name, partial_response.last_tool_result.request_keys)
                     return
+                elif isinstance(partial_response.last_tool_result, OAuthFlowResult):
+                    self.paused_context = AgentPauseContext(
+                        orig_history_length=init_len,
+                        tool_partial_response=partial_response,
+                        tool_function=partial_response.last_tool_result.tool_function
+                    )
+                    # Add tool result message before yielding OAuthFlow event
+                    self.history.extend([{
+                        "role": "tool",
+                        "content": "OAuth authentication required. Please complete the authorization flow.",
+                        "tool_call_id": partial_response.last_tool_result.tool_function._request_id,
+                        "name": partial_response.last_tool_result.tool_function.name
+                    }])
+                    yield OAuthFlow(
+                        self.name,
+                        partial_response.last_tool_result.auth_url,
+                        partial_response.last_tool_result.tool_name,
+                        depth=self.depth
+                    )
+                    return
+                    
                 elif FinishAgentResult.matches_sentinel(partial_response.messages[-1]["content"]):
                     self.history.extend(partial_response.messages)
                     break
@@ -952,6 +975,77 @@ class DynamicFastAPIHandler:
             )
         )
         return {"status": "success", "result": result}
+
+    @app.get("/oauth/callback/{tool_name}")
+    async def handle_oauth_static_callback(
+        self,
+        tool_name: str,
+        request: Request
+    ) -> dict:
+        """Static OAuth callback endpoint that extracts run_id from state parameter"""
+        params = dict(request.query_params)
+        run_id = params.get("state")  # Get run_id from state
+        
+        if not run_id:
+            raise ValueError("No state/run_id provided in OAuth callback")
+            
+        # Forward to main OAuth handler
+        return await self.handle_oauth_callback(run_id, tool_name, request)
+
+    @app.get("/oauth/{run_id}/{tool_name}") 
+    async def handle_oauth_callback(
+        self,
+        run_id: str,
+        tool_name: str,
+        request: Request
+    ) -> dict:
+        """Core OAuth callback handler implementation
+        
+        Args:
+            run_id: ID of the agent run this callback is for
+            tool_name: Name of the tool that initiated the OAuth flow
+            request: FastAPI request containing auth code and state
+        """
+        # Get query parameters
+        params = dict(request.query_params)
+        auth_code = params.get("code")
+        
+        if not auth_code:
+            raise ValueError("No authorization code provided in OAuth callback")
+
+        # Get the run context from the database
+        db_manager = DatabaseManager()
+        run = db_manager.get_run(run_id)
+        if not run:
+            raise ValueError(f"No run found with ID {run_id}")
+
+        # Create RunContext for storing auth code
+        run_context = RunContext(
+            agent=self._agent,
+            agent_name=self.name,
+            debug_level=self.debug,
+            run_id=run_id,
+        )
+
+        # Store auth code
+        run_context.set_oauth_auth_code(tool_name, auth_code)
+        
+        # Store any additional OAuth params (except code and state)
+        for key, value in params.items():
+            if key not in ["code", "state"]:
+                run_context[f"{tool_name}_oauth_{key}"] = value
+
+        # Return success page with stored values
+        return {
+            "status": "success", 
+            "message": "Authorization successful",
+            "stored_values": {
+                "auth_code": auth_code,
+                "tool_name": tool_name,
+                "additional_params": {k:v for k,v in params.items() 
+                                   if k not in ["code", "state"]}
+            }
+        }
 
     def next_turn(
         self,

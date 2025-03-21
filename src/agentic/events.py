@@ -286,6 +286,7 @@ class AddChild(Event):
 PAUSE_FOR_INPUT_SENTINEL = "__PAUSE4INPUT__"
 PAUSE_FOR_CHILD_SENTINEL = "__PAUSE__CHILD"
 FINISH_AGENT_SENTINEL = "__FINISH__"
+OAUTH_FLOW_SENTINEL = "__OAUTH_FLOW__"
 
 
 class WaitForInput(Event):
@@ -311,6 +312,46 @@ class ResumeWithInput(Event):
     def request_keys(self):
         return self.payload
 
+class OAuthFlow(Event):
+    """Event emitted when OAuth flow needs to be initiated"""
+    def __init__(self, agent: str, auth_url: str, tool_name: str, depth: int = 0):
+        super().__init__(
+            agent=agent, 
+            type="oauth_flow",
+            payload={"auth_url": auth_url, "tool_name": tool_name},
+            depth=depth
+        )
+
+    def __str__(self):
+        return self._indent(
+            f"OAuth authorization required for {self.payload['tool_name']}.\n"
+            f"Please visit: {self.payload['auth_url']}\n"
+            "After authorizing, the flow will continue automatically."
+        )
+
+class OAuthFlowResult(Result):
+    """Result indicating OAuth flow needs to be initiated"""
+    request_keys: dict = {}
+
+    def __init__(self, request_keys: dict):
+        """
+        Args:
+            request_keys: Dictionary containing 'auth_url' and 'tool_name' keys
+        """
+        super().__init__(value=OAUTH_FLOW_SENTINEL)
+        self.request_keys = request_keys
+
+    @property
+    def auth_url(self) -> str:
+        return self.request_keys["auth_url"]
+        
+    @property
+    def tool_name(self) -> str:
+        return self.request_keys["tool_name"]
+
+    @staticmethod 
+    def matches_sentinel(value) -> bool:
+        return value == OAUTH_FLOW_SENTINEL
 
 class PauseForInputResult(Result):
     request_keys: dict = {}

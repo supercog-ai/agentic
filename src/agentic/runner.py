@@ -25,6 +25,7 @@ from agentic.events import (
     TurnEnd,
     WaitForInput,
     ToolError,
+    OAuthFlow
 )
 
 # Global console for Rich
@@ -156,6 +157,12 @@ class RayAgentRunner:
                                 replies[key] = input(":> ")
                         continue_result = replies
                         continue_result["request_id"] = request_id
+                    elif isinstance(event, OAuthFlow):
+                        console.print("==== OAuth Authorization Required ====", style="bold yellow")
+                        console.print(f"Tool: [cyan]{event.payload['tool_name']}[/cyan]")
+                        console.print("Please visit this URL to authorize:", style="bold white")
+                        console.print(event.payload['auth_url'], style="blue underline")
+                        console.print("Authorization will continue automatically after completion", style="dim")
                     elif isinstance(event, FinishCompletion):
                         saved_completions.append(event)
                     if self._should_print(event):
