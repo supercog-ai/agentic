@@ -8,13 +8,25 @@ import base64
 import pandas as pd
 
 from agentic.common import RunContext
+from agentic.events import OAuthFlowResult
+from .oauth_tool import OAuthTool, OAuthConfig
 from agentic.utils.directory_management import get_runtime_filepath
 
 
-class GithubTool:
+
+class GithubTool(OAuthTool):
     repo_dir: str = get_runtime_filepath("git_tool")  # Local path to store the git repos
 
     def __init__(self, api_key: str = None, default_repo: str = None):
+        oauth_config = OAuthConfig(
+            authorize_url="https://github.com/login/oauth/authorize",
+            token_url="https://github.com/login/oauth/access_token",
+            client_id_key="GITHUB_CLIENT_ID",
+            client_secret_key="GITHUB_CLIENT_SECRET", 
+            scopes="repo user",
+            tool_name="github"
+        )
+        super().__init__(oauth_config)
         self.api_key = api_key
         self.default_repo = default_repo
 
@@ -316,13 +328,29 @@ class GithubTool:
         """
         Async helper method to make GitHub API requests.
         """
+        # First try API key
         api_key = run_context.get_secret("GITHUB_API_KEY", self.api_key)
-        if not api_key:
-            return {'status': 'error', 'message': f"Github API key not found in secrets"}
+        # Then try OAuth token
+        oauth_token = run_context.get_oauth_token("github")
+        
+        # If neither exists, start OAuth flow
+        if not api_key and not oauth_token:
+            auth_result = await self.authenticate(run_context)
+            if isinstance(auth_result, OAuthFlowResult):
+                return {'status': 'oauth_required', 'flow': auth_result}
+            elif isinstance(auth_result, str) and "Failed" in auth_result:
+                return {'status': 'error', 'message': auth_result}
+            # We should now have a token
+            oauth_token = run_context.get_oauth_token("github")
+            if not oauth_token:
+                return {'status': 'error', 'message': 'Failed to obtain OAuth token'}
+
+        # Use OAuth token if available, otherwise use API key
+        token = oauth_token or api_key
         
         url = f"https://api.github.com{endpoint}"
         headers = {
-            'Authorization': f'token {api_key}',
+            'Authorization': f'token {token}',
             'Accept': 'application/vnd.github.v3+json'
         }
         
@@ -619,13 +647,35 @@ class GithubTool:
         owner, name = self._get_repo_info(run_context, repo_owner, repo_name)
         return await self._github_request('DELETE', f'/repos/{owner}/{name}', run_context)
 
-    async def get_user_info(self, run_context: RunContext, username: str) -> Dict[str, Any]:
+    async def get_user_info(self, run_context: RunContext, username: str = "me") -> Dict[str, Any] | OAuthFlowResult:
         """
         Get information about a GitHub user.
-        :param username: GitHub username
-        :return: User information
+        
+        :param username: GitHub username or "me" for authenticated user info
+        :return: User information or error message
         """
-        return await self._github_request('GET', f'/users/{username}', run_context)
+        # Determine endpoint based on username
+        endpoint = "/user" if username == "me" else f"/users/{username}"
+            
+        try:
+            response = await self._github_request("GET", endpoint, run_context)
+            if response.get("status") == "success":
+                user_data = response["results"]
+                return {
+                    "login": user_data.get("login"),
+                    "name": user_data.get("name"),
+                    "email": user_data.get("email"),
+                    "bio": user_data.get("bio"),
+                    "public_repos": user_data.get("public_repos"),
+                    "followers": user_data.get("followers"),
+                    "following": user_data.get("following")
+                }
+            elif response.get("status") == "oauth_required":
+                return response["flow"]
+            return {"error": response.get("message", "Failed to fetch user info")}
+            
+        except Exception as e:
+            return {"error": f"Error fetching user info: {str(e)}"}
     
     async def list_user_repositories(self, run_context: RunContext, sort: str = 'updated', direction: str = 'desc') -> pd.DataFrame:
         """

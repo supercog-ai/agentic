@@ -386,7 +386,7 @@ class ActorBaseAgent:
                 if self.run_context is None
                 else self.run_context.update(actor_message.request_context)
             )
-            
+
             # Middleware to modify the input prompt (or change agent context)
             if self._callbacks.get('handle_turn_start'):
                 self._callbacks['handle_turn_start'](actor_message, self.run_context)
@@ -457,6 +457,13 @@ class ActorBaseAgent:
                         tool_partial_response=partial_response,
                         tool_function=partial_response.last_tool_result.tool_function
                     )
+                    # Add tool result message before yielding OAuthFlow event
+                    self.history.extend([{
+                        "role": "tool",
+                        "content": "OAuth authentication required. Please complete the authorization flow.",
+                        "tool_call_id": partial_response.last_tool_result.tool_function._request_id,
+                        "name": partial_response.last_tool_result.tool_function.name
+                    }])
                     yield OAuthFlow(
                         self.name,
                         partial_response.last_tool_result.auth_url,
@@ -464,6 +471,7 @@ class ActorBaseAgent:
                         depth=self.depth
                     )
                     return
+                    
                 elif FinishAgentResult.matches_sentinel(partial_response.messages[-1]["content"]):
                     self.history.extend(partial_response.messages)
                     break
