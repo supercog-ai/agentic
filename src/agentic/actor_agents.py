@@ -209,10 +209,56 @@ class ActorBaseAgent:
                 f["function"]["name"] for f in debug_params["tools"]
             ]
 
-        debug_completion_start(self.debug, self.model, debug_params)
+        # Get model name
+        model_name = model_override or self.model
+        
+        # Import token estimation utilities
+        from agentic.utils.token_estimation import (
+            should_compress_context,
+            create_compressed_messages
+        )
+        
+        # Check if we need to compress context
+        needs_compression, current_tokens, max_allowed = should_compress_context(
+            messages=messages, 
+            model=model_name,
+            safety_factor=0.3  # Use 30% safety margin
+        )
+        
+        # Debug logging for token count
+        if self.debug.debug_all():
+            print(f"[Token Count] Model: {model_name}, Current tokens: {current_tokens}, Max: {max_allowed}")
 
-        # Use LiteLLM's completion
+        # Compress context if needed
+        if needs_compression:
+            # Create compressed messages
+            truncated_messages = create_compressed_messages(
+                messages=messages,
+                model=model_name,
+                current_tokens=current_tokens,
+                debug=self.debug.debug_all()
+            )
+            
+            # Update completion params with compressed messages
+            completion_params["messages"] = truncated_messages
+            
+            # Update history but preserve system message
+            self.history = [messages[0]] + truncated_messages[2:]
+
+        debug_completion_start(self.debug, self.model, debug_params)
+        
         try:
+            return litellm.completion(**completion_params)
+        except litellm.exceptions.ContextWindowExceededError as e:
+            # Emergency fallback
+            print(f"Emergency fallback: {str(e)}")
+            
+            # Keep only the system message and most recent message
+            emergency_messages = [messages[0], messages[-1]]
+            completion_params["messages"] = emergency_messages
+            self.history = emergency_messages
+            
+            # Try one more time with minimal context
             return litellm.completion(**completion_params)
         except Exception as e:
             traceback.print_exc()
