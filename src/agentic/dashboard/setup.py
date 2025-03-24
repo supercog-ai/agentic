@@ -115,7 +115,7 @@ def start_dashboard(port: Optional[int] = None, dev_mode: bool = False):
         command.append("start")
 
     if port:
-        command.extend(["-p", str(port)])
+        command.extend(["--", "-p", str(port)])
 
     logger.info(f"Starting dashboard with command: {command}")
 
