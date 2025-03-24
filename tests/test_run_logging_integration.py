@@ -45,6 +45,7 @@ def test_agent(temp_db_path):
     )
     return agent
 
+@pytest.mark.requires_llm
 def test_run_logging_enabled(test_agent, db_manager):
     """Test that run logging works correctly when enabled."""
     runner = AgentRunner(test_agent)
@@ -148,6 +149,7 @@ def test_run_logging_toggle(test_agent, db_manager, temp_db_path):
     runs = db_manager.get_runs_by_agent("Calculator")
     assert len(runs) == 1  # Count should not have increased
 
+@pytest.mark.requires_llm
 def test_run_usage_accumulation(test_agent, db_manager):
     """Test that token usage is accumulated correctly across multiple completions in a run."""    
     runner = AgentRunner(test_agent)
