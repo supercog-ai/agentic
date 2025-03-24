@@ -38,10 +38,6 @@ class Sections(BaseModel):
         description="Sections of the report.",
     )
 
-<<<<<<< HEAD
-
-=======
->>>>>>> 0398028 (Add template path to deep researcher)
 class DeepResearchAgent(Agent):
     sections: Sections|None = None
     topic: str = ""

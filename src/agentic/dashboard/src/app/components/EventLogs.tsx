@@ -8,6 +8,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
+import { AutoScrollArea } from '@/components/ui/auto-scroll-area';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
@@ -16,7 +17,6 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
-import { AutoScrollArea } from '@/components/ui/auto-scroll-area';
 import { AgentEventType } from '@/lib/api';
 import { formatDate } from '@/lib/utils';
 
@@ -46,7 +46,6 @@ const EventLogs: React.FC<EventLogsProps> = ({ events, onClose, className = '' }
     STATE_MANAGEMENT: true,
     OTHER: true
   });
-  const [isAutoScrolling, setIsAutoScrolling] = useState(true);
   
   // Process events to combine consecutive chat_output events
   const processedEvents = useMemo(() => {
@@ -216,7 +215,6 @@ const EventLogs: React.FC<EventLogsProps> = ({ events, onClose, className = '' }
         <AutoScrollArea 
           className="h-[calc(100vh-12rem)]"
           scrollTrigger={filteredEvents.length}
-          onAutoScrollChange={setIsAutoScrolling}
         >
           <div className="space-y-3 w-full pr-4">
             <Accordion type="multiple" className="w-full">

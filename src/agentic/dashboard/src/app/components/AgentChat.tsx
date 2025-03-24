@@ -5,10 +5,10 @@ import BackgroundTasks from '@/components/BackgroundTasks';
 import ChatInputForm from '@/components/ChatInputForm';
 import EventLogs from '@/components/EventLogs';
 import MarkdownRenderer from '@/components/MarkdownRenderer';
+import { AutoScrollArea } from '@/components/ui/auto-scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { AutoScrollArea } from '@/components/ui/auto-scroll-area';
 import { Textarea } from '@/components/ui/textarea';
 import { useChat } from '@/hooks/useChat';
 
@@ -28,7 +28,6 @@ const AgentChat: React.FC<AgentChatProps> = ({ agentPath, agentInfo, currentRunI
   const [backgroundTasks, setBackgroundTasks] = useState<Ui.BackgroundTask[]>([]);
   const [showBackgroundPanel, setShowBackgroundPanel] = useState<boolean>(false);
   const [showEventLogs, setShowEventLogs] = useState<boolean>(false);
-  const [isAutoScrolling, setIsAutoScrolling] = useState<boolean>(true);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   
   // Use our custom chat API hook - now handling both events and messages
@@ -205,7 +204,6 @@ const AgentChat: React.FC<AgentChatProps> = ({ agentPath, agentInfo, currentRunI
         <AutoScrollArea 
           className="flex-1 p-4 h-[calc(100vh-180px)]"
           scrollTrigger={displayMessages.length}
-          onAutoScrollChange={setIsAutoScrolling}
         >
           <div className="space-y-4 mb-4">
             {displayMessages.map((msg, idx) => (

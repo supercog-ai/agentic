@@ -21,8 +21,8 @@ export function useChat(agentPath: string, agentName: string, currentRunId: stri
   
   // Fetch run logs when runId changes
   // If running Deep Researcher or other custom next_turn agents uncomment this line and comment out the next one
-  const { data: runLogs, isLoading: isLoadingRunLogs } = useRunLogs(agentPath, null);
-  // const { data: runLogs, isLoading: isLoadingRunLogs } = useRunLogs(agentPath, currentRunId ?? null);
+  // const { data: runLogs, isLoading: isLoadingRunLogs } = useRunLogs(agentPath, null);
+  const { data: runLogs, isLoading: isLoadingRunLogs } = useRunLogs(agentPath, currentRunId ?? null);
   
   // Reset events when currentRunId changes to undefined/null
   useEffect(() => {
@@ -217,7 +217,7 @@ export function useChat(agentPath: string, agentName: string, currentRunId: stri
       await processEventStream(
         requestId, 
         runId, 
-        (newContent) => {
+        () => {
           onMessageUpdate?.(streamContentRef.current);
         },
         false
@@ -309,7 +309,7 @@ export function useChat(agentPath: string, agentName: string, currentRunId: stri
       await processEventStream(
         requestId, 
         runId, 
-        (newContent) => {
+        () => {
           onMessageUpdate?.(streamContentRef.current);
         },
         false

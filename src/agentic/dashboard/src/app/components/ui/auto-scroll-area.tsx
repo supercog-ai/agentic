@@ -4,6 +4,7 @@ import * as ScrollAreaPrimitive from '@radix-ui/react-scroll-area'
 import * as React from 'react'
 
 import { cn } from '@/lib/utils'
+
 import { ScrollBar } from './scroll-area'
 
 interface AutoScrollAreaProps extends React.ComponentPropsWithoutRef<typeof ScrollAreaPrimitive.Root> {
@@ -11,11 +12,11 @@ interface AutoScrollAreaProps extends React.ComponentPropsWithoutRef<typeof Scro
    * Used to trigger auto-scrolling. When this value changes, the area will scroll to
    * the bottom if the user hasn't manually scrolled up.
    */
-  scrollTrigger?: any;
+  scrollTrigger?: any; // eslint-disable-line @typescript-eslint/no-explicit-any
   /**
    * Optional callback when auto-scroll state changes (scrolling mode or manual mode)
    */
-  onAutoScrollChange?: (isAutoScrolling: boolean) => void;
+  onAutoScrollChange?: (_isAutoScrolling: boolean) => void;
 }
 
 const AutoScrollArea = React.forwardRef<
