@@ -1,5 +1,5 @@
-import { Filter,X } from 'lucide-react';
-import React, { useEffect, useMemo,useRef, useState } from 'react';
+import { Filter, X } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
 
 import MarkdownRenderer from '@/components/MarkdownRenderer';
 import {
@@ -16,7 +16,7 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { AutoScrollArea } from '@/components/ui/auto-scroll-area';
 import { AgentEventType } from '@/lib/api';
 import { formatDate } from '@/lib/utils';
 
@@ -46,15 +46,7 @@ const EventLogs: React.FC<EventLogsProps> = ({ events, onClose, className = '' }
     STATE_MANAGEMENT: true,
     OTHER: true
   });
-  const logsEndRef = useRef<HTMLDivElement>(null);
-
-  const scrollToBottom = () => {
-    logsEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [events]);
+  const [isAutoScrolling, setIsAutoScrolling] = useState(true);
   
   // Process events to combine consecutive chat_output events
   const processedEvents = useMemo(() => {
@@ -221,7 +213,11 @@ const EventLogs: React.FC<EventLogsProps> = ({ events, onClose, className = '' }
         </div>
       </CardHeader>
       <CardContent className="p-4">
-        <ScrollArea className="h-[calc(100vh-12rem)]">
+        <AutoScrollArea 
+          className="h-[calc(100vh-12rem)]"
+          scrollTrigger={filteredEvents.length}
+          onAutoScrollChange={setIsAutoScrolling}
+        >
           <div className="space-y-3 w-full pr-4">
             <Accordion type="multiple" className="w-full">
               {filteredEvents.map((event, idx) => (
@@ -251,9 +247,8 @@ const EventLogs: React.FC<EventLogsProps> = ({ events, onClose, className = '' }
                 </AccordionItem>
               ))}
             </Accordion>
-            <div ref={logsEndRef} />
           </div>
-        </ScrollArea>
+        </AutoScrollArea>
       </CardContent>
     </Card>
   );

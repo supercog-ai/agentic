@@ -1,5 +1,5 @@
-import { Bot, CircleDashed,History, ListTodo, MessageSquarePlus,PlayCircle, Send, User } from 'lucide-react';
-import React, { useEffect, useRef,useState } from 'react';
+import { Bot, CircleDashed, History, ListTodo, MessageSquarePlus, PlayCircle, Send, User } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
 
 import BackgroundTasks from '@/components/BackgroundTasks';
 import ChatInputForm from '@/components/ChatInputForm';
@@ -8,7 +8,7 @@ import MarkdownRenderer from '@/components/MarkdownRenderer';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { AutoScrollArea } from '@/components/ui/auto-scroll-area';
 import { Textarea } from '@/components/ui/textarea';
 import { useChat } from '@/hooks/useChat';
 
@@ -28,8 +28,7 @@ const AgentChat: React.FC<AgentChatProps> = ({ agentPath, agentInfo, currentRunI
   const [backgroundTasks, setBackgroundTasks] = useState<Ui.BackgroundTask[]>([]);
   const [showBackgroundPanel, setShowBackgroundPanel] = useState<boolean>(false);
   const [showEventLogs, setShowEventLogs] = useState<boolean>(false);
-  
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [isAutoScrolling, setIsAutoScrolling] = useState<boolean>(true);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   
   // Use our custom chat API hook - now handling both events and messages
@@ -58,101 +57,92 @@ const AgentChat: React.FC<AgentChatProps> = ({ agentPath, agentInfo, currentRunI
     }
   }, [input]);
 
-  // Scroll to bottom when messages change
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  // Handle prompt button click
+  const handlePromptButtonClick = (promptText: string) => {
+    setInput(promptText);
+    // Automatically submit the form
+    handleSubmit(new Event('submit') as unknown as React.FormEvent, false, promptText);
   };
 
-// Handle prompt button click
-const handlePromptButtonClick = (promptText: string) => {
-  setInput(promptText);
-  // Automatically submit the form
-  handleSubmit(new Event('submit') as unknown as React.FormEvent, false, promptText);
-};
-
-// Handle form submission
-const handleSubmit = async (e: React.FormEvent, isBackground: boolean = false, customInput?: string) => {
-  e.preventDefault();
-  const userInput = customInput || input;
-  if (!userInput.trim()) return;
-  
-  setInput('');
-  
-  if (isBackground) {
-    // Handle background task
-    const userMessage = { role: 'user' as const, content: userInput };
-    const agentMessage = { role: 'agent' as const, content: '' };
+  // Handle form submission
+  const handleSubmit = async (e: React.FormEvent, isBackground: boolean = false, customInput?: string) => {
+    e.preventDefault();
+    const userInput = customInput || input;
+    if (!userInput.trim()) return;
     
-    const newTask: Ui.BackgroundTask = {
-      id: `task-${Date.now()}`,
-      completed: false,
-      messages: [userMessage, agentMessage],
-      currentStreamContent: ''
-    };
+    setInput('');
     
-    setBackgroundTasks(prev => [...prev, newTask]);
-    setShowBackgroundPanel(true);
-    if (showEventLogs) setShowEventLogs(false);
-    
-    const response = await sendBackgroundPrompt(
-      userInput,
-      currentRunId,
-      // Update message content as it streams in
-      (requestId, content) => {
-        setBackgroundTasks(prev => prev.map(task => {
-          if (task.id === newTask.id || task.id === requestId) {
-            return {
-              ...task,
-              id: requestId, // Update with real ID
-              currentStreamContent: content,
-              messages: [
-                task.messages[0],
-                { role: 'agent', content }
-              ]
-            };
-          }
-          return task;
-        }));
-      },
-      // Mark as completed when done
-      (requestId) => {
+    if (isBackground) {
+      // Handle background task
+      const userMessage = { role: 'user' as const, content: userInput };
+      const agentMessage = { role: 'agent' as const, content: '' };
+      
+      const newTask: Ui.BackgroundTask = {
+        id: `task-${Date.now()}`,
+        completed: false,
+        messages: [userMessage, agentMessage],
+        currentStreamContent: ''
+      };
+      
+      setBackgroundTasks(prev => [...prev, newTask]);
+      setShowBackgroundPanel(true);
+      if (showEventLogs) setShowEventLogs(false);
+      
+      const response = await sendBackgroundPrompt(
+        userInput,
+        currentRunId,
+        // Update message content as it streams in
+        (requestId, content) => {
+          setBackgroundTasks(prev => prev.map(task => {
+            if (task.id === newTask.id || task.id === requestId) {
+              return {
+                ...task,
+                id: requestId, // Update with real ID
+                currentStreamContent: content,
+                messages: [
+                  task.messages[0],
+                  { role: 'agent', content }
+                ]
+              };
+            }
+            return task;
+          }));
+        },
+        // Mark as completed when done
+        (requestId) => {
+          setBackgroundTasks(prev => prev.map(task => 
+            task.id === requestId 
+              ? { ...task, completed: true }
+              : task
+          ));
+        }
+      );
+      
+      // If response failed, show error
+      if (!response) {
         setBackgroundTasks(prev => prev.map(task => 
-          task.id === requestId 
-            ? { ...task, completed: true }
+          task.id === newTask.id
+            ? { ...task, completed: true, messages: [...task.messages.slice(0, 1), { role: 'agent', content: 'Error: Failed to get response from agent' }] }
             : task
         ));
       }
-    );
-    
-    // If response failed, show error
-    if (!response) {
-      setBackgroundTasks(prev => prev.map(task => 
-        task.id === newTask.id
-          ? { ...task, completed: true, messages: [...task.messages.slice(0, 1), { role: 'agent', content: 'Error: Failed to get response from agent' }] }
-          : task
-      ));
+    } else {
+      // Handle foreground task - we just need to send the prompt
+      // Messages will be derived from events in the useChat hook
+      const response = await sendPrompt(
+        userInput,
+        currentRunId,
+        // This callback is used for streaming updates
+        () => {},
+        // Callback when complete
+        onRunComplete
+      );
+      // If response failed, we could handle error here
+      if (!response) {
+        console.error('Failed to get response from agent');
+      }
     }
-  } else {
-    // Handle foreground task - we just need to send the prompt
-    // Messages will be derived from events in the useChat hook
-    const response = await sendPrompt(
-      userInput,
-      currentRunId,
-      // This callback is used for streaming updates
-      () => {},
-      // Callback when complete
-      onRunComplete
-    );
-    // If response failed, we could handle error here
-    if (!response) {
-      console.error('Failed to get response from agent');
-    }
-  }
-};
+  };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -212,7 +202,11 @@ const handleSubmit = async (e: React.FormEvent, isBackground: boolean = false, c
           </div>
         </CardHeader>
         
-        <ScrollArea className="flex-1 p-4 h-[calc(100vh-180px)]">
+        <AutoScrollArea 
+          className="flex-1 p-4 h-[calc(100vh-180px)]"
+          scrollTrigger={displayMessages.length}
+          onAutoScrollChange={setIsAutoScrolling}
+        >
           <div className="space-y-4 mb-4">
             {displayMessages.map((msg, idx) => (
               <div
@@ -264,8 +258,6 @@ const handleSubmit = async (e: React.FormEvent, isBackground: boolean = false, c
               </div>
             ))}
 
-            <div ref={messagesEndRef} />
-
             {/* Separate container for prompt buttons, aligned with agent messages */}
             {showPromptButtons && agentInfo.prompts ? (
               <div className="flex justify-start pl-11 mt-2"> 
@@ -286,8 +278,7 @@ const handleSubmit = async (e: React.FormEvent, isBackground: boolean = false, c
               </div>
             ) : null}
           </div>
-        </ScrollArea>
-
+        </AutoScrollArea>
 
         <CardContent className="p-4 border-t">
           <form onSubmit={(e) => handleSubmit(e, false)} className="flex gap-2">
