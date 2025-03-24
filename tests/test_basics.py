@@ -2,6 +2,7 @@ import pytest
 from agentic.common import Agent, AgentRunner
 
 
+@pytest.mark.requires_llm
 def test_agent():
     agent = Agent(
         name="Basic Agent",
@@ -17,6 +18,7 @@ def test_agent():
     response = agent_runnner.turn("please tell me hello")
     assert "hello" in response.lower(), response
 
+@pytest.mark.requires_llm
 def test_agent_as_tool():
     agent = Agent(
         name="Agent A",

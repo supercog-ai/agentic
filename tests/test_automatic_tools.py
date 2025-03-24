@@ -16,6 +16,7 @@ def toolset():
     return [WeatherTool, GoogleNewsTool, DatabaseTool]
     
 @pytest.mark.asyncio
+@pytest.mark.requires_llm
 async def test_search_for_tool(toolset):
     autos = AutomaticTools(tool_classes=toolset, tool_functions=[a_dummy_tool_function])
 
