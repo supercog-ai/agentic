@@ -134,7 +134,7 @@ it can use to retrieve weather reports. (The weather info is provided by https:/
 
 Try running some of the other example agents to get a feel for the framework.
 
-Try `examples/database_agent.py` for a basic Text-to-SQL agent.
+Try `examples/database/database_agent.py` for a basic Text-to-SQL agent.
 
 
 # Understanding Agents
