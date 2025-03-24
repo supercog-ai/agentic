@@ -8,16 +8,31 @@ import { convertFromUTC, isUserTurn } from '@/lib/utils';
 /**
  * Custom hook for handling agent prompt submission and event streaming
  */
-export function useChat(agentPath: string, agentName: string, _currentRunId: string | undefined) {
+export function useChat(agentPath: string, agentName: string, currentRunId: string | undefined) {
   const [isSending, setIsSending] = useState(false);
   const [events, setEvents] = useState<Ui.Event[]>([]);
   const streamContentRef = useRef<string>('');
   const cleanupRef = useRef<(() => void) | null>(null);
+  // Track the last event type to detect non-continuous chat outputs
+  const lastEventTypeRef = useRef<string | null>(null);
+
+  // Track the previous runId to detect changes
+  const prevRunIdRef = useRef<string | undefined | null>(currentRunId);
   
   // Fetch run logs when runId changes
   // If running Deep Researcher or other custom next_turn agents uncomment this line and comment out the next one
   const { data: runLogs, isLoading: isLoadingRunLogs } = useRunLogs(agentPath, null);
   // const { data: runLogs, isLoading: isLoadingRunLogs } = useRunLogs(agentPath, currentRunId ?? null);
+  
+  // Reset events when currentRunId changes to undefined/null
+  useEffect(() => {
+    // If currentRunId changed from a value to undefined/null, reset events
+    if (prevRunIdRef.current && !currentRunId) {
+      setEvents([]);
+    }
+    // Update the ref for next comparison
+    prevRunIdRef.current = currentRunId;
+  }, [currentRunId]);
   
   // Convert run logs to Ui.Event format when they change
   useEffect(() => {
@@ -74,9 +89,9 @@ export function useChat(agentPath: string, agentName: string, _currentRunId: str
       }
       
       setEvents(processedEvents);
-    } else {
+    } else if (runLogs && runLogs.length === 0) {
       // Reset events when we get empty logs
-      // setEvents([]); TODO: Figure this out better
+      setEvents([]);
     }
   }, [runLogs]);
   
@@ -118,7 +133,13 @@ export function useChat(agentPath: string, agentName: string, _currentRunId: str
             
             // Handle chat output events
             if (event.type === AgentEventType.CHAT_OUTPUT) {
+              // Reset streamContentRef if this is a new chat_output not preceded by another chat_output
+              if (lastEventTypeRef.current !== AgentEventType.CHAT_OUTPUT) {
+                streamContentRef.current = '';
+              }
+              
               const content = event.payload.content || '';
+              streamContentRef.current += content;
               onStreamContent(content);
               
               // Update the events state
@@ -151,6 +172,9 @@ export function useChat(agentPath: string, agentName: string, _currentRunId: str
             else if (uiEvent.type !== AgentEventType.CHAT_OUTPUT || !isBackground) {
               setEvents(prev => [...prev, uiEvent]);
             }
+
+            // Update the lastEventType reference
+            lastEventTypeRef.current = event.type;
             
             // Handle turn end
             if (isUserTurn(agentName, event)) {
@@ -182,6 +206,7 @@ export function useChat(agentPath: string, agentName: string, _currentRunId: str
     try {
       setIsSending(true);
       streamContentRef.current = '';
+      lastEventTypeRef.current = null; // Reset the last event type
       
       // Send the prompt to the agent
       const response = await agenticApi.sendPrompt(agentPath, promptText, existingRunId);
@@ -193,7 +218,6 @@ export function useChat(agentPath: string, agentName: string, _currentRunId: str
         requestId, 
         runId, 
         (newContent) => {
-          streamContentRef.current += newContent;
           onMessageUpdate?.(streamContentRef.current);
         },
         false
@@ -228,6 +252,9 @@ export function useChat(agentPath: string, agentName: string, _currentRunId: str
     if (!promptText.trim()) return null;
     
     try {
+      // Reset the last event type reference
+      lastEventTypeRef.current = null;
+      
       // Send the prompt to the agent
       const response = await agenticApi.sendPrompt(agentPath, promptText, existingRunId);
       const requestId = response.request_id;
@@ -271,6 +298,7 @@ export function useChat(agentPath: string, agentName: string, _currentRunId: str
     try {
       setIsSending(true);
       streamContentRef.current = '';
+      lastEventTypeRef.current = null; // Reset the last event type
       
       // Send the prompt to the agent
       const response = await agenticApi.resumeWithInput(agentPath, continueResult, existingRunId);
@@ -282,7 +310,6 @@ export function useChat(agentPath: string, agentName: string, _currentRunId: str
         requestId, 
         runId, 
         (newContent) => {
-          streamContentRef.current += newContent;
           onMessageUpdate?.(streamContentRef.current);
         },
         false

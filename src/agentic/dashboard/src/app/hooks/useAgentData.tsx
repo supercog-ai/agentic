@@ -26,7 +26,7 @@ export function useAgentsWithDetails() {
   
   // TODO: Make sure all agent details are exposed
   const { data: agentDetails, error: detailsError, isLoading: detailsLoading } = useSWR(
-    agentPaths ? ['agents-with-details', [agentPaths[0]]] : null,
+    agentPaths ? ['agents-with-details', agentPaths] : null,
     async ([_, paths]) => {
       return await Promise.all(
         paths.map(async (path: string) => {

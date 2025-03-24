@@ -24,10 +24,10 @@ const MarkdownComponents: Components = {
   },
   // Style lists
   ul({ children, ...props }) {
-    return <ul className="list-disc list-inside my-4" {...props}>{children}</ul>;
+    return <ul className="list-disc list-inside my-4 [&>li>p]:inline [&>li>p]:m-0" {...props}>{children}</ul>;
   },
   ol({ children, ...props }) {
-    return <ol className="list-decimal list-inside my-4" {...props}>{children}</ol>;
+    return <ol className="list-decimal list-inside my-4 [&>li>p]:inline [&>li>p]:m-0" {...props}>{children}</ol>;
   },
   // Style headings
   h1({ children, ...props }) {
