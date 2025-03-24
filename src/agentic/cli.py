@@ -188,8 +188,8 @@ def serve(
     else:
         console.print("[green]Using threading for agent execution[/green]")
 
-    # Now that we've set the environment variable, import dependencies
-    
+    # Import the AgentAPIServer now that environment variables are set
+    from agentic.api import AgentAPIServer
     
     # Load the agent instances
     with Status("[bold green]Loading agent instances...", console=console):
@@ -200,208 +200,20 @@ def serve(
         console.print("[yellow]Make sure you create an Agent instance in your script[/yellow]")
         raise typer.Exit(1)
     
-    # Create a single FastAPI application with all endpoints
-    app = FastAPI(title="Agentic API")
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=["*"],
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
-    
-    # Create a registry of agents by name
-    agent_registry = {agent.safe_name: agent for agent in agent_instances}
-    
-    # Dependency to get the agent from the path parameter
-    def get_agent(agent_name: str = FastAPIPath(...)):
-        if agent_name not in agent_registry:
-            raise HTTPException(status_code=404, detail=f"Agent '{agent_name}' not found")
-        return agent_registry[agent_name]
-    
-    # Add the discovery endpoint
-    @app.get("/_discovery")
-    async def list_endpoints():
-        """Discovery endpoint that lists all available agents"""
-        return [f"/{name}" for name in agent_registry.keys()]
-    
-    # Create router for agent endpoints
-    agent_router = APIRouter()
-    
-    # Process endpoint
-    @agent_router.post("/{agent_name}/process")
-    async def process_request(
-        request: ProcessRequest, 
-        agent = Depends(get_agent)
-    ):
-        """Process a new request"""
-        return agent.start_request(
-            request=request.prompt,
-            run_id=request.run_id,
-            debug=DebugLevel(request.debug or "")
-        )
-    
-    # Resume endpoint
-    @agent_router.post("/{agent_name}/resume")
-    async def resume_request(
-        request: ResumeWithInputRequest, 
-        agent = Depends(get_agent)
-    ):
-        """Resume an existing request"""
-        return agent.start_request(
-            request=json.dumps(request.continue_result),
-            continue_result=request.continue_result,
-            run_id=request.run_id,
-            debug=DebugLevel(request.debug or "")
-        )
-    
-    # Get events endpoint
-    @agent_router.get("/{agent_name}/getevents")
-    async def get_events(
-        request_id: str, 
-        stream: bool = False, 
-        agent = Depends(get_agent)
-    ):
-        """Get events for a request"""
-        if not stream:
-            # Non-streaming response
-            results = []
-            for event in agent.get_events(request_id):
-                event_data = {
-                    "type": event.type,
-                    "agent": event.agent,
-                    "depth": event.depth,
-                    "payload": make_json_serializable(event.payload)
-                }
-                results.append(event_data)
-            return results
-        else:
-            # Streaming response
-            import asyncio
-            
-            async def event_generator():
-                for event in agent.get_events(request_id):
-                    event_data = {
-                        "type": event.type,
-                        "agent": event.agent,
-                        "depth": event.depth,
-                        "payload": make_json_serializable(event.payload)
-                    }
-                    yield {
-                        "data": json.dumps(event_data),
-                        "event": "message"
-                    }
-                    await asyncio.sleep(0.01)
-            return EventSourceResponse(event_generator())
-    
-    # Stream request endpoint
-    @agent_router.post("/{agent_name}/stream_request")
-    async def stream_request(
-        request: ProcessRequest, 
-        agent = Depends(get_agent)
-    ):
-        """Stream a request response"""
-        def render_events():
-            for event in agent.next_turn(request.prompt):
-                yield str(event)
-        return EventSourceResponse(render_events())
-    
-    # Get runs endpoint
-    @agent_router.get("/{agent_name}/runs")
-    async def get_runs(agent = Depends(get_agent)):
-        """Get all runs for this agent"""
-        runs = agent.get_runs()
-        return [run.model_dump() for run in runs]
-    
-    # Get run logs endpoint
-    @agent_router.get("/{agent_name}/runs/{run_id}/logs")
-    async def get_run_logs(
-        run_id: str, 
-        agent = Depends(get_agent)
-    ):
-        """Get logs for a specific run"""
-        run_logs = agent.get_run_logs(run_id)
-        return [run_log.model_dump() for run_log in run_logs]
-    
-    # Webhook endpoint
-    @agent_router.post("/{agent_name}/webhook/{run_id}/{callback_name}")
-    async def handle_webhook(
-        run_id: str, 
-        callback_name: str,
-        request: Request,
-        agent = Depends(get_agent)
-    ):
-        """Handle webhook callbacks"""
-        # Get query parameters
-        params = dict(request.query_params)
-        # Get request body if any
-        try:
-            body = await request.json()
-            params.update(body)
-        except:
-            pass
+    # Create and run the API server
+    with Status("[bold green]Setting up API server...", console=console):
+        api_server = AgentAPIServer(agent_instances, port=port)
         
-        # Call the webhook handler
-        if hasattr(agent._agent, 'webhook'):
-            if hasattr(agent._agent.webhook, 'remote'):
-                # Ray implementation
-                from agentic.ray_mock import ray
-                result = ray.get(
-                    agent._agent.webhook.remote(
-                        run_id=run_id,
-                        callback_name=callback_name, 
-                        args=params
-                    )
-                )
-            else:
-                # Local implementation
-                result = agent._agent.webhook(
-                    run_id=run_id,
-                    callback_name=callback_name,
-                    args=params
-                )
-            return {"status": "success", "result": result}
-        else:
-            return {"status": "error", "message": "Webhook not supported by this agent"}
-    
-    # Describe endpoint
-    @agent_router.get("/{agent_name}/describe")
-    async def describe(agent = Depends(get_agent)):
-        """Get agent description"""
-        return AgentDescriptor(
-            name=agent.name,
-            purpose=agent.welcome,
-            tools=agent.list_tools(),
-            endpoints=["/process", "/getevents", "/describe"],
-            operations=["chat"],
-            prompts=agent.prompts,
-        )
-    
-    # Include the router in the main app
-    app.include_router(agent_router)
-    
-    # Update API endpoints for each agent
-    with Status("[bold green]Setting up API endpoints...", console=console):
-        for agent_name, agent in agent_registry.items():
-            # Update the agent's API endpoint URL
-            api_endpoint = f"http://0.0.0.0:{port}/{agent_name}"
-            if hasattr(agent, "_update_state"):
-                agent._update_state({"api_endpoint": api_endpoint})
-            
-            console.print(f"[green]Added endpoints for {agent.name} at /{agent_name}[/green]")
-    
-    # Start the server
     console.print(f"[bold green]✓ Starting server on port {port}[/bold green]")
     console.print(f"[blue]Server URL: http://0.0.0.0:{port}[/blue]")
     console.print(f"[blue]Swagger UI: http://0.0.0.0:{port}/docs[/blue]")
     console.print("[yellow]Press Ctrl+C to exit[/yellow]")
     
     try:
-        uvicorn.run(app, host="0.0.0.0", port=port)
+        api_server.run()
     except KeyboardInterrupt:
         console.print("[yellow]Shutting down...[/yellow]")
 
-# executes a shell with all the args
 @app.command()
 def shell(args: List[str]):
     """Copies secrets into the environment and executes a shell command"""
