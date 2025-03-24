@@ -31,7 +31,7 @@ Now run from the command line:
 Or serve the FastAPI API and use the web UI:
 
     (terminal 1):
-    agentic serve examples/oss_deep_research.py
+    agentic serve examples/deep_research/oss_deep_research.py
 
     (terminal 2):
     agentic dashboard start

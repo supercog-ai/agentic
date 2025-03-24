@@ -1,15 +1,13 @@
 import asyncio
 import time
 from pydantic import BaseModel, ConfigDict
-from typing import Any, Optional, Generator, Literal, Type, Union
+from typing import Any, Optional, Generator, Literal, Type
 from dataclasses import dataclass
 from pathlib import Path
 from queue import Queue
 import threading
 from copy import deepcopy
 import uuid
-
-from starlette.requests import Request
 
 import inspect
 import json
@@ -24,8 +22,6 @@ import threading
 import traceback
 from datetime import timedelta
 from .swarm.types import agent_secret_key, tool_name
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
 import yaml
 from typing import Callable, Any, List
 from .swarm.types import (
@@ -79,11 +75,9 @@ from .events import (
     ResumeWithInput,
     DebugLevel,
     ToolError,
-    AgentDescriptor,
     StartRequestResponse,
 )
 from agentic.db.models import Run, RunLog
-from agentic.utils.json import make_json_serializable
 from agentic.tools.registry import tool_registry
 from agentic.db.db_manager import DatabaseManager
 
@@ -114,11 +108,12 @@ if os.environ.get("AGENTIC_USE_RAY"):
     # Use the actual Ray implementation
     print("Using Ray engine for running agents")
     import ray
-    from ray import serve
 
 else:
     print("Using simple Thread engine for running agents")
-    from .ray_mock import ray, serve
+    from .ray_mock import ray
+
+_AGENT_REGISTRY = []
 
 @ray.remote
 class ActorBaseAgent:
@@ -789,18 +784,6 @@ def handoff(agent, **kwargs):
     called as a subroutine."""
     return HandoffAgentWrapper(agent)
 
-
-_AGENT_REGISTRY: list = []
-
-
-app = FastAPI()
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # Allows all origins
-    allow_credentials=True,
-    allow_methods=["*"],  # Allows all methods
-    allow_headers=["*"],  # Allows all headers
-)
 class ProcessRequest(BaseModel):
     prompt: str
     debug: Optional[str] = None
@@ -811,214 +794,7 @@ class ResumeWithInputRequest(BaseModel):
     debug: Optional[str] = None
     run_id: Optional[str] = None
 
-from sse_starlette.sse import EventSourceResponse
 
-ActorHandleType = Union["ray.actor.ActorHandle", object]
-
-@serve.deployment
-@serve.ingress(app)
-class DynamicFastAPIHandler:
-    def __init__(self, actor_ref: ActorHandleType, agent_proxy: "BaseAgentProxy"):
-        self._agent = actor_ref
-        self.agent_proxy = agent_proxy
-        self.debug = DebugLevel(os.environ.get("AGENTIC_DEBUG") or DebugLevel.OFF)
-        self.name = self.agent_proxy.name
-        self.prompt: ProcessRequest = None
-
-    @app.post("/process")
-    async def handle_post(self, prompt: ProcessRequest) -> StartRequestResponse:
-        """Start a new request via the agent facade"""
-        if prompt.debug and self.debug.is_off():
-            self.debug = DebugLevel(prompt.debug)
-        
-        return self.agent_proxy.start_request(
-            request=prompt.prompt,
-            run_id=prompt.run_id,
-            debug=self.debug
-        )
-    
-    @app.post("/resume")
-    async def handle_post(self, prompt: ResumeWithInputRequest) -> StartRequestResponse:
-        """Resume an input request via the agent facade"""
-        if prompt.debug and self.debug.is_off():
-            self.debug = DebugLevel(prompt.debug)
-                
-        return self.agent_proxy.start_request(
-            request=json.dumps(prompt.continue_result),
-            continue_result=prompt.continue_result,
-            run_id=prompt.run_id,
-            debug=self.debug
-        )
-
-    @app.get("/getevents")
-    async def get_events(self, request_id: str, stream: bool = False):
-        """Get events for a specific request using the agent facade"""
-        if not stream:
-            # Non-streaming response - collect all events
-            results = []
-            for event in self.agent_proxy.get_events(request_id):
-                if self._should_print(event):
-                    print(str(event), end="")
-                
-                event_data = {
-                    "type": event.type,
-                    "agent": event.agent,
-                    "depth": event.depth,
-                    "payload": make_json_serializable(event.payload)
-                }
-                results.append(event_data)
-            return results
-            
-        else:
-            # Streaming response
-            async def event_generator():
-                for event in self.agent_proxy.get_events(request_id):
-                    if self._should_print(event):
-                        print(str(event), end="")
-
-                    # Quick hack to return tool_result and tool_call events
-                    if isinstance(event, ToolCall):
-                        event.payload = {
-                            "name": event.payload,
-                            "arguments": make_json_serializable(event.args)
-                        }
-
-                    if isinstance(event, ToolResult):
-                        event.payload = {
-                            "name": event.payload,
-                            "result": make_json_serializable(event.result)
-                        }
-                        
-                    event_data = {
-                        "type": event.type,
-                        "agent": event.agent,
-                        "depth": event.depth,
-                        "payload": make_json_serializable(event.payload)
-                    }
-                    yield {
-                        "data": json.dumps(event_data),
-                        "event": "message"
-                    }
-                    
-                    # Small delay to prevent flooding
-                    await asyncio.sleep(0.01)
-            return EventSourceResponse(event_generator())
-
-    @app.post('/stream_request')
-    async def stream_request(self, prompt: ProcessRequest) -> EventSourceResponse:
-        def render_events():
-            for event in self.next_turn(prompt.prompt):
-                yield (str(event))
-        return EventSourceResponse(render_events())
-    
-    @app.get('/runs')
-    async def get_runs(self) -> list[dict]:
-        runs = self.agent_proxy.get_runs()
-        return [run.model_dump() for run in runs]
-    
-    @app.get('/runs/{run_id}/logs')
-    async def get_run_logs(self, run_id=str) -> list[dict]:
-        run_logs = self.agent_proxy.get_run_logs(run_id)
-        return [run_log.model_dump() for run_log in run_logs]
-    
-    @app.post("/webhook/{run_id}/{callback_name}")
-    async def handle_webhook(
-        self, 
-        run_id: str, 
-        callback_name: str,
-        request: Request
-    ) -> dict:
-        """Handle incoming webhook requests by executing the specified callback
-        
-        Args:
-            run_id: ID of the agent run this webhook is for 
-            callback_name: Name of the callback function to invoke
-            request: FastAPI request object containing query params and body
-        """
-        # Get query parameters
-        params = dict(request.query_params)
-        # Get request body if any
-        try:
-            body = await request.json()
-            params.update(body)
-        except:
-            pass
-        # Call the remote webhook handler
-        result = ray.get(
-            self._agent.webhook.remote(
-                run_id=run_id,
-                callback_name=callback_name, 
-                args=params
-            )
-        )
-        return {"status": "success", "result": result}
-
-    def next_turn(
-        self,
-        request: str,
-        continue_result: dict = {},
-        debug: DebugLevel = DebugLevel(DebugLevel.OFF),
-    ) -> Generator[Event, Any, Any]:
-        """This is the key agent loop generator. It runs the agent for a single turn and
-        emits events as it goes. If a WaitForInput event is emitted, then you should
-        gather human input and call this function again with _continue_result_ to
-        continue the turn."""
-        self.debug.raise_level(debug)
-        event: Event
-        if not continue_result:
-            remote_gen = self._agent.handlePromptOrResume.remote(
-                Prompt(
-                    self.name,
-                    request,
-                    depth=0,
-                    debug=self.debug,
-                )
-            )
-        else:
-            remote_gen = self._agent.handlePromptOrResume.remote(
-                ResumeWithInput(self.name, continue_result, request_id=request_id),
-            )
-        for remote_next in remote_gen:
-            event = ray.get(remote_next)
-            yield event
-
-    @app.get("/describe")
-    async def describe(self) -> AgentDescriptor:
-        return AgentDescriptor(
-            name=self.agent_proxy.name,
-            purpose=self.agent_proxy.welcome,
-            tools=self.agent_proxy.list_tools(),
-            endpoints=["/process", "/getevents", "/describe"],
-            operations=["chat"],
-            prompts=self.agent_proxy.prompts,
-        )
-
-    # FIXME: DRY this with Runner
-    def _should_print(self, event: Event) -> bool:
-        if self.debug.debug_all():
-            return True
-        if not self.debug.is_off() and event.is_output and event.depth == 0:
-            return True
-        elif isinstance(event, ToolError):
-            return self.debug != ""
-        elif isinstance(event, (ToolCall, ToolResult)):
-            return self.debug.debug_tools()
-        elif isinstance(event, PromptStarted):
-            return self.debug.debug_llm() or self.debug.debug_agents()
-        elif isinstance(event, TurnEnd):
-            return self.debug.debug_agents()
-        elif isinstance(event, (StartCompletion, FinishCompletion)):
-            return self.debug.debug_llm()
-        else:
-            return False
-
-
-@serve.deployment
-class BaseServeDeployment:
-    def __call__(self, request: Request) -> list[str]:
-        return [f"/{agent.safe_name}" for agent in _AGENT_REGISTRY]
-
-base_serve_app = None
 depthLocal = threading.local()
 depthLocal.depth = -1
 
@@ -1045,7 +821,7 @@ class BaseAgentProxy:
         welcome: str | None = None,
         tools: list = None,
         model: str | None = None,
-        template_path: str | Path = None,
+        template_path: str | Path | None = None,
         max_tokens: int = None,
         db_path: Optional[str | Path] = "./agent_runs.db",
         memories: list[str] = [],
@@ -1061,14 +837,7 @@ class BaseAgentProxy:
         self.prompts = prompts or {}
         self.cancelled = False
         self.mock_settings = mock_settings
-
-        # Setup template path
-        caller_frame = inspect.currentframe()
-        if caller_frame:
-            caller_file = inspect.getframeinfo(caller_frame.f_back).filename
-            directory = os.path.dirname(caller_file)
-            base = os.path.splitext(os.path.basename(caller_file))[0]
-            template_path = os.path.join(directory, f"{base}.prompts.yaml")
+        
         self.template_path = template_path
         
         # Setup tools and other properties
@@ -1236,15 +1005,19 @@ class BaseAgentProxy:
     @property
     def prompt_variables(self) -> dict:
         """Dictionary of variables to make available to prompt templates."""
-        paths_to_search = [self.template_path]
-
-        for path in [Path(p) for p in paths_to_search]:
-            if path.exists():
+        if self.template_path is None:
+            return {"name": self.name}  # Return default values when no template path exists
+            
+        path = Path(self.template_path)
+        if path.exists():
+            try:
                 with open(path, "r") as f:
                     prompts = yaml.safe_load(f)
-                return prompts
-
-        return {"name": "John Doe"}
+                    return prompts or {"name": self.name}
+            except Exception as e:
+                print(f"Error loading prompt template: {e}")
+        
+        return {"name": self.name}
 
     @property
     def safe_name(self) -> str:
@@ -1320,10 +1093,11 @@ class BaseAgentProxy:
         # The logic here is to keep reusing the default '_agent' value created when the Proxy is
         # first constructed. We only go to create a new instance if a request is started before
         # the prior one finishes.
-        if len(self.agent_instances) == 0:
-            self.agent_instances[request_id] = self._agent or self._create_agent_instance(request_id)
-        else:
-            self.agent_instances[request_id] = self._create_agent_instance(request_id)
+        # TODO: RESOLVE THIS TO WORK WITH RESUME WITH INPUT
+        # if len(self.agent_instances) == 0:
+        self.agent_instances[request_id] = self._agent or self._create_agent_instance(request_id)
+        # else:
+        #     self.agent_instances[request_id] = self._create_agent_instance(request_id)
         return self.agent_instances[request_id]
 
     def _cleanup_agent_instance(self, request_id: str):
@@ -1349,6 +1123,10 @@ class BaseAgentProxy:
         # Create request ID if not provided in continue_result
         request_id = continue_result.get("request_id") or str(uuid.uuid4())
 
+        agent_instance = self._get_agent_for_request(request_id)
+        if (self.run_id != run_id or not self.run_id) and self.db_path:
+            self.init_run_tracking(agent_instance, run_id)
+
         # Initialize new request
         request_obj = Prompt(
             self.name,
@@ -1359,12 +1137,9 @@ class BaseAgentProxy:
             request_id=request_id,
         )
 
-        # Re-initialize run tracking for this request
-        self.run_id = run_id
-
         def producer(queue, request_obj, continue_result):
             depthLocal.depth = request_obj.depth
-            for event in self.next_turn(request_obj, continue_result=continue_result, request_id=request_id):
+            for event in self.next_turn(request_obj, request_context=request_context, continue_result=continue_result, request_id=request_id):
                 queue.put(event)
             queue.put(self.queue_done_sentinel)
             # Cleanup the agent instance when done
@@ -1510,37 +1285,6 @@ class BaseAgentProxy:
                 return items[-1]
         except StopIteration as e:
             return e.value
-
-    def _create_fastapi_endpoint(self, port: int = 8086):
-        """Create a FastAPI endpoint for this agent"""
-        global base_serve_app
-
-        serve.start(http_options={"host": "0.0.0.0", "port": port})
-        dep = DynamicFastAPIHandler.bind(self._agent, self)
-        dep.name = f"{self.safe_name}_api"
-        deployment = serve.run(
-            dep,
-            name=f"{self.safe_name}_api",
-            route_prefix=f"/{self.safe_name}",
-        )
-
-        api_endpoint = f"http://0.0.0.0:{port}/{self.safe_name}"
-        self._update_state({"api_endpoint": api_endpoint})
-
-        if base_serve_app is None:
-            base_serve_app = BaseServeDeployment.bind()
-            serve.run(
-                base_serve_app, 
-                name=f"base_api",
-                route_prefix="/_discovery"
-            )
-
-        return deployment, f"/{self.safe_name}"
-
-    def start_api_server(self, port: int = 8086) -> str:
-        """Start an API server for this agent"""
-        return self._create_fastapi_endpoint(port)[1]
-
 
 class RayAgentProxy(BaseAgentProxy):
     """Ray-based implementation of the agent proxy.
@@ -1755,35 +1499,6 @@ class LocalAgentProxy(BaseAgentProxy):
     def list_functions(self) -> list[str]:
         """Gets the current list of functions from the local agent"""
         return self._agent.list_functions()
-
-    def NO_create_fastapi_endpoint(self, port: int = 8086):
-        """Create a FastAPI endpoint for this agent"""
-        global base_serve_app
-
-        # Local implementation of FastAPI endpoint
-        from fastapi import FastAPI
-        import uvicorn
-        
-        app = FastAPI()
-        
-        # Create API endpoint similar to Ray implementation
-        # This would need to be expanded for a real implementation
-        
-        api_endpoint = f"http://0.0.0.0:{port}/{self.safe_name}"
-        self._update_state({"api_endpoint": api_endpoint})
-        
-        # Start server in a separate thread
-        def run_server():
-            uvicorn.run(app, host="0.0.0.0", port=port)
-            
-        t = threading.Thread(target=run_server, daemon=True)
-        t.start()
-        
-        return app, f"/{self.safe_name}"
-
-    def NOstart_api_server(self, port: int = 8086) -> str:
-        """Start an API server for this agent"""
-        return self._create_fastapi_endpoint(port)[1]
 
     def _get_prompt_generator(self, agent, prompt):
         """Get generator for a new prompt - Local implementation"""
