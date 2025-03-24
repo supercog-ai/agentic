@@ -107,7 +107,8 @@ class TavilySearchTool:
                 timeout=90,
             )
 
-        response.raise_for_status()
+        if not response.is_success:
+            return []
         results = response.json()
 
         # Concatenate the new rows to the existing DataFrame
@@ -178,7 +179,6 @@ class TavilySearchTool:
                 raw_content = source.get('raw_content', '')
                 if raw_content is None:
                     raw_content = ''
-                    print(f"Warning: No raw_content found for source {source['url']}")
                     missing_pages_list.append(source['url'])
                 if len(raw_content) > char_limit:
                     raw_content = raw_content[:char_limit] + "... [truncated]"

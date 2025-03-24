@@ -1,38 +1,37 @@
 import asyncio
-import time
-from pydantic import BaseModel, ConfigDict
-from typing import Any, Optional, Generator, Literal, Type
-from dataclasses import dataclass
-from pathlib import Path
-from queue import Queue
-import threading
-from copy import deepcopy
-import uuid
-
 import inspect
 import json
+import litellm
 import os
-from pathlib import Path
-import os
-import yaml
-from jinja2 import Template, DebugUndefined
-import os
+import re
 import threading
-
+import time
 import traceback
-from datetime import timedelta
-from .swarm.types import agent_secret_key, tool_name
+import uuid
 import yaml
-from typing import Callable, Any, List
-from .swarm.types import (
+
+from copy import deepcopy
+from dataclasses import dataclass
+from datetime import timedelta
+from jinja2 import Template, DebugUndefined
+from litellm.types.utils import Message
+from pathlib import Path
+from pydantic import BaseModel, ConfigDict
+from queue import Queue
+from typing import Any, Callable, List, Optional, Generator, Literal, Type
+
+from agentic.swarm.types import (
+    agent_secret_key,
     AgentFunction,
+    ChatCompletionMessage,
+    ChatCompletionMessageToolCall,
+    Function,
     Response,
     Result,
     RunContext,
-    ChatCompletionMessageToolCall,
-    Function,
+    tool_name
 )
-from .swarm.util import (
+from agentic.swarm.util import (
     debug_print,
     debug_completion_start,
     debug_completion_end,
@@ -42,20 +41,7 @@ from .swarm.util import (
     wrap_llm_function,
 )
 
-from jinja2 import Template
-import litellm
-from litellm.types.utils import Message
-
-from .swarm.types import (
-    AgentFunction,
-    ChatCompletionMessage,
-    ChatCompletionMessageToolCall,
-    Function,
-    Response,
-    Result,
-    RunContext,
-)
-from .events import (
+from agentic.events import (
     Event,
     Prompt,
     PromptStarted,
@@ -80,9 +66,7 @@ from .events import (
 from agentic.db.models import Run, RunLog
 from agentic.tools.registry import tool_registry
 from agentic.db.db_manager import DatabaseManager
-
-from .models import get_special_model_params 
-from agentic.models import mock_provider
+from agentic.models import get_special_model_params, mock_provider
 
 
 __CTX_VARS_NAME__ = "run_context"
@@ -638,13 +622,17 @@ class ActorBaseAgent:
     {%- endfor %}
     </memory>
     """
+            # Fix for Jinja2 template rendering error if there is an unclosed comment, ensure all `{#` have a closing `#}`
+            while re.search(r"\{#(?!.*#\})", prompt, re.DOTALL):
+                prompt = re.sub(r"\{#(?!.*#\})", "{% raw %}{#{% endraw %}", prompt, count=1)
+
             return Template(prompt).render(
                 context.get_context() | {"MEMORIES": self.memories}
             )
-        except:
-            print(f"Prompt = {prompt}")
-            print(f"Context = {context.get_context()}")
-            print(f"Memories = {self.memories}")
+        except Exception as e:
+            print("Error in prompt template, using raw prompt without subsitutions:", e)
+            traceback.print_exc()
+            return prompt
 
     def set_state(self, actor_message: SetState):
         self.inject_secrets_into_env()
