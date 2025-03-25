@@ -1,4 +1,4 @@
-name: Test_CI
+name: Lint_and_Test
 on:
   pull_request:
     branches: [ main ]
@@ -21,7 +21,7 @@ jobs:
           pip install -e ".[all,dev]"
           
       - name: Run tests (excluding LLM tests)
-        run: pytest -v -m "not requires_llm"
+        run: pytest -v -m "not requires_llm and not requires_secrets"
         
   lint:
     runs-on: ubuntu-latest
