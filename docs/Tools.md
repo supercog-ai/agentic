@@ -133,7 +133,7 @@ that your tool needs some credentials, and the framework will check that they ar
 prompt the user to supply them.
 
 Once your tool function is called (like 'query_for_news') then you can retrieve the
-secrets from the RunContext. Look at Agentic's [secrets](./Building_Agents.md#settings-and-secrets) system for a description
+secrets from the RunContext. Look at Agentic's [secrets](./building-agents.md#secrets) system for a description
 of how secrets are managed.
 
 ### Using environment configuration
@@ -174,7 +174,7 @@ available.
 
 ### Generating Events / Logging
 
-Remember that when you agent is running, it emits a stream of well-typed [events](./Events.md).
+Remember that when you agent is running, it emits a stream of well-typed [events](./events.md).
 It is possible for tool functions to also generate events. In this case these events will be
 emitted by your agent, but they won't be revealed to the LLM. Only the actual return value
 from your function is returned to the LLM.

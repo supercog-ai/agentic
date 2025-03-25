@@ -10,8 +10,8 @@ Agentic is a few different things:
 - A reference implementation of the [agent protocol](https://github.com/supercog-ai/agent-protocol).
 - An agent runtime built on [Ray](https://github.com/ray-project/ray)
 - An optional "batteries included" set of features to help you get running quickly:
-    * Built in FastAPI [API](./REST_API.md) for your agent
-    * Basic [RAG](./Rag.md) features
+    * Built in FastAPI [API](./rest-api.md) for your agent
+    * Basic [RAG](./rag.md) features
     * A set of production-ready [tools](https://github.com/supercog-ai/agentic/tree/main/src/agentic/tools) (extracted from our Supercog product)
     * Agentic Chat UI examples in [NextJS](https://github.com/supercog-ai/agentic/tree/main/src/agentic/ui/next-js) and [Streamlit](https://github.com/supercog-ai/agentic/tree/main/src/agentic/ui)
     * A growing set of working [examples](https://github.com/supercog-ai/agentic/tree/main/examples)
@@ -99,7 +99,7 @@ if __name__ == "__main__":
 
 Now let's run our agent. Note that you will need to configure your OpenAI API key. If you
 want to use a different LLM, including running a model locally, see the intstructions
-at [models](./Models.md).
+at [models](./models.md).
 
 ```sh
     agentic set-secret OPENAI_API_KEY=<your key>
@@ -401,7 +401,7 @@ object. One is created each time a turn starts.
  
 ### Examples
 
-Read [Examples](./Examples.md) or look at the github repo [examples](https://github.com/supercog-ai/agentic/tree/main/examples) folder.
+Read [Examples](./examples.md) or look at the github repo [examples](https://github.com/supercog-ai/agentic/tree/main/examples) folder.
 
 ## Try the web UI (using streamlit)
 

@@ -7,15 +7,15 @@ markdown_extensions:
   - toc
 nav:
  - index.md  
- - Building_Agents.md
- - Debugging.md
- - Tools.md
- - Rag.md
- - Models.md
- - REST_API.md
- - CLI.md
- - Dashboard.md
- - PROJECT_STRUCTURE.md
- - EVENTS.md
- - AGENTIC_MANIFESTO.md
+ - building-agents.md
+ - debugging.md
+ - tools.md
+ - rag.md
+ - models.md
+ - rest-api.md
+ - cli.md
+ - dashboard.md
+ - project-structure.md
+ - events.md
+ - agentic-manifesto.md
 
