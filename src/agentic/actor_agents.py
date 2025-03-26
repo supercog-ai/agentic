@@ -1274,6 +1274,19 @@ class BaseAgentProxy:
         except StopIteration as e:
             return e.value
 
+    def __lshift__(self, prompt: str):
+        """
+        Implement the << operator for sending prompts to agents.
+        This allows syntax like: response = agent << "prompt"
+        
+        Args:
+            prompt: The prompt to send to the agent
+            
+        Returns:
+            The final response from the agent
+        """
+        return self.grab_final_result(prompt)
+
 class RayAgentProxy(BaseAgentProxy):
     """Ray-based implementation of the agent proxy.
     The actual agent is run as a remote actor on Ray.
