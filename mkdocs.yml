@@ -1,15 +1,25 @@
 site_name: Agentic Docs
 site_url: https://supercog.ai/agentic
+repo_url: https://github.com/supercog-ai/agentic
+repo_name: supercog-ai/agentic
 theme:
   name: material
+  logo: assets/logo.png
+  favicon: assets/favicon.ico
+  palette:
+    scheme: default
+    primary: black
+  icon:
+    repo: fontawesome/brands/github
   features:
-    - navigation.path
     - navigation.indexes
     - toc.follow
 markdown_extensions: 
   - codehilite
   - toc
   - attr_list
+  - md_in_html
+  - pymdownx.blocks.caption
 nav:
   - index.md
   - getting-started.md
@@ -34,4 +44,4 @@ nav:
     - Tool Library: tools/tool-library.md
     - Building Tools: tools/building-tools.md
   - rag.md
-  - examples.md
+  - example-agents.md
