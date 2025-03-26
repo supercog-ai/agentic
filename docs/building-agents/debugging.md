@@ -1,4 +1,4 @@
-# Debugging agents
+# Debugging
 
 The simplest tools for debugging are using the debug levels in the REPL:
     

@@ -6,5 +6,5 @@ A simple UI for developing and testing with the agentic framework.
 
 
 ```bash
-agentic ui
+agentic streamlit
 ```

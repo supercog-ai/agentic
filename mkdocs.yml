@@ -2,20 +2,36 @@ site_name: Agentic Docs
 site_url: https://supercog.ai/agentic
 theme:
   name: material
+  features:
+    - navigation.path
+    - navigation.indexes
+    - toc.follow
 markdown_extensions: 
   - codehilite
   - toc
+  - attr_list
 nav:
- - index.md  
- - building-agents.md
- - debugging.md
- - tools.md
- - rag.md
- - models.md
- - rest-api.md
- - cli.md
- - dashboard.md
- - project-structure.md
- - events.md
- - agentic-manifesto.md
-
+  - index.md
+  - getting-started.md
+  - Core Concepts:
+    - core-concepts/index.md
+    - Agentic Design Principles: core-concepts/agentic-design-principles.md
+    - Project Structure: core-concepts/project-structure.md
+    - Event System: core-concepts/event-system.md
+    - LLM Models: core-concepts/models.md
+  - Building Agents:
+    - building-agents/index.md
+    - Debugging: building-agents/debugging.md
+    - Agent Teams: building-agents/agent-teams.md
+  - Interacting with Agents:
+    - interacting-with-agents/index.md
+    - CLI: interacting-with-agents/cli.md
+    - Rest API: interacting-with-agents/rest-api.md
+    - Next.js Dashboard: interacting-with-agents/nextjs-dashboard.md
+    - Streamlit Dashboard: interacting-with-agents/streamlit-dashboard.md
+  - Tools:
+    - tools/index.md
+    - Tool Library: tools/tool-library.md
+    - Building Tools: tools/building-tools.md
+  - rag.md
+  - examples.md

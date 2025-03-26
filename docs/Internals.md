@@ -41,7 +41,7 @@ The import `agentic.common.Agent` will reference the active runtime proxy class,
 One big difference when using the `Ray` engine is that all events and data in and out of
 your agent must be picklable.
 
-# Agent processing flow
+## Agent processing flow
 
 Forward direction processing happens by sending events to agent, which may send
 events to sub-agents, and those agents emit events back with results.
