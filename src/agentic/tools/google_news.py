@@ -75,12 +75,12 @@ class GoogleNewsTool(BaseAgenticTool):
             query (str): The main search query.
             language (str): The language for the search results.
             country (str): The country for the search results.
-            before (date, optional): End date format YYYY-MM-DD.
-            after (date, optional): Start date format YYYY-MM-DD.
+            before (Optional[date]): End date format YYYY-MM-DD.
+            after (Optional[date]): Start date format YYYY-MM-DD.
             back_days: Number of days back to retrieve news
-            exact_phrase (str, optional): Phrase that must appear exactly as written.
-            exclude_terms (List[str], optional): Terms to exclude from the search.
-            site (str, optional): Limit search to a specific news source.
+            exact_phrase (Optional[str]): Phrase that must appear exactly as written.
+            exclude_terms (Optional[List[str]]): Terms to exclude from the search.
+            site (Optional[str]): Limit search to a specific news source.
             in_title (bool): If True, search only in the title.
             in_url (bool): If True, search only in the URL.
             all_in_text (bool): If True, all words must appear in the body text.

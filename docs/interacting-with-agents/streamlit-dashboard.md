@@ -18,13 +18,12 @@ The dashboard offers the following capabilities:
 
 ### Prerequisites
 
-The dashboard requires:
+The streamlit dashboard requires:
 
-- Streamlit (v1.25+)
-- Agentic framework with the UI extras
+- Agentic framework with the streamlit extra
 - An active agent server (started with `agentic serve`)
 
-To install with dashboard support:
+To install with streamlit support:
 
 ```bash
 pip install agentic-framework[streamlit]
@@ -46,26 +45,12 @@ agentic streamlit
 agentic serve examples/basic_agent.py & agentic streamlit
 ```
 
-### Programmatically
-
-You can also start the dashboard from Python code:
-
-```python
-from agentic.streamlit import start_dashboard
-
-# Start the dashboard on the default port
-start_dashboard()
-
-# Or with custom parameters
-start_dashboard(port=8501, server_url="http://localhost:8086")
-```
-
 ## Usage Guide
 
 ### Agent Selection
 
-1. Choose an agent from the sidebar dropdown
-2. The dashboard will display the agent's description and available tools
+1. Choose an agent from the dropdown
+2. The dashboard will display a chat interface with the selected agent
 3. You can switch between agents at any time
 
 ### Chatting with Agents
@@ -73,23 +58,6 @@ start_dashboard(port=8501, server_url="http://localhost:8086")
 1. Enter your query in the input field at the bottom
 2. View agent responses and tool usage in the main chat area
 3. Agent responses support Markdown for rich formatting
-
-### Viewing Run History
-
-1. Click on the "Run History" tab in the sidebar
-2. Select a run from the available history
-3. View the full event log and conversation transcript
-4. Export run data as JSON or CSV
-
-## Dashboard Structure
-
-The Streamlit dashboard is organized into several key sections:
-
-- **Sidebar**: Agent selection, navigation, and settings
-- **Chat Window**: Main conversation interface with the agent
-- **Event Log**: Real-time display of agent events
-- **Status Bar**: Connection and processing status indicators
-- **Metrics Panel**: Token usage and performance data
 
 ## Customizing the Dashboard
 
@@ -147,7 +115,7 @@ Common issues and solutions:
 
 - **Connection errors**: Ensure the agent server is running and accessible
 - **Missing agents**: Verify agent registration in the server logs
-- **Display issues**: Check Streamlit version compatibility (minimum v1.25)
+- **Display issues**: Check Streamlit version compatibility
 - **Performance problems**: Reduce history retention for long-running agents
 
 ## Technical Details
@@ -157,22 +125,3 @@ The Streamlit dashboard connects to agents through the Agentic API server, using
 - Server-sent events (SSE) for real-time updates
 - Asynchronous HTTP requests for agent operations
 - Local state management for UI state
-- WebSocket reconnection logic for reliability
-
-## Development and Contributing
-
-To contribute to the dashboard:
-
-1. Locate the dashboard code in `src/agentic/streamlit/`
-2. Make your changes following the project's style guide
-3. Test with a variety of agents and scenarios
-4. Submit a pull request with a clear description of changes
-
-## Future Enhancements
-
-Planned improvements include:
-
-- Advanced data visualizations for agent performance
-- Multi-agent conversation views
-- Customizable dashboards with drag-and-drop layouts
-- Integrated debugging tools for agent development
