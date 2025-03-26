@@ -1185,7 +1185,7 @@ class BaseAgentProxy:
                 )
             )
             # Transmit depth through the Prompt
-            if depthLocal.depth > prompt.depth:
+            if hasattr(depthLocal, 'depth') and depthLocal.depth > prompt.depth:
                 prompt.depth = depthLocal.depth
                 
             # Get generator from agent
