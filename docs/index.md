@@ -13,7 +13,7 @@ Agentic is an opinionated framework that provides:
 - A suite of "batteries included" features to help you get running quickly
     - Basic [RAG](./rag.md) features
     - Run history and logging
-    - Simple UI examples built with [Streamlit](https://github.com/supercog-ai/agentic/tree/main/src/agentic/ui){target="_blank"} and [Next.js](https://github.com/supercog-ai/agentic/tree/main/src/agentic/dashboard){target="_blank"}
+    - Simple UI examples built with [Streamlit](https://github.com/supercog-ai/agentic/tree/main/src/agentic/streamlit){target="_blank"} and [Next.js](https://github.com/supercog-ai/agentic/tree/main/src/agentic/dashboard){target="_blank"}
 
 ## Key Features
 

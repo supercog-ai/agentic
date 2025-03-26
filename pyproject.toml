@@ -8,7 +8,6 @@ dependencies = [
     "html2text>=2024.2.26",
     "jinja2>=3.1.5",
     "pyyaml>=6.0.2",
-    "streamlit>=1.41.1",
     "swarm",
     "thespian>=4.0.0",
     "litellm>=1.63.14",
@@ -37,6 +36,11 @@ dependencies = [
 [project.optional-dependencies]
 # Dashboard package
 dashboard = []
+
+# Streamlit package
+streamlit = [
+    "streamlit>=1.41.1",
+]
 
 # Tool groups
 google-news = [
@@ -69,7 +73,7 @@ rag = [
 ]
 
 all = [
-    "agentic-framework[google-news,database,image-generator,github,rag,dashboard]",
+    "agentic-framework[google-news,database,image-generator,github,rag,dashboard,streamlit]",
 ]
 
 dev = [
@@ -95,7 +99,7 @@ packages = [
     "agentic", 
     "agentic.tools",
     "agentic.swarm",
-    "agentic.ui",
+    "agentic.streamlit",
     "agentic.dashboard",
     "agentic_examples"
 ]

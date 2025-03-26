@@ -760,7 +760,7 @@ def models_gpt(
 @app.command()
 def streamlit():
     """Runs the Streamlit UI"""
-    os.execvp("streamlit", ["streamlit", "run", "src/agentic/ui/app.py"])
+    os.execvp("streamlit", ["streamlit", "run", "src/agentic/streamlit/app.py"])
 
 # Hidden deprecated commands that map to new structure
 @app.command(hidden=True)

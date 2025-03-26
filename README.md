@@ -19,7 +19,7 @@ Agentic is a few different things:
   * Built in FastAPI API for your agent
   * Basic RAG features
   * A set of production-ready [tools](https://github.com/supercog-ai/agentic/tree/main/src/agentic/tools) (extracted from our Supercog product)
-  * Agentic Chat UI examples in [NextJS](https://github.com/supercog-ai/agentic/tree/main/src/agentic/ui/next-js) and [Streamlit](https://github.com/supercog-ai/agentic/tree/main/src/agentic/ui)
+  * Agentic Chat UI examples in [NextJS](https://github.com/supercog-ai/agentic/tree/main/src/agentic/dashboard) and [Streamlit](https://github.com/supercog-ai/agentic/tree/main/src/agentic/streamlit)
   * A growing set of working [examples](https://github.com/supercog-ai/agentic/tree/main/examples)
 
 You can pretty much use any of these features and leave the others. There are lots of framework choices but we think we have
