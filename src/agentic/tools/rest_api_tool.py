@@ -1,28 +1,17 @@
 from typing import Callable, Any, Optional, Dict, Awaitable, Union, AsyncGenerator
 from io import BytesIO
 from PIL import Image
-import requests
 import uuid
-import pandas as pd
 import os
 import json
-from aiohttp import FormData
 import pandas as pd
 import math
 import numpy as np
 import random
-from urllib.parse import urlparse
-from pydantic import BaseModel
+from urllib.parse import urlparse, parse_qsl, urlencode
 
-from urllib.parse import parse_qsl, urlencode
-
-import os
-from urllib.parse import urlparse
-from typing import Dict, Optional, Any
-
-from .base import BaseAgenticTool
+from agentic.tools.base import BaseAgenticTool
 from agentic.tools.registry import tool_registry, Dependency
-from agentic.events import ToolOutput
 from agentic.common import RunContext
 
 with tool_registry.safe_imports():
@@ -133,7 +122,7 @@ class AsyncRequestBuilder:
         )
     ],
 )
-class RESTAPIToolV2(BaseAgenticTool):
+class RestApiTool(BaseAgenticTool):
     request_map: dict[str, AsyncRequestBuilder] = {}
     return_dataframe: bool = False
     run_context: RunContext | None = None
@@ -406,7 +395,7 @@ class RESTAPIToolV2(BaseAgenticTool):
             return data
 
     async def process_image(self, response: httpx.Response):
-        return await RESTAPIToolV2._process_image(
+        return await RestApiTool._process_image(
             response.content
         )  # Read the image data as bytes
 

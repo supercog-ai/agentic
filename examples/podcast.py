@@ -1,6 +1,6 @@
 from agentic.common import Agent, AgentRunner
 from agentic.tools.text_to_speech_tool import TextToSpeechTool
-from agentic.tools.auth_rest_api_tool import AuthorizedRESTAPITool
+from agentic.tools.auth_rest_api_tool import AuthorizedRestApiTool
 from agentic.tools.google_news import GoogleNewsTool
 from agentic.tools.tavily_search_tool import TavilySearchTool
 
@@ -57,7 +57,7 @@ pipeline = Pipeline(
                 name="TransistorFM",
                 welcome="I can work with podcast episodes via the Transistor.fm API.",
                 instructions="{{TRANSISTOR_FM}}",
-                tools=[AuthorizedRESTAPITool("header", "TRANSISTOR_API_KEY", "x-api-key")],
+                tools=[AuthorizedRestApiTool("header", "TRANSISTOR_API_KEY", "x-api-key")],
                 memories=["Default show ID is 60214"],
                 model=model,
             )

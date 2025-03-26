@@ -54,7 +54,7 @@ class Meeting(Base):
 )
 
 
-class MEETING_BAAS_Tool(BaseAgenticTool):
+class MeetingBaasTool(BaseAgenticTool):
 
     def __init__(self):
         self.db_path = os.path.join(get_runtime_directory(), "meetings.db")
@@ -73,7 +73,7 @@ class MEETING_BAAS_Tool(BaseAgenticTool):
             
             self.meeting_baas_api_key = agentic_secrets.get_required_secret("MEETING_BAAS_API_KEY")
         except ValueError as e:
-            logger.error(f"Error initializing MEETING_BAAS_Tool: {e}")
+            logger.error(f"Error initializing MeetingBaasTool: {e}")
             self.meeting_baas_api_key = None
 
     def get_tools(self) -> list[Callable]:

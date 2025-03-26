@@ -1,7 +1,7 @@
 import asyncio
 from typing import Any, Dict, List, Optional
 from agentic.common import Agent, AgentRunner
-from agentic.tools.meeting_tool import MEETING_BAAS_Tool
+from agentic.tools.meeting_tool import MeetingBaasTool
 
 meeting_manager = Agent(
     name="Meeting Manage Agent",
@@ -25,7 +25,7 @@ meeting_manager = Agent(
             - Call the Meeting Summarizer for transcripts and summaries.  
             - Use answer_question for specific queries about meeting content.  
             """,
-    tools=[MEETING_BAAS_Tool()],
+    tools=[MeetingBaasTool()],
     model="openai/gpt-4o-mini"
 )
 

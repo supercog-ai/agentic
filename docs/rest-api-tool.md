@@ -1,10 +1,10 @@
 # REST API Tools
 
-`RESTAPIToolV2`
+`RestApiTool`
 
 The base tool offering REST API calling functions.
 
-`AuthorizedRESTAPITool`
+`AuthorizedRestApiTool`
 
 This tool is an easy way to access REST APIs that require authentication. Construct the
 tool passing these args:
