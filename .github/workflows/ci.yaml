@@ -1,4 +1,4 @@
-name: Lint_and_Test
+name: Test and Lint
 on:
   pull_request:
     branches: [ main ]
