@@ -1,14 +1,17 @@
 name: Update Documentation
 
 on:
+  # Triggered by the publish workflow
+  repository_dispatch:
+    types: [publish-docs-event]
+  
+  # Automatic updates for doc changes
   push:
     branches:
       - main
     paths:
       - 'docs/**'
       - 'mkdocs.yml'
-  # Allow manual triggers
-  workflow_dispatch:
 
 jobs:
   deploy-docs:
@@ -20,7 +23,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-        
+          
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
@@ -29,7 +32,6 @@ jobs:
       - name: Install documentation dependencies
         run: |
           python -m pip install --upgrade pip
-          # Install only what's needed for docs
           pip install mkdocs-material
           pip install mkdocstrings mkdocstrings-python
           pip install mike
@@ -44,18 +46,15 @@ jobs:
           # Extract current version from pyproject.toml
           VERSION=$(python -c "import re; f=open('pyproject.toml', 'r'); content=f.read(); f.close(); print(re.search(r'version = \"([0-9.]+)\"', content).group(1))")
           
-          # Check if this is a manual trigger or automated update
-          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
-            echo "Manual trigger - updating all versions"
-            # Get all existing versions to update their docs too
-            git fetch origin gh-pages --tags
-            
-            # Update current version and dev docs
-            echo "Deploying version $VERSION and dev documentation"
+          # Check if this is triggered by publish workflow or doc changes
+          if [ "${{ github.event_name }}" == "repository_dispatch" ]; then
+            echo "Triggered by publish workflow - updating all documentation"
+            # Deploy the version docs and update latest alias
             mike deploy --push --update-aliases $VERSION latest
+            # Also update dev docs
             mike deploy --push dev
           else
-            echo "Automated trigger - updating only dev docs"
-            # Just update the dev docs for automated pushes to docs directory
+            echo "Triggered by doc changes - updating only dev docs"
+            # Just update the dev docs
             mike deploy --push dev
           fi
