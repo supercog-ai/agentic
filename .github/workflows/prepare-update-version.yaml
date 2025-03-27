@@ -23,7 +23,7 @@ jobs:
       - name: Verify authorized user
         env:
           AUTHORIZED_USERS: ${{ secrets.AUTHORIZED_RELEASE_USERS }}
-          CURRENT_USER: ${{ github.event.pull_request.author.login }}
+          CURRENT_USER: ${{ github.event.pull_request.user.login }}
         run: |
           if [[ ! ",$AUTHORIZED_USERS," == *",$CURRENT_USER,"* ]]; then
             echo "Error: User $CURRENT_USER is not authorized to create releases"
