@@ -7,6 +7,7 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
     steps:
       - uses: actions/checkout@v3
       
@@ -21,6 +22,8 @@ jobs:
           pip install -e ".[all,dev]"
           
       - name: Run tests (excluding LLM tests)
+        env:
+          TEST_GITHUB_TOKEN: ${{ secrets.TEST_GITHUB_TOKEN }}
         run: pytest -v -m "not requires_llm and not requires_secrets"
         
   lint:
