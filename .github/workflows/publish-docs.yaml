@@ -24,14 +24,13 @@ jobs:
         with:
           python-version: '==3.11'
           
-      - name: Install project with docs dependencies
+      - name: Install documentation dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -e .
-          
-      - name: Install additional documentation dependencies
-        run: |
+          # Install only what's needed for docs
+          pip install mkdocs-material
           pip install mkdocstrings mkdocstrings-python
+          pip install mike
           
       - name: Configure Git user
         run: |
@@ -40,8 +39,6 @@ jobs:
           
       - name: Build and deploy docs
         run: |
-          pip install mike
-          
           # Extract current version from pyproject.toml
           VERSION=$(python -c "import re; f=open('pyproject.toml', 'r'); content=f.read(); f.close(); print(re.search(r'version = \"([0-9.]+)\"', content).group(1))")
           
