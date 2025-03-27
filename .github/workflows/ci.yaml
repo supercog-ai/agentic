@@ -23,7 +23,7 @@ jobs:
       - name: Run tests (excluding LLM tests)
         env:
           TEST_GITHUB_TOKEN: ${{ secrets.TEST_GITHUB_TOKEN }}
-        run: pytest -v -m "not requires_llm and not requires_secrets"
+        run: pytest -v -m "not requires_llm"
         
   lint:
     runs-on: ubuntu-latest
