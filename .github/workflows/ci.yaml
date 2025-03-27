@@ -7,7 +7,6 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    env:
     steps:
       - uses: actions/checkout@v3
       
