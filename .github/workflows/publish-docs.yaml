@@ -13,6 +13,9 @@ on:
   # Allow manual triggers
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   deploy-docs:
     runs-on: ubuntu-latest
