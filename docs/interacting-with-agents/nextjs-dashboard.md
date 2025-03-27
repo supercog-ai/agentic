@@ -2,6 +2,8 @@
 
 The Agentic Dashboard is a web-based interface for interacting with your agents, monitoring their activities, and reviewing their run history. Built with [Next.js](https://nextjs.org/docs), it provides a modern, responsive UI that connects to your agents through the Agentic framework's REST API.
 
+![Agentic Next.js Dashboard](../assets/next-js-ui.png)
+
 ## Overview
 
 The dashboard offers the following features:
