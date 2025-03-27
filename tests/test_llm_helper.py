@@ -22,4 +22,3 @@ def test_llm_generate_return_format():
     assert isinstance(result, CalendarEvent)
     assert 'meeting' in result.name.lower()
     assert "Alex" in result.participants
-    print(result.model_dump_json())

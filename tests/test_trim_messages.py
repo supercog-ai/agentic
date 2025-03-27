@@ -16,7 +16,6 @@ def sample_messages():
 
 
 @pytest.fixture
-@pytest.mark.requires_llm
 def mock_token_counter():
     with patch("litellm.token_counter", return_value=50) as mock:
         yield mock

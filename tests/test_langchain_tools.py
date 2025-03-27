@@ -20,5 +20,4 @@ def test_langchain_tool():
 
     agent_runner = AgentRunner(agent)
     response = agent_runner.turn("search for 'supercog ai'")
-    print(response)
     assert "supercog" in response.lower(), response

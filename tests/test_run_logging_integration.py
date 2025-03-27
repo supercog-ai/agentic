@@ -32,7 +32,6 @@ def db_manager(temp_db_path):
     return DatabaseManager(db_path=temp_db_path)
 
 @pytest.fixture
-@pytest.mark.requires_llm
 def test_agent(temp_db_path):
     """Create a simple test agent with basic math capabilities."""
     agent = Agent(

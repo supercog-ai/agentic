@@ -5,8 +5,6 @@ from agentic.tools.weather_tool import WeatherTool
 from agentic.tools.google_news import GoogleNewsTool
 from agentic.tools.database_tool import DatabaseTool
 
-from agentic.common import Agent
-
 def a_dummy_tool_function(name: str):
     """ This turns the parameter into a dummy. """
     return name + " is a dummy"
@@ -34,4 +32,3 @@ async def test_search_for_tool(toolset):
 
     result = await autos.search_for_tool("post a Slack message")
     assert not result
-
