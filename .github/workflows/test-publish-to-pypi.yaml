@@ -1,20 +1,15 @@
 name: Test PyPI Publish
 
 on:
-  workflow_dispatch:
-    inputs:
-      simulate_publish:
-        description: 'Simulate the PyPI publish process'
-        required: true
-        type: boolean
-        default: true
+  pull_request:
+    branches: [ main ]
 
 jobs:
   test-publish:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         
       - name: Verify authorized merger
         env:
