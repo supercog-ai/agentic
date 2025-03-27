@@ -22,6 +22,15 @@ markdown_extensions:
   - attr_list
   - md_in_html
   - pymdownx.blocks.caption
+plugins:
+  mike:
+    alias_type: symlink
+    redirect_template: null
+    deploy_prefix: ''
+    canonical_version: null
+    version_selector: true
+    css_dir: css
+    javascript_dir: js
 nav:
   - index.md
   - getting-started.md

@@ -13,12 +13,11 @@ on:
   # Allow manual triggers
   workflow_dispatch:
 
-permissions:
-  contents: write
-
 jobs:
   deploy-docs:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -47,19 +46,5 @@ jobs:
         run: |
           # Extract current version from pyproject.toml
           VERSION=$(python -c "import re; f=open('pyproject.toml', 'r'); content=f.read(); f.close(); print(re.search(r'version = \"([0-9.]+)\"', content).group(1))")
-          
-          # Check if this is a manual trigger or automated update
-          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
-            echo "Manual trigger - updating all versions"
-            # Get all existing versions to update their docs too
-            git fetch origin gh-pages --tags
-            
-            # Update current version and dev docs
-            echo "Deploying version $VERSION and dev documentation"
-            mike deploy --push --update-aliases $VERSION latest
-            mike deploy --push dev
-          else
-            echo "Automated trigger - updating only dev docs"
-            # Just update the dev docs for automated pushes to docs directory
-            mike deploy --push dev
-          fi
+          mike deploy --push --update-aliases $VERSION latest
+          mike deploy --push dev
