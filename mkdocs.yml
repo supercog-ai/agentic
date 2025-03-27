@@ -2,6 +2,9 @@ site_name: Agentic Docs
 site_url: https://supercog.ai/agentic
 repo_url: https://github.com/supercog-ai/agentic
 repo_name: supercog-ai/agentic
+extra:
+  version:
+    provider: mike
 theme:
   name: material
   logo: assets/logo.png
