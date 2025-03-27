@@ -69,7 +69,7 @@ rag = [
 ]
 
 all = [
-    "agentic-framework[google-news,database,image-generator,github,dashboard]",
+    "agentic-framework[google-news,database,image-generator,github,rag,dashboard]",
 ]
 
 dev = [
