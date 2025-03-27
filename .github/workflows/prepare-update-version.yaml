@@ -1,6 +1,8 @@
 name: Prepare Update Version
 
 on:
+  pull_request:
+    branches: [ main ]
   release:
     types: [published]
 
@@ -48,6 +50,7 @@ jobs:
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v7
         with:
+          token: ${{ secrets.PUBLISH_GITHUB_TOKEN }}
           commit-message: "build: update version to ${{ env.VERSION }}"
           title: "build: update version to ${{ env.VERSION }}"
           body: |
