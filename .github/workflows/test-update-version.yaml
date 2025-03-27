@@ -1,12 +1,8 @@
 name: Test Update Version
 
 on:
-  workflow_dispatch:
-    inputs:
-      version:
-        description: 'Version to simulate (e.g., 1.2.3)'
-        required: true
-        type: string
+  pull_request:
+    branches: [ main ]
 
 jobs:
   test-update-version:
