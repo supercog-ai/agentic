@@ -1,3 +1,5 @@
+# Models
+
 Agentic uses [Litellm](https://www.litellm.ai/) as the "LLM router" which allows us
 to support most popular LLMs via simple configuration.
 

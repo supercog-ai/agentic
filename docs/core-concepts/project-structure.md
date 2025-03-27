@@ -1,4 +1,4 @@
-# Project structure
+# Project Structure
 
 An Agentic project has the following structure:
 

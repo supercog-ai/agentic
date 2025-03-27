@@ -1,4 +1,4 @@
-# Teams of agents
+# Agent Teams
 
 Agentic makes it very easy to solve a larger problem using a _team of agents_ which
 collaborate together.

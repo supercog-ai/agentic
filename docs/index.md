@@ -11,7 +11,7 @@ Agentic is an opinionated framework that provides:
 - A reference implementation of the [agent protocol](https://github.com/supercog-ai/agent-protocol)
 - An agent runtime built on threads with support for [Ray](https://github.com/ray-project/ray)
 - A suite of "batteries included" features to help you get running quickly
-    - Basic [RAG](./rag.md) features
+    - Basic [RAG](./rag-support.md) features
     - Run history and logging
     - Simple UI examples built with [Streamlit](https://github.com/supercog-ai/agentic/tree/main/src/agentic/streamlit){target="_blank"} and [Next.js](https://github.com/supercog-ai/agentic/tree/main/src/agentic/dashboard){target="_blank"}
 

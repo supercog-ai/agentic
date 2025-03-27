@@ -22,7 +22,7 @@ def __init__(command: str, args: list[str], tool_name: Optional[str] = None, env
 **Parameters:**
 
 - `command (str)`: The command to run the MCP server (e.g., "python3", "npx")
-- `args (list[str])`: Arguments for the command (e.g., ["./mcp_server.py"])
+- `args (list[str])`: Arguments for the command
 - `tool_name (Optional[str])`: Optional specific tool name to use from the MCP server
 - `env (Optional[Dict[str, str]])`: Optional environment variables to pass to the MCP server
 

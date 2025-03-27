@@ -1,4 +1,4 @@
-# Agentic CLI
+# CLI
 
 ## Global Commands
 

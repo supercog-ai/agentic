@@ -1,4 +1,4 @@
-# Building agents
+# Building Agents
 
 ### Terminology
 

@@ -1,4 +1,4 @@
-# Event system
+# Event System
 
 The agent protocol defines a set of events which are emitted when an agent is
 processing an operation.

@@ -64,5 +64,5 @@ nav:
       - TavilySearchTool: tools/tool-library/tavily-search-tool.md
       - TextToSpeechTool: tools/tool-library/text-to-speech-tool.md
       - WeatherTool: tools/tool-library/weather-tool.md
-  - rag.md
+  - rag-support.md
   - example-agents.md

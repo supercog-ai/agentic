@@ -98,7 +98,7 @@ The agent maintains context about recently viewed repositories and has built-in 
 ## Next Steps
 
 - Learn more about the [Tools](./tools//tool-library/index.md) that power these agents - each tool has a basic demo agent you can run
-- Check out [RAG Support](./rag.md) to give your agents access to your own knowledge base
+- Check out [RAG Support](./rag-support.md) to give your agents access to your own knowledge base
 - Build your own Agents! Think about some of these ideas, or come up with your own:
     - Build a "conversational assistant" agent that can answer questions from private documents,
     or by retrieving information live from systems like JIRA or Salesforce.
