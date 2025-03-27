@@ -52,9 +52,7 @@ An agent team which auto-produces and publishes a daily podcast. Customize for y
 
 ### [Meeting Notetaker](https://github.com/supercog-ai/agentic/blob/main/examples/meeting_notetaker.py)
 
-[Coming soon] Your own meeting bot agent with meeting summaries stored into RAG.
-
-### Personal Data Analyst
+Your own meeting bot agent with meeting summaries stored into RAG.
 
 ## Install
 
@@ -154,7 +152,7 @@ implemented by another agent.
 building a UI for your agents. "Agent contracts" for testing.
 - Automatic context management keeps your agent within context length limits.
 
-# Contributing
+## Contributing
 
 We would love you to contribute! We especially welcome:
 
@@ -164,5 +162,3 @@ We would love you to contribute! We especially welcome:
 
 but obviously we appreciate bug reports, bug fixes, etc... We encourage **tests** with all contributions,
 but especially if you want to modify the core framework please submit tests in the PR.
-
-

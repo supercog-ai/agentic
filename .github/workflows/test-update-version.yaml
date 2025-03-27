@@ -1,0 +1,80 @@
+name: Test Update Version
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to simulate (e.g., 1.2.3)'
+        required: true
+        type: string
+
+jobs:
+  test-update-version:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        
+      - name: Set version
+        run: echo "VERSION=${{ github.event.inputs.version }}" >> $GITHUB_ENV
+        
+      - name: Verify authorized user
+        env:
+          AUTHORIZED_USERS: ${{ secrets.AUTHORIZED_RELEASE_USERS }}
+          CURRENT_USER: ${{ github.actor }}
+        run: |
+          echo "TESTING MODE: Checking if user $CURRENT_USER is authorized"
+          if [[ ! ",$AUTHORIZED_USERS," == *",$CURRENT_USER,"* ]]; then
+            echo "TEST RESULT: User $CURRENT_USER would NOT be authorized in production"
+            echo "Continuing anyway since this is a test..."
+          else
+            echo "TEST RESULT: User $CURRENT_USER is authorized"
+          fi
+          
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+          
+      - name: Update version in pyproject.toml
+        run: |
+          # Create a backup of the original file
+          cp pyproject.toml pyproject.toml.bak
+          
+          # Use Python to update the version in pyproject.toml
+          python -c "
+          import re
+          with open('pyproject.toml', 'r') as f:
+              content = f.read()
+          # Store original version
+          original = re.search(r'version = \"([0-9.]+)\"', content).group(1)
+          print(f'Original version: {original}')
+          # Update to test version
+          content = re.sub(r'version = \"[0-9.]+\"', f'version = \"{\"${{ env.VERSION }}\"}\"', content)
+          with open('pyproject.toml', 'w') as f:
+              f.write(content)
+          "
+      
+      - name: Create test Pull Request
+        uses: peter-evans/create-pull-request@v5
+        with:
+          commit-message: "[TEST] Update version to ${{ env.VERSION }}"
+          title: "[TEST] Update version to ${{ env.VERSION }}"
+          body: |
+            # TEST PULL REQUEST - DO NOT MERGE
+            
+            This is a TEST of the automated version update PR process.
+            This PR was created by the test workflow to simulate the real version update process.
+            
+            In production, this PR would update the version in pyproject.toml to match a new release v${{ env.VERSION }}.
+          branch: "test-version-update-${{ env.VERSION }}"
+          base: "main"
+          labels: "test,do-not-merge"
+          
+      - name: Restore original pyproject.toml
+        run: |
+          mv pyproject.toml.bak pyproject.toml
+          echo "Restored original pyproject.toml file"
