@@ -81,6 +81,7 @@ dev = [
     "debugpy>=1.8.0",
     "black",
     "mkdocs-material>=9.6.4",
+    "mkdocs-swagger-ui-tag>=0.6.11",
     "mike>=2.1.3"
 ]
 

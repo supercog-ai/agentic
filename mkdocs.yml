@@ -2,6 +2,7 @@ site_name: Agentic Docs
 site_url: https://supercog.ai/agentic
 repo_url: https://github.com/supercog-ai/agentic
 repo_name: supercog-ai/agentic
+exclude_docs: docs/hooks/*
 extra:
   version:
     provider: mike
@@ -23,9 +24,13 @@ markdown_extensions:
   - md_in_html
   - pymdownx.blocks.caption
 plugins:
-  mike:
-    alias_type: symlink
-    version_selector: true
+  - search
+  - swagger-ui-tag
+  - mike:
+      alias_type: symlink
+      version_selector: true
+hooks:
+  - docs/hooks/generate_swagger.py
 nav:
   - index.md
   - getting-started.md
