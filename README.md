@@ -68,6 +68,8 @@ At this stage it's probably easiest to run this repo from source. We use `uv` fo
 ```
 git clone git@github.com:supercog-ai/agentic.git
 cd agentic
+uv venv .venv
+source .venv/bin/activate
 uv pip install -e ".[all,dev]"
 ```
 
