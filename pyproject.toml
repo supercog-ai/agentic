@@ -26,7 +26,6 @@ dependencies = [
     "unicodedata2>=16.0.0",
     "sse-starlette>=2.2.1",
     "sqlmodel>=0.0.22",
-    "mcp[cli]>=1.5.0",
     "numpy>=2.1.3",
     "textract<1.6.4",
     "pypdf2>=3.0.1",
@@ -41,25 +40,6 @@ streamlit = [
     "streamlit>=1.41.1",
 ]
 
-# Tool groups
-google-news = [
-    "google-news-feed>=1.1.0",
-    "googlenewsdecoder>=0.1.7",
-]
-
-database = [
-    "psycopg2-binary>=2.9.9",
-    "sqlalchemy>=2.0.26",
-]
-
-image-generator = [
-   "boto3>=1.36.19",
-]
-
-github = [
-    "gitpython>=3.1.44",
-]
-
 # RAG packages
 rag = [
     "weaviate-client>=4.10.4",
@@ -71,8 +51,62 @@ rag = [
     "extract-msg<=0.29.0",
 ]
 
+# Tool groups
+airbnb = [
+    "icalendar>=6.1.3",
+]
+
+browser-use = [
+    "browser-use>=0.1.40",
+    "playwright>=1.51.0",
+    "langchain>=0.3.22",
+    "langchain-google-genai>=2.1.2"
+]
+
+database = [
+    "psycopg2-binary>=2.9.9",
+    "sqlalchemy>=2.0.26",
+]
+
+duckduckgo = [
+    "duckduckgo-search>=7.5.5",
+]
+
+github = [
+    "gitpython>=3.1.44",
+]
+
+google-news = [
+    "google-news-feed>=1.1.0",
+    "googlenewsdecoder>=0.1.7",
+]
+
+image-generator = [
+   "boto3>=1.36.19",
+]
+
+mcp = [
+    "mcp[cli]>=1.5.0",
+]
+
+meeting-baas = [
+    "agentic-framework[rag]",
+]
+
+playwright = [
+    "playwright>=1.51.0",
+]
+
+text-to-speech = [
+    "pydub>=0.25.1",
+]
+
+tools = [
+    "agentic-framework[airbnb,browser-use,database,duckduckgo,github,google-news,image-generator,mcp,meeting-baas,playwright,text-to-speech]",
+]
+
 all = [
-    "agentic-framework[google-news,database,image-generator,github,rag,dashboard,streamlit]",
+    "agentic-framework[tools,rag,dashboard,streamlit]",
 ]
 
 dev = [
