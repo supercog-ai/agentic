@@ -5,6 +5,37 @@ import sys
 import pytest
 from pathlib import Path
 
+def find_tools_directory():
+    """
+    Find the tools directory by searching up from the current directory.
+    Returns the Path object for the tools directory if found.
+    """
+    # Start with the current working directory
+    current_dir = Path.cwd()
+    
+    # Try to find the tools directory by walking up the directory tree
+    while current_dir != current_dir.parent:  # Stop at the root directory
+        # Check if 'agentic/tools' exists in this directory
+        tools_path = current_dir / 'src' / 'agentic' / 'tools'
+        if tools_path.exists() and tools_path.is_dir():
+            return tools_path
+        
+        # Also check for direct 'agentic/tools' pattern
+        alt_path = current_dir / 'agentic' / 'tools'
+        if alt_path.exists() and alt_path.is_dir():
+            return alt_path
+            
+        # Move up one directory
+        current_dir = current_dir.parent
+    
+    # If we couldn't find it, one last attempt by using the module info
+    try:
+        import agentic.tools
+        return Path(inspect.getfile(agentic.tools)).parent
+    except (ImportError, TypeError):
+        pass
+        
+    raise FileNotFoundError("Could not find the tools directory in any parent directory")
 
 def test_all_tools_are_imported_and_listed():
     """
@@ -15,8 +46,10 @@ def test_all_tools_are_imported_and_listed():
     This test is compatible with the lazy-loading implementation.
     """
     # Get the tools directory path
-    current_directory = os.getcwd()
-    tools_dir = Path('src/agentic/tools')
+    try:
+        tools_dir = find_tools_directory()
+    except FileNotFoundError as e:
+        pytest.skip(f"Skipping test: {str(e)}")
     
     # Import the tools module to inspect its __all__ variable
     if str(tools_dir.parent) not in sys.path:
@@ -81,7 +114,10 @@ def test_tools_inherit_from_base_class():
     Compatible with lazy-loading implementation.
     """
     # Get the tools directory path
-    tools_dir = Path('src/agentic/tools')
+    try:
+        tools_dir = find_tools_directory()
+    except FileNotFoundError as e:
+        pytest.skip(f"Skipping test: {str(e)}")
     
     # Import the tools module
     if str(tools_dir.parent) not in sys.path:
