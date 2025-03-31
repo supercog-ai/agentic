@@ -205,7 +205,7 @@ def test_run_manager_handle_events(db_manager, run_manager, run_context):
     run_manager.handle_event(completion_event, run_context)
     
     # Test handling tool events
-    tool_call = ToolCall(agent="test_agent", name="test_tool", args={"arg": "value"})
+    tool_call = ToolCall(agent="test_agent", name="test_tool", arguments={"arg": "value"})
     run_manager.handle_event(tool_call, run_context)
     
     tool_result = ToolResult(agent="test_agent", name="test_tool", result="success")
