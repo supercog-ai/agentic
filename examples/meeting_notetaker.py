@@ -1,5 +1,5 @@
 from agentic.common import Agent, AgentRunner
-from agentic.tools.meeting_tool import MeetingBaasTool
+from agentic.tools import MeetingBaasTool
 
 meeting_manager = Agent(
     name="Meeting Manage Agent",

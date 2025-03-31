@@ -9,11 +9,12 @@ https://pypi.org/project/duckduckgo-search/
 
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, ConfigDict, model_validator
-from agentic.tools.registry import tool_registry
+from pydantic import ConfigDict, model_validator
+from agentic.tools.utils.registry import tool_registry
+from agentic.tools.base import BaseAgenticTool
 
 @tool_registry.register(
-    name="DuckDuckGoSearchTool",
+    name="DuckDuckGoTool",
     description="Search the web using DuckDuckGo",
     dependencies=[
         tool_registry.Dependency(
@@ -23,7 +24,7 @@ from agentic.tools.registry import tool_registry
         ),
     ],
 )
-class DuckDuckGoSearchAPIWrapper(BaseModel):
+class DuckDuckGoTool(BaseAgenticTool):
     """Wrapper for DuckDuckGo Search API.
 
     Free and does not require any setup.

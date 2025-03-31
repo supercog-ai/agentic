@@ -103,7 +103,7 @@ A formatted string containing averaged weather data for the specified date range
 
 ```python
 from agentic.common import Agent
-from agentic.tools.weather_tool import WeatherTool
+from agentic.tools import WeatherTool
 
 # Create an agent with weather capabilities
 weather_agent = Agent(

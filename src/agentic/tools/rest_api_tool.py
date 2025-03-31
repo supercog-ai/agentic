@@ -11,7 +11,7 @@ import random
 from urllib.parse import urlparse, parse_qsl, urlencode
 
 from agentic.tools.base import BaseAgenticTool
-from agentic.tools.registry import tool_registry, Dependency
+from agentic.tools.utils.registry import tool_registry, Dependency
 from agentic.common import RunContext
 
 with tool_registry.safe_imports():

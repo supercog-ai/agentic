@@ -1,8 +1,8 @@
 import pytest
-from agentic.common import Agent, AgentRunner
-from agentic.tools.unit_test_tool import UnitTestingTool
-from agentic.models import CLAUDE, GPT_4O_MINI
-from agentic.events import ToolOutput, TurnEnd
+from agentic.common import Agent
+from agentic.tools import UnitTestingTool
+from agentic.models import GPT_4O_MINI
+from agentic.events import ToolResult
 
 model = GPT_4O_MINI
 
@@ -31,42 +31,30 @@ def parent():
 @pytest.mark.requires_llm
 def test_sync_logging(parent):
     tool_outputs = []
-    turn_end = None
     for event in parent.next_turn("call sync_function_with_logging"):
-        if isinstance(event, ToolOutput):
+        if isinstance(event, ToolResult):
             tool_outputs.append(event)
-        elif isinstance(event, TurnEnd):
-            turn_end = event
 
-    print("Turn end: ", turn_end)
     assert len(tool_outputs) > 0
 
 @pytest.mark.requires_llm
 def test_async_logging(parent):
     tool_outputs = []
-    turn_end = None
     for event in parent.next_turn("call async_function_with_logging"):
-        if isinstance(event, ToolOutput):
+        if isinstance(event, ToolResult):
             tool_outputs.append(event)
-        elif isinstance(event, TurnEnd):
-            turn_end = event
 
-    print("Turn end: ", turn_end)
     assert len(tool_outputs) > 0
-    assert tool_outputs[0].payload == "async_function_with_logging"
+    assert tool_outputs[0].payload["name"] == "async_function_with_logging"
     assert "ASYNC" in tool_outputs[0].result
 
 @pytest.mark.requires_llm
 def test_direct_logging(parent):
     tool_outputs = []
-    turn_end = None
     for event in parent.next_turn("call sync_function_direct_logging"):
-        if isinstance(event, ToolOutput):
+        if isinstance(event, ToolResult):
             tool_outputs.append(event)
-        elif isinstance(event, TurnEnd):
-            turn_end = event
 
-    print("Turn end: ", turn_end)
     assert len(tool_outputs) > 0
-    assert tool_outputs[0].payload == "sync_function_direct_logging"
+    assert tool_outputs[0].payload["name"] == "sync_function_direct_logging"
     assert "Something interesting happened" in tool_outputs[0].result

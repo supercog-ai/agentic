@@ -2,7 +2,7 @@
 # 
 #
 from agentic.common import Agent, AgentRunner
-from agentic.tools.rag_tool import RAGTool
+from agentic.tools import RAGTool
 
 # Define our agent, and attach the RAG Tool, plus pre-populate with some content.
 rag_agent = Agent(

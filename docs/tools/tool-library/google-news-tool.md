@@ -172,7 +172,7 @@ The text content of the article.
 
 ```python
 from agentic.common import Agent
-from agentic.tools.google_news import GoogleNewsTool
+from agentic.tools import GoogleNewsTool
 
 # Create a news agent
 news_agent = Agent(

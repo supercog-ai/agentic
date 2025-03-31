@@ -8,7 +8,7 @@ import html2text
 # import requests
 import httpx
 
-from .base import BaseAgenticTool
+from agentic.tools.base import BaseAgenticTool
 
 
 class ScaleSerpBrowserTool(BaseAgenticTool):

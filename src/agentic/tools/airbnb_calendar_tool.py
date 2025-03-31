@@ -1,12 +1,11 @@
-from typing import List, Callable, Optional, Dict, Any
+from typing import List, Callable, Optional, Dict
 import requests
 import json
 from datetime import datetime, date, timedelta, time
 import icalendar
-from agentic.common import RunContext, PauseForInputResult
-from agentic.tools.registry import tool_registry
+from agentic.common import RunContext
+from agentic.tools.utils.registry import tool_registry
 from agentic.tools.base import BaseAgenticTool
-
 
 @tool_registry.register(
     name="AirbnbCalendarTool",

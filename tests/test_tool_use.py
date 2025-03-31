@@ -1,6 +1,6 @@
 import pytest
 from agentic.common import Agent, AgentRunner
-from agentic.tools.unit_test_tool import UnitTestingTool
+from agentic.tools import UnitTestingTool
 from agentic.models import CLAUDE, GPT_4O_MINI
 
 model = GPT_4O_MINI

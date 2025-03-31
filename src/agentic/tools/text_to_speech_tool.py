@@ -7,8 +7,8 @@ from typing import List, Callable, Optional, Literal
 
 from openai import OpenAI
 
-from .base import BaseAgenticTool
-from .registry import tool_registry, Dependency, ConfigRequirement
+from agentic.tools.base import BaseAgenticTool
+from agentic.tools.utils.registry import tool_registry, Dependency, ConfigRequirement
 
 from agentic.agentic_secrets import agentic_secrets
 

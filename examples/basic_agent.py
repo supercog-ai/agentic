@@ -1,4 +1,4 @@
-from agentic.tools.weather_tool import WeatherTool
+from agentic.tools import WeatherTool
 
 from agentic.common import Agent, AgentRunner
 from agentic.models import GPT_4O_MINI, LMSTUDIO_QWEN

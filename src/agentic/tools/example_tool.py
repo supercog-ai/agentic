@@ -1,6 +1,4 @@
 ## required package imports should go here
-import os
-import asyncio
 from typing import Callable
 import pandas as pd
 
@@ -9,7 +7,7 @@ import pandas as pd
 #   pip install pydantic
 #   pip install requests
 
-from .base import BaseAgenticTool
+from agentic.tools.base import BaseAgenticTool
 from agentic.common import RunContext, PauseForInputResult
 
 ###

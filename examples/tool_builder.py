@@ -1,6 +1,6 @@
 from agentic.common import Agent, AgentRunner
 from agentic.models import CLAUDE
-from agentic.tools import tool_schema
+from agentic.tools import example_tool
 
 instructions = """
 You are a helpful assistant, helping the user to construct new "AI agent" tools.
@@ -19,7 +19,7 @@ tool_builder = Agent(
     welcome="I can help you code new tools for your AI agent. Tell me about the tool you want to build.",
     instructions=instructions,
     model=CLAUDE,
-    memories=["Example tool definition: \n" + open(tool_schema.__file__).read()],
+    memories=["Example tool definition: \n" + open(example_tool.__file__).read()],
     tools=[]
 )
 

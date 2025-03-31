@@ -87,7 +87,7 @@ String containing the full document content.
 
 ```python
 from agentic.common import Agent
-from agentic.tools.rag_tool import RAGTool
+from agentic.tools import RAGTool
 
 # Create a RAG tool with default settings
 rag_tool = RAGTool()

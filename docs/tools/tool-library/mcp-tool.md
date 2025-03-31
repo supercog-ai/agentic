@@ -66,7 +66,7 @@ Cleanup MCP session and resources.
 
 ```python
 from agentic.common import Agent
-from agentic.tools.mcp_tool import MCPTool
+from agentic.tools import MCPTool
 
 # Create an MCP tool for a Python-based MCP server
 python_mcp = MCPTool(

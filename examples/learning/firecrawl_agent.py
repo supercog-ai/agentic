@@ -1,5 +1,5 @@
 from agentic.common import Agent, AgentRunner
-from agentic.tools.mcp_tool import MCPTool
+from agentic.tools import MCPTool
 
 def create_firecrawl_researcher():
     """Create Firecrawl MCP tool with proper error handling"""

@@ -52,7 +52,7 @@ A list of dictionaries with search results. The structure varies by source type:
 
 ```python
 from agentic.common import Agent
-from agentic.tools.duckduckgo import DuckDuckGoSearchTool
+from agentic.tools import DuckDuckGoSearchTool
 
 # Create a basic search tool with default settings
 search_tool = DuckDuckGoSearchTool()

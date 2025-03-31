@@ -108,7 +108,7 @@ A list of tuples (url, title, content) for each page.
 
 ```python
 from agentic.common import Agent
-from agentic.tools.playwright import PlaywrightTool
+from agentic.tools import PlaywrightTool
 
 # Create a browser automation tool with visible browser (for debugging)
 browser_tool = PlaywrightTool(headless=False)

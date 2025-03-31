@@ -7,7 +7,7 @@ from agentic.common import Agent, AgentRunner
 from agentic.agentic_secrets import agentic_secrets
 from agentic.events import Event, Prompt, TurnEnd, ChatOutput, PromptStarted
 from agentic.models import GPT_4O, CLAUDE
-from agentic.tools.tavily_search_tool import TavilySearchTool
+from agentic.tools import TavilySearchTool
 
 ANALYZER_MODEL = GPT_4O
 PREDICTOR_MODEL = CLAUDE

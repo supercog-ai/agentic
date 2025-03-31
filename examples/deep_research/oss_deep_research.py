@@ -1,18 +1,14 @@
 import asyncio
 import os
-from typing import Generator, Optional
-from typing import Any, Generator, List
+from typing import Any, Generator, List, Optional
 from pydantic import BaseModel, Field
 from datetime import datetime
 
-from agentic.common import Agent, AgentRunner, RunContext
-from agentic.events import Prompt, TurnEnd
-
 from agentic.agentic_secrets import agentic_secrets
+from agentic.common import Agent, AgentRunner, RunContext
+from agentic.events import Event, ChatOutput, WaitForInput, Prompt, PromptStarted, TurnEnd
 from agentic.models import GPT_4O_MINI, CLAUDE, GPT_4O
-from agentic.events import Event, ChatOutput, WaitForInput, PromptStarted, TurnEnd
-from agentic.tools.tavily_search_tool import TavilySearchTool
-from agentic.tools.playwright import PlaywrightTool
+from agentic.tools import PlaywrightTool, TavilySearchTool
 
 # These can take any Litellm model path [see https://supercog-ai.github.io/agentic/Models/]
 # Or use aliases 'GPT_4O' or 'CLAUDE'
@@ -263,10 +259,13 @@ provide feedback to regenerate the report plan:\n
             all_results = []
             for query in queries.queries:
                 missing_pages = []
-                res = await self.tavily_tool.perform_web_search(
-                    query.search_query, 
-                    include_content=True
-                )
+                try:
+                    res = await self.tavily_tool.perform_web_search(
+                        query.search_query, 
+                        include_content=True
+                    )
+                except:
+                    res = []
                 content = self.tavily_tool._deduplicate_and_format_sources(
                     res, 
                     content_max, 

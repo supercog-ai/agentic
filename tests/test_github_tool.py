@@ -1,7 +1,7 @@
 import pytest
 import os
-from agentic.tools.github_tool import GithubTool
-from agentic.tools.registry import tool_registry
+from agentic.tools import GithubTool
+from agentic.tools.utils.registry import tool_registry
 from agentic.common import RunContext
 from agentic.agentic_secrets import agentic_secrets
 import pandas as pd

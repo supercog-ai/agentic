@@ -48,7 +48,7 @@ A list containing the history of browsing actions taken and a FinishCompletion e
 
 ```python
 from agentic.common import Agent
-from agentic.tools.browser_use import BrowserUseTool
+from agentic.tools import BrowserUseTool
 
 # Create an agent with browser automation capabilities
 browser_agent = Agent(

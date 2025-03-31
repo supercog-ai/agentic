@@ -86,7 +86,7 @@ Location ID for the first matching result.
 
 ```python
 from agentic.common import Agent
-from agentic.tools.linkedin_tool import LinkedinDataTool
+from agentic.tools import LinkedinDataTool
 
 # Set up the API key
 # os.environ["RAPIDAPI_KEY"] = "your-rapidapi-key"

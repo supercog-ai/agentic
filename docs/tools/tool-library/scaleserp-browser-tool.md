@@ -82,7 +82,7 @@ List of dictionaries containing downloaded page data.
 
 ```python
 from agentic.common import Agent
-from agentic.tools.scaleserp_browser import ScaleSerpBrowserTool
+from agentic.tools import ScaleSerpBrowserTool
 
 # Set up the API key
 # os.environ["SCALESERP_API_KEY"] = "your-scaleserp-api-key"

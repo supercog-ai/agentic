@@ -1,11 +1,10 @@
 from typing import Any, Optional, Dict, List, Callable
 import asyncio
 import json
-from functools import partial
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 from litellm import experimental_mcp_client
-from .base import BaseAgenticTool
+from agentic.tools.base import BaseAgenticTool
 
 class MCPTool(BaseAgenticTool):
     """Universal wrapper for MCP tools that can work with any MCP server."""

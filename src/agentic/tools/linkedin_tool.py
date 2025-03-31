@@ -4,7 +4,7 @@ from typing import Dict, Callable, ClassVar, Optional
 import httpx
 import pandas as pd
 
-from .base import BaseAgenticTool
+from agentic.tools.base import BaseAgenticTool
 
 
 class LinkedinDataTool(BaseAgenticTool):

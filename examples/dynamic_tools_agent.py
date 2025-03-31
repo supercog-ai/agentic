@@ -1,16 +1,18 @@
-from agentic.tools.weather_tool import WeatherTool
-from agentic.tools.google_news import GoogleNewsTool
-from agentic.tools.database_tool import DatabaseTool
-from agentic.tools.automatic_tools import AutomaticTools
-from agentic.tools.linkedin_tool import LinkedinDataTool
-from agentic.tools.tavily_search_tool import TavilySearchTool
-from agentic.tools.image_generator import OpenAIImageGenerator
-from agentic.tools.imap_tool import IMAPTool
-from agentic.tools.browser_use import BrowserUseTool
-from agentic.tools.duckduckgo import DuckDuckGoSearchAPIWrapper
+from agentic.tools import (
+    AutomaticTools,
+    BrowserUseTool,
+    DatabaseTool,
+    DuckDuckGoTool,
+    GoogleNewsTool,
+    ImageGeneratorTool,
+    IMAPTool,
+    LinkedinDataTool,
+    TavilySearchTool,
+    WeatherTool
+)
 
 from agentic.common import Agent, AgentRunner
-from agentic.tools.registry import tool_registry
+from agentic.tools.utils.registry import tool_registry
 
 # This is a demonstration of dynamic tool use. You can add a tool to an agent at any time. This
 # demo uses a meta tool called "AutomaticTools" which will automatically load tools from the
@@ -34,10 +36,10 @@ agent = Agent(
                 WeatherTool, 
                 DatabaseTool, 
                 LinkedinDataTool, 
-                OpenAIImageGenerator,
+                ImageGeneratorTool,
                 TavilySearchTool,
                 IMAPTool,
-                DuckDuckGoSearchAPIWrapper,
+                DuckDuckGoTool,
             ],
         ),
         # The tool registry has some support for installing/loading LangChain tools.

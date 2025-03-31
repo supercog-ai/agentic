@@ -87,7 +87,7 @@ A JSON string containing a sorted list of blocked dates.
 
 ```python
 from agentic.common import Agent
-from agentic.tools.airbnb_calendar_tool import AirbnbCalendarTool
+from agentic.tools import AirbnbCalendarTool
 
 # Create an agent with Airbnb calendar capabilities
 airbnb_agent = Agent(

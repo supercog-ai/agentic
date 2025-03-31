@@ -1,22 +1,13 @@
-from pprint import pprint
-import inspect
-
-from typing import Dict, List, Callable, ContextManager
+from typing import List, Callable
 import pandas as pd
-from contextlib import contextmanager
-
 import httpx
 
 from agentic.common import RunContext, PauseForInputResult
+from agentic.tools.base import BaseAgenticTool
 
 TAVILY_API_URL = "https://api.tavily.com"
 
-from functools import wraps
-from typing import TypeVar, Generic, Union
-from dataclasses import dataclass
-
-
-class TavilySearchTool:
+class TavilySearchTool(BaseAgenticTool):
     def __init__(self, api_key: str = None):
         self.api_key = api_key
 
@@ -53,11 +44,8 @@ class TavilySearchTool:
                 timeout=90,
             )
 
-        print(f"{TAVILY_API_URL}/search {response}")
         response.raise_for_status()
         results = response.json()
-
-        print(results)
 
         return pd.DataFrame(results["results"])
 
@@ -107,8 +95,7 @@ class TavilySearchTool:
                 timeout=90,
             )
 
-        if not response.is_success:
-            return []
+        response.raise_for_status()
         results = response.json()
 
         # Concatenate the new rows to the existing DataFrame
@@ -129,7 +116,7 @@ class TavilySearchTool:
 
         async with httpx.AsyncClient() as client:
             response = await client.post(
-                "https://api.tavily.com/extract",
+                f"{TAVILY_API_URL}/extract",
                 json=params,
                 timeout=90,
             )

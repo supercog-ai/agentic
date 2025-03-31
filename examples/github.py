@@ -1,6 +1,6 @@
 from typing import Any
 
-from agentic.tools.github_tool import GithubTool
+from agentic.tools import GithubTool
 from agentic.common import Agent, AgentRunner
 from agentic.models import CLAUDE
 

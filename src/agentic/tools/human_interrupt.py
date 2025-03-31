@@ -1,6 +1,6 @@
 from typing import Callable
 
-from .base import BaseAgenticTool
+from agentic.tools.base import BaseAgenticTool
 from agentic.events import PauseForInputResult
 from agentic.common import RunContext
 

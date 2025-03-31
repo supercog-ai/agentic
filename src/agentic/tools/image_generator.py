@@ -3,12 +3,10 @@ from litellm import image_generation
 
 # required packages:
 
-from .base import BaseAgenticTool
+from agentic.tools.base import BaseAgenticTool
 from agentic.common import RunContext, PauseForInputResult
-from .s3_utils import S3Utility
 
-
-class OpenAIImageGenerator(BaseAgenticTool):
+class ImageGeneratorTool(BaseAgenticTool):
     api_key: str
     """
     A tool for generating images using OpenAI's GPT-4V model and storing them in an S3 bucket.

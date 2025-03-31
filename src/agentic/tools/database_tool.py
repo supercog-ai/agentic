@@ -1,14 +1,14 @@
-from typing import Any, Callable
+from typing import Callable
 import re
 
 import pandas as pd
-from psycopg2.extras import DictCursor
 
 from urllib.parse import urlparse, urlunparse, parse_qs, urlencode
 from sqlalchemy import create_engine, text, Engine
 from sqlalchemy.exc import SQLAlchemyError
 
 from agentic.common import RunContext, PauseForInputResult
+from agentic.tools.base import BaseAgenticTool
 
 
 class DatabaseConnectionError(Exception):
@@ -19,7 +19,7 @@ class LocalhostConnectionError(DatabaseConnectionError):
     pass
 
 
-class DatabaseTool:
+class DatabaseTool(BaseAgenticTool):
     """Accessing any SQL database."""
 
     connection_string: str = ""

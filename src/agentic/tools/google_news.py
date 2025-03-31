@@ -6,9 +6,8 @@ import pandas as pd
 from googlenewsdecoder import new_decoderv1
 from google_news_feed import GoogleNewsFeed, NewsItem
 
-from .scaleserp_browser import ScaleSerpBrowserTool
-from .base import BaseAgenticTool
-
+from agentic.tools.scaleserp_browser import ScaleSerpBrowserTool
+from agentic.tools.base import BaseAgenticTool
 
 class GoogleNewsTool(BaseAgenticTool):
     """Functions for accessing Google News."""

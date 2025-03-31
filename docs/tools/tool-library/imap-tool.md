@@ -137,7 +137,7 @@ List of dictionaries containing email data (only unread/unprocessed emails).
 
 ```python
 from agentic.common import Agent
-from agentic.tools.imap_tool import IMAPTool
+from agentic.tools import IMAPTool
 
 # Create an agent with email capabilities
 email_agent = Agent(

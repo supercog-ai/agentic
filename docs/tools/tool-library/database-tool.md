@@ -87,7 +87,7 @@ sqlcmd -S host -U username -P password -d database
 
 ```python
 from agentic.common import Agent
-from agentic.tools.database_tool import DatabaseTool
+from agentic.tools import DatabaseTool
 
 # Connect with a connection string
 db_tool = DatabaseTool("postgresql+psycopg2://user:pass@localhost:5432/mydb")

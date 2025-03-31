@@ -1,7 +1,6 @@
 import os
 from agentic.common import Agent, AgentRunner
-from agentic.tools.database_tool import DatabaseTool
-from agentic.tools.playwright import PlaywrightTool
+from agentic.tools import DatabaseTool, PlaywrightTool
 
 # This is the simplest possible Text-to-SQL agent. It uses a database tool to answer questions.
 

@@ -1,4 +1,4 @@
-from agentic.tools.browser_use import BrowserUseTool
+from agentic.tools import BrowserUseTool
 
 from agentic.common import Agent, AgentRunner
 

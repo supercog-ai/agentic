@@ -45,7 +45,7 @@ agentic init .
 
 ```python
 from agentic.common import Agent, AgentRunner
-from agentic.tools.weather_tool import WeatherTool
+from agentic.tools import WeatherTool
 
 weather_agent = Agent(
     name="Weather Agent",

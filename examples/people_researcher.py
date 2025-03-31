@@ -1,9 +1,8 @@
 from typing import Callable, Any
 import asyncio
-from agentic.tools.linkedin_tool import LinkedinDataTool
 
 from agentic.common import Agent, AgentRunner, handoff, PauseForInputResult
-
+from agentic.tools import LinkedinDataTool
 
 def invoke_async(async_func: Callable, *args, **kwargs) -> Any:
     return asyncio.run(async_func(*args, **kwargs))

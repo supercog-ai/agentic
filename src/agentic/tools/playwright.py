@@ -7,7 +7,7 @@ import time
 #   pip install playwright
 #   After installation, run: playwright install chromium
 
-from .base import BaseAgenticTool
+from agentic.tools.base import BaseAgenticTool
 from agentic.common import RunContext
 
 class PlaywrightTool(BaseAgenticTool):

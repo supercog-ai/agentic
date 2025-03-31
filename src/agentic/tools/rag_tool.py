@@ -2,7 +2,8 @@ from typing import List, Callable
 import glob
 
 from agentic.common import RunContext
-from agentic.tools.registry import tool_registry
+from agentic.tools.utils.registry import tool_registry
+from agentic.tools.base import BaseAgenticTool
 from agentic.utils.rag_helper import (
     list_collections,
     init_weaviate,
@@ -32,7 +33,7 @@ from weaviate.classes.config import VectorDistances
     dependencies=[
     ]
 )
-class RAGTool:
+class RAGTool(BaseAgenticTool):
     def __init__(
         self,
         default_index: str = "knowledge_base",

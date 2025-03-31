@@ -4,7 +4,7 @@
 # a demonstration of using RAG and tools with your agent.
 #
 from agentic.common import Agent, AgentRunner
-from agentic.tools.rag_tool import RAGTool
+from agentic.tools import RAGTool
 
 # Define our agent, and attach the RAG, plus pre-populate with the Agentic docs.
 oracle = Agent(

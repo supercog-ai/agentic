@@ -1,7 +1,6 @@
 import pytest
 from agentic.common import Agent, AgentRunner
-from agentic.tools.rag_tool import RAGTool
-import re
+from agentic.tools import RAGTool
 
 @pytest.fixture
 def rag_agent():

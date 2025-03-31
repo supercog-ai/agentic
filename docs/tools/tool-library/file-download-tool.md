@@ -47,7 +47,7 @@ The content of the downloaded file, or an error message if the download failed.
 
 ```python
 from agentic.common import Agent
-from agentic.tools.file_download import FileDownloadTool
+from agentic.tools import FileDownloadTool
 
 # Create an agent with file downloading capabilities
 download_agent = Agent(

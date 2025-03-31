@@ -124,7 +124,7 @@ A dictionary containing the processing status and any updated meeting informatio
 
 ```python
 from agentic.common import Agent
-from agentic.tools.meeting_tool import MeetingBaasTool
+from agentic.tools import MeetingBaasTool
 
 # Create an agent with meeting capabilities
 meeting_agent = Agent(

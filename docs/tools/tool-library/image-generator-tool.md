@@ -1,6 +1,6 @@
-# OpenAIImageGenerator
+# ImageGeneratorTool
 
-The `OpenAIImageGenerator` provides capabilities for generating images using OpenAI's image generation models. This tool allows agents to create images based on text prompts and return accessible URLs.
+The `ImageGeneratorTool` provides capabilities for generating images using OpenAI's image generation models. This tool allows agents to create images based on text prompts and return accessible URLs.
 
 ## Features
 
@@ -39,13 +39,13 @@ A markdown-formatted string with the URL to the generated image, or an error mes
 
 ```python
 from agentic.common import Agent
-from agentic.tools.image_generator import OpenAIImageGenerator
+from agentic.tools import ImageGeneratorTool
 
 # Create an agent with image generation capabilities
 image_agent = Agent(
     name="Image Creator",
     instructions="You create images based on user descriptions.",
-    tools=[OpenAIImageGenerator()]
+    tools=[ImageGeneratorTool()]
 )
 
 # Use the agent to generate an image

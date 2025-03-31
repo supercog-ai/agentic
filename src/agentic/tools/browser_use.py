@@ -3,13 +3,13 @@
 from typing import Optional
 import os
 
-from agentic.tools import tool_registry
+from agentic.tools.utils.registry import tool_registry
 from agentic.models import GPT_4O_MINI
 from agentic.common import RunContext
 from agentic.events import FinishCompletion
+from agentic.tools.base import BaseAgenticTool
 from browser_use import Agent as BrowserAgent
 from browser_use import Browser, BrowserConfig
-from langchain_openai import ChatOpenAI
 from langchain.callbacks import StdOutCallbackHandler
 from langchain_google_genai import ChatGoogleGenerativeAI
 
@@ -29,7 +29,7 @@ from langchain_google_genai import ChatGoogleGenerativeAI
         ),
     ],
 )
-class BrowserUseTool:
+class BrowserUseTool(BaseAgenticTool):
     # Automates browser interactions with a smart agent.
     # Set the chrome_instance_path to the path to your Chrome executable if you want to use YOUR browser with its
     # cookies and state - but be careful.

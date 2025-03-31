@@ -73,7 +73,7 @@ A pandas DataFrame or JSON response containing the extracted content.
 
 ```python
 from agentic.common import Agent
-from agentic.tools.tavily_search_tool import TavilySearchTool
+from agentic.tools import TavilySearchTool
 
 # Create an agent with web search capabilities
 search_agent = Agent(

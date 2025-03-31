@@ -140,7 +140,7 @@ The parsed response based on content type.
 
 ```python
 from agentic.common import Agent
-from agentic.tools.auth_rest_api_tool import AuthorizedRestApiTool
+from agentic.tools import AuthorizedRestApiTool
 
 # Set up the secret first
 # agentic set-secret GITHUB_TOKEN your_token_here

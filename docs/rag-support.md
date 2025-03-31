@@ -55,8 +55,7 @@ $ agentic index search index1 "reasoning models"
 And to use RAG with an agent, via _agentic RAG_, just enable the RAG Tool:
 
 ```python
-from agentic.tools.rag_tool import RAGTool
-from agentic.tools.mcp_tool import MCPTool
+from agentic.tools import MCPTool, RAGTool
 from agentic.common import Agent
 
 # Create Sequential Thinking MCP tool

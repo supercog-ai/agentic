@@ -58,7 +58,7 @@ nav:
       - AuthorizedRestApiTool: tools/tool-library/authorized-rest-api-tool.md
       - BrowserUseTool: tools/tool-library/browser-use-tool.md
       - DatabaseTool: tools/tool-library/database-tool.md
-      - DuckDuckGoSearchTool: tools/tool-library/duckduckgo-search-tool.md
+      - DuckDuckGoTool: tools/tool-library/duckduckgo-search-tool.md
       - FileDownloadTool: tools/tool-library/file-download-tool.md
       - GithubTool: tools/tool-library/github-tool.md
       - GoogleNewsTool: tools/tool-library/google-news-tool.md
@@ -67,7 +67,7 @@ nav:
       - LinkedinDataTool: tools/tool-library/linkedin-data-tool.md
       - MCPTool: tools/tool-library/mcp-tool.md
       - MeetingBaasTool: tools/tool-library/meeting-baas-tool.md
-      - OpenAIImageGenerator: tools/tool-library/image-generator-tool.md
+      - ImageGeneratorTool: tools/tool-library/image-generator-tool.md
       - PlaywrightTool: tools/tool-library/playwright-tool.md
       - RAGTool: tools/tool-library/rag-tool.md
       - RestApiTool: tools/tool-library/rest-api-tool.md

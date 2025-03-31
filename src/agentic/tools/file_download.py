@@ -2,12 +2,15 @@ from typing import Callable
 from urllib.parse import urlparse
 import httpx
 import aiofiles
-
 import html2text
 import requests
 
+from agentic.tools.base import BaseAgenticTool
 
-class FileDownloadTool:
+class FileDownloadTool(BaseAgenticTool):
+    def __init__(self):
+        super().__init__()
+
     def get_tools(self) -> list[Callable]:
         return [
             self.download_url_as_file,

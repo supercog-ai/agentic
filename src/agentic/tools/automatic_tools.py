@@ -6,9 +6,9 @@ import pandas as pd
 
 from agentic.llm import llm_generate_with_format
 from agentic.common import RunContext
-from .rag_tool import RAGTool
-
-from .file_download import FileDownloadTool
+from agentic.tools.base  import BaseAgenticTool
+from agentic.tools.file_download import FileDownloadTool
+from agentic.tools.rag_tool import RAGTool
 
 ToolChoiceResult = namedtuple(
     "ToolChoiceResult", ["name", "tool_factory_id", "credential_id", "help"]
@@ -19,7 +19,7 @@ def get_docstring(obj: Any) -> str:
     return obj.__doc__ or ""
 
 
-class AutomaticTools:
+class AutomaticTools(BaseAgenticTool):
     file_download_tool: Optional[FileDownloadTool] = None
     tool_classes: list[Type] = []
     tool_functions: list[Callable] = []

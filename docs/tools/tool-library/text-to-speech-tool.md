@@ -47,7 +47,7 @@ The tool supports the following OpenAI TTS-1 voices:
 
 ```python
 from agentic.common import Agent
-from agentic.tools.text_to_speech_tool import TextToSpeechTool
+from agentic.tools import TextToSpeechTool
 
 # Create an agent with text-to-speech capabilities
 tts_agent = Agent(

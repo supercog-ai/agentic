@@ -211,7 +211,7 @@ Status message.
 
 ```python
 from agentic.common import Agent
-from agentic.tools.github_tool import GithubTool
+from agentic.tools import GithubTool
 
 # Create a GitHub tool with authentication
 github_tool = GithubTool(api_key="<YOUR-API-KEY>" default_repo="supercog-ai/agentic")

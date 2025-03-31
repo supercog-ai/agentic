@@ -4,8 +4,8 @@ from datetime import datetime, timedelta
 import zoneinfo
 import statistics
 
-from .base import BaseAgenticTool
-from agentic.tools.registry import tool_registry
+from agentic.tools.base import BaseAgenticTool
+from agentic.tools.utils.registry import tool_registry
 
 """
 import openmeteopy  #pip inst

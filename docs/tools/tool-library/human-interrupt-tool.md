@@ -41,7 +41,7 @@ Either the human input (if already provided) or a `PauseForInputResult` that wil
 
 ```python
 from agentic.common import Agent
-from agentic.tools.human_interrupt import HumanInterruptTool
+from agentic.tools import HumanInterruptTool
 
 # Create an agent with human interruption capability
 interactive_agent = Agent(
@@ -65,8 +65,7 @@ The `HumanInterruptTool` works well when combined with other tools that might ne
 
 ```python
 from agentic.common import Agent
-from agentic.tools.human_interrupt import HumanInterruptTool
-from agentic.tools.weather_tool import WeatherTool
+from agentic.tools import HumanInterruptTool, WeatherTool
 
 # Create an agent with multiple tools
 travel_agent = Agent(

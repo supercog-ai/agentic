@@ -2,7 +2,7 @@ import asyncio
 import os
 from typing import Callable
 
-from .base import BaseAgenticTool
+from agentic.tools.base import BaseAgenticTool
 from agentic.common import RunContext
 
 # A dummy tool created just for unit testing

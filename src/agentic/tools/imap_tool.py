@@ -8,16 +8,14 @@ import email.message
 from email.header import decode_header
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from typing import Any, Callable, List, Dict, Optional, Tuple
-from pytz import utc
+from typing import Any, Callable, List, Dict, Optional
 from datetime import datetime, timedelta
-import os
-import re
 import smtplib
 
 from bs4 import BeautifulSoup
 from agentic.common import RunContext
-from agentic.tools import tool_registry
+from agentic.tools.utils.registry import tool_registry
+from agentic.tools.base import BaseAgenticTool
 
 from sqlmodel import SQLModel, Field, Session, select
 
@@ -48,7 +46,7 @@ class EmailMsgsProcessed(SQLModel, table=True):
         ),
     ],
 )
-class IMAPTool:
+class IMAPTool(BaseAgenticTool):
     """Access an Email Inbox using IMAP protocol."""
 
     email_address: Optional[str] = None

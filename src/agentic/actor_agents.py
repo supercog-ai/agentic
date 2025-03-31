@@ -66,7 +66,7 @@ from agentic.events import (
     OAuthFlowResult,
 )
 from agentic.db.models import Run, RunLog
-from agentic.tools.registry import tool_registry
+from agentic.tools.utils.registry import tool_registry
 from agentic.db.db_manager import DatabaseManager
 from agentic.models import get_special_model_params, mock_provider
 

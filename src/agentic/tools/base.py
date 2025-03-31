@@ -1,7 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import Callable
 
-
 class BaseAgenticTool(ABC):
     """Base class for all Agentic tools."""
 

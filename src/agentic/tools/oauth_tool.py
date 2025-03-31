@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any, Dict, Optional
+from typing import Any, Callable, Dict, Optional
 from urllib.parse import urlencode
 import os
 from dotenv import load_dotenv
@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 import httpx
 from agentic.common import RunContext
 from agentic.events import OAuthFlowResult
+from agentic.tools.base import BaseAgenticTool
 
 @dataclass
 class OAuthConfig:
@@ -18,11 +19,14 @@ class OAuthConfig:
     scopes: str
     tool_name: str
 
-class OAuthTool:
+class OAuthTool(BaseAgenticTool):
     """Base class for tools that need OAuth authentication"""
     
     def __init__(self, oauth_config: OAuthConfig):
         self.oauth_config = oauth_config
+
+    def get_tools(self) -> list[Callable]:
+        return [self.authenticate]
 
     async def authenticate(self, run_context: RunContext) -> str | OAuthFlowResult:
         """Start or continue OAuth authentication flow"""

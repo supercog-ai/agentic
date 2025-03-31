@@ -5,7 +5,6 @@ import importlib.util
 
 import shutil
 import subprocess
-import sys
 from contextlib import contextmanager
 
 from agentic.tools.base import BaseAgenticTool

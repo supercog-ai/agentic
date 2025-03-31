@@ -34,8 +34,7 @@ Tools can be added to your agent by passing them to the `tools` parameter when c
 
 ```python
 from agentic.common import Agent
-from agentic.tools.weather_tool import WeatherTool
-from agentic.tools.google_news import GoogleNewsTool
+from agentic.tools import GoogleNewsTool, WeatherTool
 
 agent = Agent(
     name="News and Weather Agent",
@@ -47,7 +46,7 @@ agent = Agent(
 Some tools require API keys or other configuration. These are typically passed during initialization:
 
 ```python
-from agentic.tools.github_tool import GithubTool
+from agentic.tools import GithubTool
 
 github_tool = GithubTool(api_key="your_github_token", default_repo="owner/repo")
 ```
