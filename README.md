@@ -1,8 +1,15 @@
-# Agentic
+# Agentic - [Docs](https://supercog-ai.github.io/agentic/latest/)
 
 <p align="center"><a href="https://discord.gg/EmPGShjmGu"><img height="60px" src="https://user-images.githubusercontent.com/31022056/158916278-4504b838-7ecb-4ab9-a900-7dc002aade78.png" alt="Join our Discord!"></a></p>
 
 ![Screenshot 2025-02-24 at 12 13 31 PM](https://github.com/user-attachments/assets/9aeba0df-82b9-4c75-bb7a-d4fdacddfb29)
+
+[![Release Notes](https://img.shields.io/github/release/supercog-ai/agentic)](https://github.com/supercog-ai/agentic/releases)
+[![CI](https://github.com/supercog-ai/agentic/actions/workflows/test-and-lint.yaml/badge.svg)](https://github.com/supercog-ai/agentic/actions/workflows/test-and-lint.yaml)
+[![PyPI - License](https://img.shields.io/pypi/l/agentic)](https://opensource.org/licenses/MIT)
+[![PyPI - Downloads](https://img.shields.io/pypi/dm/agentic)](https://pypistats.org/packages/agentic)
+[![GitHub star chart](https://img.shields.io/github/stars/supercog-ai/agentic)](https://star-history.com/#supercog-ai/agentic)
+[![Open Issues](https://img.shields.io/github/issues-raw/supercog-ai/agentic)](https://github.com/supercog-ai/agentic/issues)
 
 Agentic makes it easy to create AI agents - autonomous software programs that understand natural language
 and can use tools to do work on your behalf.
@@ -33,7 +40,7 @@ Some of the _framework_ features:
 - Easy definition and use of tools (functions, class methods, import LangChain tools, ...)
 - Built alongside a set of production-tested tools
 
-Visits the docs: https://supercog-ai.github.io/agentic/
+Visits the docs: https://supercog-ai.github.io/agentic/latest/
 
 ## Pre-built agents you can run today
 
@@ -84,8 +91,94 @@ or rename this folder however you like.
 
 ## Intro Tutorial
 
-Visit [the docs](https://supercog-ai.github.io/agentic/) for a tutorial on getting started
+Visit [the docs](https://supercog-ai.github.io/agentic/latest/) for a tutorial on getting started
 with the framework.
+
+## Running Agents
+
+Agentic provides multiple ways to interact with your agents, from command-line interfaces to web applications. This guide covers all available methods.
+
+### Available Interfaces
+
+| Interface | Use Case | Features |
+|-----------|----------|----------|
+| [Command Line (CLI)](#command-line-interface) | Quick testing, scripting | Simple text I/O, dot commands |
+| [REST API](#rest-api) | Integration with other applications | HTTP endpoints, event streaming |
+| [Next.js Dashboard](#nextjs-dashboard) | Professional web UI | Real-time updates, run history, background tasks |
+| [Streamlit Dashboard](#streamlit-dashboard) | Quick prototyping | Simple web UI with minimal setup |
+
+### Command Line Interface
+
+The CLI provides a simple REPL interface for direct conversations with your agents.
+
+```bash
+agentic thread examples/basic_agent.py
+```
+
+[Learn more about the CLI →](https://supercog-ai.github.io/agentic/latest/interacting-with-agents/cli/)
+
+### REST API
+
+The REST API allows integration with web applications, automation systems, or other services.
+
+```bash
+agentic serve examples/basic_agent.py
+```
+
+[Learn more about the API →](https://supercog-ai.github.io/agentic/latest/interacting-with-agents/rest-api/)
+
+### Next.js Dashboard
+
+The Next.js Dashboard offers a full-featured web interface with:
+
+- Multiple agent management
+- Real-time event streaming
+- Background task management
+- Run history and logs
+- Markdown rendering
+
+```bash
+agentic dashboard start --agent-path examples/basic_agent.py
+```
+
+[Learn more about the Next.js Dashboard →](https://supercog-ai.github.io/agentic/latest/interacting-with-agents/nextjs-dashboard/)
+
+
+### Streamlit Dashboard
+
+The Streamlit Dashboard provides a lightweight interface for quick prototyping.
+
+```bash
+agentic streamlit --agent-path examples/basic_agent.py
+```
+
+[Learn more about the Streamlit Dashboard →](https://supercog-ai.github.io/agentic/latest/interacting-with-agents/streamlit-dashboard/)
+
+### Programmatic Access
+
+You can always interact with agents directly in Python:
+
+```python
+from agentic.common import Agent
+
+# Create an agent
+agent = Agent(
+    name="My Agent",
+    instructions="You are a helpful assistant.",
+    model="openai/gpt-4o-mini"
+)
+
+# Use the << operator for a quick response
+response = agent << "Hello, how are you?"
+print(response)
+
+# For more control over the conversation
+request_id = agent.start_request("Tell me a joke").request_id
+for event in agent.get_events(request_id):
+    print(event)
+```
+
+[Learn more about Programtic Access →](https://supercog-ai.github.io/agentic/latest/interacting-with-agents/)
 
 ## Dependencies
 
@@ -95,7 +188,7 @@ Under the covers, Agentic uses [Ray](https://github.com/ray-project/ray) to host
 run your agents. Ray implements an _actor model_ which implements a much better 
 architecture for running complex agents than a typical web framework.
 
-### API Keys
+## API Keys
 
 Agentic requires API keys for the LLM providers you plan to use. Copy the `.env.example` file to `.env` and set the following environment variables:
 
@@ -106,7 +199,7 @@ ANTHROPIC_API_KEY=your_anthropic_api_key_here
 
 You only need to set the API keys for the models you plan to use. For example, if you're only using OpenAI models, you only need to set `OPENAI_API_KEY`.
 
-### Tests and docs
+## Tests and docs
 
 Run tests:
 
@@ -114,11 +207,11 @@ Run tests:
 
 Preview docs locally:
 
-    mkdocs serve
+    mike serve
 
 Deploy the docs:
 
-    mkdocs gh-deploy
+    mike deploy --push dev
 
 ## Why does this exist?
 
