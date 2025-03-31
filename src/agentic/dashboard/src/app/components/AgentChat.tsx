@@ -17,9 +17,16 @@ interface AgentChatProps {
   agentInfo: Api.AgentInfo;
   currentRunId?: string;
   onRunComplete?: (_runId: string) => void;
+  showMobileMenuButton?: boolean; // New prop to control header visibility
 }
 
-const AgentChat: React.FC<AgentChatProps> = ({ agentPath, agentInfo, currentRunId, onRunComplete }) => {
+const AgentChat: React.FC<AgentChatProps> = ({ 
+  agentPath, 
+  agentInfo, 
+  currentRunId, 
+  onRunComplete,
+  showMobileMenuButton = true // Default to true for backward compatibility
+}) => {
   const defaultPurpose: Ui.Message[] = agentInfo.purpose ? [
     { role: 'agent' as const, content: agentInfo.purpose } 
   ] : [];
@@ -171,39 +178,42 @@ const AgentChat: React.FC<AgentChatProps> = ({ agentPath, agentInfo, currentRunI
   return (
     <div className="flex h-full relative">
       <Card className={`flex flex-col h-full border-0 rounded-none bg-background transition-all ${showBackgroundPanel || showEventLogs ? 'w-1/2' : 'w-full'}`}>
-        <CardHeader className="p-4 border-b flex flex-row items-center justify-between">
-          <CardTitle className="text-lg font-medium">
-            {agentInfo.name}
-          </CardTitle>
-          <div className="flex gap-2">
-            {totalBackgroundTasks > 0 && (
+        <CardHeader className={`p-4 border-b flex flex-row items-center justify-between ${!showMobileMenuButton ? 'md:block' : ''}`}>
+          <div className="flex items-center justify-between w-full">
+            {/* Add left padding in mobile view when menu button is not shown */}
+            <CardTitle className={`text-lg font-medium ${!showMobileMenuButton ? 'pl-14 md:pl-0' : ''}`}>
+              {agentInfo.name}
+            </CardTitle>
+            <div className="flex gap-2">
+              {totalBackgroundTasks > 0 && (
+                <Button
+                  onClick={toggleBackgroundPanel}
+                  variant={showBackgroundPanel ? 'default' : 'outline'}
+                  className="flex items-center gap-2"
+                  size="sm"
+                >
+                  <ListTodo className="h-4 w-4" />
+                  <span className="hidden md:inline">
+                    {activeBackgroundTasks > 0 ? `Background (${activeBackgroundTasks}/${totalBackgroundTasks})` : `Background (${totalBackgroundTasks})`}
+                  </span>
+                </Button>
+              )}
               <Button
-                onClick={toggleBackgroundPanel}
-                variant={showBackgroundPanel ? 'default' : 'outline'}
+                onClick={toggleEventLogs}
+                variant={showEventLogs ? 'default' : 'outline'}
                 className="flex items-center gap-2"
                 size="sm"
               >
-                <ListTodo className="h-4 w-4" />
-                <span className="hidden md:inline">
-                  {activeBackgroundTasks > 0 ? `Background (${activeBackgroundTasks}/${totalBackgroundTasks})` : `Background (${totalBackgroundTasks})`}
-                </span>
+                <History className="h-4 w-4" />
+                <span className="hidden md:inline">Event Logs</span>
               </Button>
-            )}
-            <Button
-              onClick={toggleEventLogs}
-              variant={showEventLogs ? 'default' : 'outline'}
-              className="flex items-center gap-2"
-              size="sm"
-            >
-              <History className="h-4 w-4" />
-              <span className="hidden md:inline">Event Logs</span>
-            </Button>
+            </div>
           </div>
         </CardHeader>
         
         <AutoScrollArea 
           className="flex-1 p-4 h-[calc(100vh-180px)]"
-          scrollTrigger={displayMessages.length}
+          scrollTrigger={displayMessages}
         >
           <div className="space-y-4 mb-4">
             {displayMessages.map((msg, idx) => (

@@ -1,6 +1,7 @@
 'use client'
 
 import * as ScrollAreaPrimitive from '@radix-ui/react-scroll-area'
+import { ArrowDown } from 'lucide-react'
 import * as React from 'react'
 
 import { cn } from '@/lib/utils'
@@ -17,40 +18,69 @@ interface AutoScrollAreaProps extends React.ComponentPropsWithoutRef<typeof Scro
    * Optional callback when auto-scroll state changes (scrolling mode or manual mode)
    */
   onAutoScrollChange?: (_isAutoScrolling: boolean) => void;
+  /**
+   * Threshold in pixels to determine if user is at the bottom
+   * Default: 30 pixels from bottom
+   */
+  bottomThreshold?: number;
+  /**
+   * Show the scroll-to-bottom button when auto-scroll is disabled
+   * Default: true
+   */
+  showScrollButton?: boolean;
 }
 
 const AutoScrollArea = React.forwardRef<
   React.ElementRef<typeof ScrollAreaPrimitive.Root>,
   AutoScrollAreaProps
->(({ className, children, scrollTrigger, onAutoScrollChange, ...props }, ref) => {
+>(({ 
+  className, 
+  children, 
+  scrollTrigger, 
+  onAutoScrollChange, 
+  bottomThreshold = 30,
+  showScrollButton = true,
+  ...props 
+}, ref) => {
   const viewportRef = React.useRef<HTMLDivElement>(null)
   const [userHasScrolled, setUserHasScrolled] = React.useState(false)
   const [prevScrollHeight, setPrevScrollHeight] = React.useState(0)
+  const [isAtBottom, setIsAtBottom] = React.useState(true)
   
   // Scroll to bottom function
   const scrollToBottom = React.useCallback(() => {
     if (viewportRef.current) {
       viewportRef.current.scrollTop = viewportRef.current.scrollHeight
+      // After scrolling to bottom, reset user scroll state
+      setUserHasScrolled(false)
+      onAutoScrollChange?.(true)
+      setIsAtBottom(true)
     }
-  }, [])
+  }, [onAutoScrollChange])
+
+  // Function to check if viewport is at bottom
+  const checkIfAtBottom = React.useCallback((viewport: HTMLDivElement) => {
+    return viewport.scrollHeight - viewport.clientHeight - viewport.scrollTop < bottomThreshold
+  }, [bottomThreshold])
 
   // Handle scroll event to detect manual user scrolling
   const handleScroll = React.useCallback((event: React.UIEvent<HTMLDivElement>) => {
     const viewport = event.currentTarget
-    const isAtBottom = viewport.scrollHeight - viewport.clientHeight - viewport.scrollTop < 30
+    const atBottom = checkIfAtBottom(viewport)
+    setIsAtBottom(atBottom)
     
     // If user scrolls up, mark as manually scrolled
-    if (!isAtBottom && !userHasScrolled) {
+    if (!atBottom && !userHasScrolled) {
       setUserHasScrolled(true)
       onAutoScrollChange?.(false)
     }
     
     // If user scrolls back to bottom, reset to auto-scroll mode
-    if (isAtBottom && userHasScrolled) {
+    if (atBottom && userHasScrolled) {
       setUserHasScrolled(false)
       onAutoScrollChange?.(true)
     }
-  }, [userHasScrolled, onAutoScrollChange])
+  }, [userHasScrolled, onAutoScrollChange, checkIfAtBottom])
 
   // Effect to track content changes and auto-scroll
   React.useEffect(() => {
@@ -79,21 +109,34 @@ const AutoScrollArea = React.forwardRef<
   }, [scrollToBottom])
 
   return (
-    <ScrollAreaPrimitive.Root
-      ref={ref}
-      className={cn('relative overflow-hidden', className)}
-      {...props}
-    >
-      <ScrollAreaPrimitive.Viewport 
-        ref={viewportRef}
-        className="h-full w-full rounded-[inherit]"
-        onScroll={handleScroll}
+    <div className="relative">
+      <ScrollAreaPrimitive.Root
+        ref={ref}
+        className={cn('relative overflow-hidden', className)}
+        {...props}
       >
-        {children}
-      </ScrollAreaPrimitive.Viewport>
-      <ScrollBar />
-      <ScrollAreaPrimitive.Corner />
-    </ScrollAreaPrimitive.Root>
+        <ScrollAreaPrimitive.Viewport 
+          ref={viewportRef}
+          className="h-full w-full rounded-[inherit]"
+          onScroll={handleScroll}
+        >
+          {children}
+        </ScrollAreaPrimitive.Viewport>
+        <ScrollBar />
+        <ScrollAreaPrimitive.Corner />
+      </ScrollAreaPrimitive.Root>
+      
+      {showScrollButton && userHasScrolled && !isAtBottom && (
+        <button
+          onClick={scrollToBottom}
+          className="absolute bottom-4 right-4 flex items-center justify-center w-8 h-8 rounded-full bg-primary text-primary-foreground shadow-md hover:bg-primary/90 transition-opacity"
+          title="Scroll to bottom (enables auto-scroll)"
+          type="button"
+        >
+          <ArrowDown size={16} />
+        </button>
+      )}
+    </div>
   )
 })
 AutoScrollArea.displayName = 'AutoScrollArea'

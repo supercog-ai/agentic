@@ -62,7 +62,7 @@ export function useChat(agentPath: string, agentName: string, currentRunId: stri
           const prevEvent = processedEvents[processedEvents.length - 1];
           
           // Combine the content
-          const prevContent = typeof prevEvent.payload === 'string' 
+          const prevContent = typeof prevEvent.payload === 'string'
             ? prevEvent.payload 
             : prevEvent.payload?.content || '';
             

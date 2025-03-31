@@ -81,33 +81,36 @@ export default function Home() {
 
   return (
     <div className="flex h-screen">
-      {/* Mobile Sidebar */}
-      <Sheet open={isSidebarOpen} onOpenChange={setIsSidebarOpen}>
-        <SheetTrigger asChild>
-          <Button 
-            variant="ghost" 
-            size="icon"
-            className="md:hidden absolute top-4 left-4 z-50"
-          >
-            <Menu className="h-6 w-6" />
-          </Button>
-        </SheetTrigger>
-        <SheetContent side="left" className="p-0 w-64">
-          <AgentSidebar 
-            agents={agents}
-            selectedAgent={selectedAgent}
-            onSelectAgent={(path) => {
-              handleAgentSelect(path);
-              setIsSidebarOpen(false);
-            }}
-            onNewChat={() => {
-              setCurrentRunId(undefined);
-              refreshRuns();
-            }}
-            onRunSelected={handleRunSelect}
-          />
-        </SheetContent>
-      </Sheet>
+      {/* Mobile Menu Button (fixed position) */}
+      <div className="md:hidden fixed top-4 left-4 z-50">
+        <Sheet open={isSidebarOpen} onOpenChange={setIsSidebarOpen}>
+          <SheetTrigger asChild>
+            <Button
+              variant="ghost" 
+              size="icon"
+              className="bg-background"
+            >
+              <Menu className="h-6 w-6" />
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="left" className="pt-1 pb-0 px-0 w-64">
+            <AgentSidebar 
+              agents={agents}
+              selectedAgent={selectedAgent}
+              onSelectAgent={(path) => {
+                handleAgentSelect(path);
+                setIsSidebarOpen(false);
+              }}
+              onNewChat={() => {
+                setCurrentRunId(undefined);
+                refreshRuns();
+              }}
+              onRunSelected={handleRunSelect}
+              isMobile={true}
+            />
+          </SheetContent>
+        </Sheet>
+      </div>
 
       {/* Desktop Sidebar */}
       <div className="hidden md:block w-64 border-r">
@@ -126,12 +129,15 @@ export default function Home() {
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
         {selectedAgent && selectedAgentInfo && (
-          <AgentChat 
-            agentPath={selectedAgent} 
-            agentInfo={selectedAgentInfo}
-            currentRunId={currentRunId}
-            onRunComplete={refreshRuns}
-          />
+          <div className="h-full">
+            <AgentChat 
+              agentPath={selectedAgent} 
+              agentInfo={selectedAgentInfo}
+              currentRunId={currentRunId}
+              onRunComplete={refreshRuns}
+              showMobileMenuButton={false}
+            />
+          </div>
         )}
       </div>
     </div>

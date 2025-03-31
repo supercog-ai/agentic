@@ -95,9 +95,10 @@ const EventLogs: React.FC<EventLogsProps> = ({ events, onClose, className = '' }
   };
   
   const formatPayload = (event: Ui.Event) => {
-    if (event.type === AgentEventType.CHAT_OUTPUT && typeof event.payload?.content === 'string') {
+    if (event.type === AgentEventType.CHAT_OUTPUT && (typeof event.payload == 'string' || typeof event.payload?.content === 'string')) {
+      const content = typeof event.payload == 'string' ? event.payload : event.payload?.content;
       return (
-        <MarkdownRenderer content={event.payload.content} />
+        <MarkdownRenderer content={content} />
       );
     }
     

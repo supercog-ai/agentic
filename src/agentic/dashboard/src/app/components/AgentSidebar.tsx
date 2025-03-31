@@ -1,4 +1,4 @@
-import { Bot,Plus } from 'lucide-react';
+import { Bot, Plus } from 'lucide-react';
 import React from 'react';
 
 import RunsTable from '@/components/RunsTable';
@@ -19,6 +19,7 @@ interface AgentSidebarProps {
   onSelectAgent: (_path: string) => void;
   onNewChat: () => void;
   onRunSelected: (_runId: string) => void;
+  isMobile?: boolean;
 }
 
 const AgentSidebar: React.FC<AgentSidebarProps> = ({ 
@@ -27,10 +28,11 @@ const AgentSidebar: React.FC<AgentSidebarProps> = ({
   onSelectAgent, 
   onNewChat,
   onRunSelected,
+  isMobile = false,
 }) => {
   return (
     <div className="flex flex-col h-full">
-      <div className="p-4 border-b space-y-4">
+      <div className={`p-4 border-b space-y-4 ${isMobile ? 'pt-10' : ''}`}>
         <Button 
           variant="secondary" 
           className="w-full justify-start gap-2"
