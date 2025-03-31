@@ -187,7 +187,7 @@ A classic use case is generating logging events from a function:
     def long_running_function(self, run_context) -> str:
         """ Runs a long operation and returns the result. """
         for x in range():
-            yield ToolOutput(run_context.agent_name, "long_running_function", f"working on row {x})
+            yield ToolResult(run_context.agent_name, "long_running_function", f"working on row {x})
             ... do some work
 
         return "The work is done! Thanks for waiting."
@@ -197,7 +197,7 @@ Building the event is toilsome, so `run_context` has a convenience method:
 
     yield run_context.log("Something interesting happened: ", param2, param2)
 
-This builds and returns the `ToolOutput` event for you.
+This builds and returns the `ToolResult` event for you.
 
 Note that this style works for synchronous functions, but not async. In the async
 case you need to yield the return value:
@@ -228,7 +228,7 @@ So for convenience, you can log into the `run_context` instead:
         return "The work is done! Thanks for waiting."
 ```
 Note that we didn't `yield` the log object. After your function returns, the system will 
-automatically publish the `ToolOutput` events from any messages logged by your function, 
+automatically publish the `ToolResult` events from any messages logged by your function, 
 and then proceed to process the function result.
 
 

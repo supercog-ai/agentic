@@ -3,10 +3,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from sse_starlette.sse import EventSourceResponse
 import json
 import uvicorn
-from typing import List, Dict, Any, Optional
+from typing import List
 import asyncio
 
 from agentic.actor_agents import ProcessRequest, ResumeWithInputRequest
+from agentic.common import Agent
 from agentic.events import AgentDescriptor, DebugLevel
 from agentic.utils.json import make_json_serializable
 from agentic.swarm.types import RunContext
@@ -128,7 +129,7 @@ class AgentAPIServer:
         agent_router = APIRouter()
         
         # Dependency to get the agent from the path parameter
-        def get_agent(agent_name: str = FastAPIPath(...)):
+        def get_agent(agent_name: str = FastAPIPath(...)) -> Agent:
             if agent_name not in self.agent_registry:
                 raise HTTPException(status_code=404, detail=f"Agent '{agent_name}' not found")
             return self.agent_registry[agent_name]
@@ -165,7 +166,7 @@ class AgentAPIServer:
         async def get_events(
             request_id: str, 
             stream: bool = False, 
-            agent = Depends(get_agent)
+            agent: Agent = Depends(get_agent)
         ):
             """Get events for a request"""
             if not stream:

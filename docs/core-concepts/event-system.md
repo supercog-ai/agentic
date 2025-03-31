@@ -6,8 +6,7 @@ processing an operation.
 The most obvious events are `ChatOutput` events which represent text generations
 from the LLM. 
 
-To show tool calls, you should show `ToolResult` events, and maybe `ToolOutput`
-event inside a disclosure control.
+To show tool calls, you should show `ToolResult` events.
 
 To understand the lifecycle of processing you can observe `PromptStarted`
 and `TurnEnd` events. 

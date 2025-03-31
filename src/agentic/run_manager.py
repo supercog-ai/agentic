@@ -8,7 +8,8 @@ from .events import (
     TurnEnd,
     FinishCompletion,
     ToolCall,
-    ToolResult
+    ToolResult,
+    ToolError
 )
 from agentic.common import RunContext
 from agentic.utils.json import make_json_serializable
@@ -69,19 +70,9 @@ class RunManager:
         if isinstance(event, Output):
             event_data = payload
         
-        elif isinstance(event, ToolCall):
+        elif isinstance(event, ToolCall) or isinstance(event, ToolResult) or isinstance(event, ToolError):
             role = "tool"
-            event_data = {
-                "name": payload,
-                "arguments": make_json_serializable(event.args)
-            }
-            
-        elif isinstance(event, ToolResult):
-            role = "tool"
-            event_data = {
-                "name": payload,
-                "result": make_json_serializable(event.result)
-            }
+            event_data = make_json_serializable(payload)
             
         elif isinstance(event, FinishCompletion):
             role = "usage"

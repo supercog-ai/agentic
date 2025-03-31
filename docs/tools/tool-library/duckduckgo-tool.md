@@ -1,6 +1,6 @@
-# DuckDuckGoSearchTool
+# DuckDuckGoTool
 
-The `DuckDuckGoSearchTool` provides a simple interface to search the web using DuckDuckGo. This tool allows agents to perform web searches without requiring API keys or authentication.
+The `DuckDuckGoTool` provides a simple interface to search the web using DuckDuckGo. This tool allows agents to perform web searches without requiring API keys or authentication.
 
 ## Features
 
@@ -52,10 +52,10 @@ A list of dictionaries with search results. The structure varies by source type:
 
 ```python
 from agentic.common import Agent
-from agentic.tools import DuckDuckGoSearchTool
+from agentic.tools import DuckDuckGoTool
 
 # Create a basic search tool with default settings
-search_tool = DuckDuckGoSearchTool()
+search_tool = DuckDuckGoTool()
 
 # Create an agent with search capabilities
 search_agent = Agent(
@@ -69,7 +69,7 @@ response = search_agent << "Find information about renewable energy technologies
 print(response)
 
 # Create a tool for news searches
-news_search = DuckDuckGoSearchTool(source="news", time="d", max_results=10)
+news_search = DuckDuckGoTool(source="news", time="d", max_results=10)
 
 # Create an agent focused on news
 news_agent = Agent(

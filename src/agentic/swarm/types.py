@@ -104,14 +104,14 @@ class RunContext:
         )
 
     def log(self, *args):
-        """ Makes and returns a ToolOutput event. You can ignore the return value and let
+        """ Makes and returns a ToolResult event. You can ignore the return value and let
             the system automatically publish log messages queued during the tool call. """
-        from agentic.events import ToolOutput
+        from agentic.events import ToolResult
         import inspect
 
         caller_frame = inspect.currentframe().f_back
         caller_name = inspect.getframeinfo(caller_frame).function
-        event = ToolOutput(self.agent_name, caller_name, result=" ".join(map(str, args)))
+        event = ToolResult(self.agent_name, caller_name, result=" ".join(map(str, args)))
         self._log_queue.append(event)
         return event
     

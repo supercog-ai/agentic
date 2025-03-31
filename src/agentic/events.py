@@ -127,34 +127,38 @@ class ChatOutput(Output):
 
 
 class ToolCall(Event):
-    args: dict = {}
+    arguments: dict = {}
 
-    def __init__(self, agent: str, name: str, args: dict, depth: int = 0):
-        super().__init__(agent=agent, type="tool_call", payload=name, depth=depth)
-        self.args = args
+    def __init__(self, agent: str, name: str, arguments: dict, depth: int = 0):
+        super().__init__(
+            agent=agent,
+            type="tool_call",
+            payload={
+                "name": name,
+                "arguments": arguments
+            },
+            depth=depth
+        )
+        self.arguments = arguments
 
     def __str__(self):
         name = self.payload
-        return "  " * (self.depth + 1) + f"[TOOL: {name} >> ({self.args})]\n"
+        return "  " * (self.depth + 1) + f"[TOOL: {name} >> ({self.arguments})]\n"
 
 
 class ToolResult(Event):
     result: Any = None
 
     def __init__(self, agent: str, name: str, result: Any, depth: int = 0):
-        super().__init__(agent=agent, type="tool_result", payload=name, depth=depth)
-        self.result = result
-
-    def __str__(self):
-        name = self.payload
-        return "  " * (self.depth + 1) + f"[TOOL: {name}] <<\n{self.result}]\n"
-
-
-class ToolOutput(Event):
-    result: Optional[Any] = None # make Pydantic not complain when we super.init
-
-    def __init__(self, agent: str, name: str, result: Any, depth: int = 0):
-        super().__init__(agent=agent, type="tool_result", payload=name, depth=depth)
+        super().__init__(
+            agent=agent,
+            type="tool_result",
+            payload={
+                "name": name,
+                "result": result
+            },
+            depth=depth
+        )
         self.result = result
 
     def __str__(self):
@@ -164,8 +168,16 @@ class ToolOutput(Event):
 class ToolError(Event):
     _error: str
 
-    def __init__(self, agent: str, func_name: str, error: str, depth: int = 0):
-        super().__init__(agent=agent, type="tool_error", payload=func_name, depth=depth)
+    def __init__(self, agent: str, name: str, error: str, depth: int = 0):
+        super().__init__(
+            agent=agent,
+            type="tool_error",
+            payload={
+                "name": name,
+                "error": error
+            },
+            depth=depth
+        )
         self._error = error
 
     @property
