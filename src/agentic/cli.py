@@ -302,7 +302,9 @@ def dashboard_callback():
 def start(
     port: int = typer.Option(None, "--port", "-p", help="Port to run the dashboard on"),
     dev: bool = typer.Option(False, "--dev", help="Run in development mode"),
+    use_ray: bool = typer.Option(False, "--use-ray", help="Use Ray for agent execution"),
     agent_path: str = typer.Option(None, "--agent-path", help="Path to the agent configuration file, will start the agent if provided"),
+    agent_port: int = typer.Option(8086, "--agent-port", help="Port to run the agent server on"),
 ):
     """Start the dashboard server"""
     import threading
@@ -312,7 +314,7 @@ def start(
         typer.echo(f"Starting agent from {agent_path} in a background thread...")
         agent_thread = threading.Thread(
             target=serve, 
-            args=(agent_path,),
+            args=[agent_path, use_ray, agent_port],
             daemon=True  # This ensures the thread exits when the main program exits
         )
         agent_thread.start()
