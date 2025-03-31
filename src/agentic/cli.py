@@ -2,24 +2,15 @@ import typer
 import os
 import requests
 import inspect
-import json
-import uvicorn
 from rich.markdown import Markdown
 from rich.console import Console
 from typing import Optional, List
 from .file_cache import file_cache
 from .colors import Colors
 
-from fastapi import FastAPI, APIRouter, Request, Depends, Path as FastAPIPath, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
-from sse_starlette.sse import EventSourceResponse
-
 import agentic.quiet_warnings
-from agentic.actor_agents import ProcessRequest, ResumeWithInputRequest
 from agentic.agentic_secrets import agentic_secrets as secrets
-from agentic.events import AgentDescriptor, DebugLevel
 from agentic.settings import settings
-from agentic.utils.json import make_json_serializable
 
 import shutil
 from pathlib import Path
@@ -760,9 +751,56 @@ def models_gpt(
     quiet_log(usage)
 
 @app.command()
-def streamlit():
-    """Runs the Streamlit UI"""
-    os.execvp("streamlit", ["streamlit", "run", "src/agentic/streamlit/app.py"])
+def streamlit(
+    port: int = typer.Option(8501, "--port", help="Port to run the Streamlit UI on"),
+    agent_path: str = typer.Option(None, "--agent-path", help="Path to the agent configuration file, will start the agent in a background thread"),
+    agent_port: int = typer.Option(8086, "--agent-port", help="Port to run the agent server on"),
+    use_ray: bool = typer.Option(False, "--use-ray", help="Use Ray for agent execution"),
+):
+    """Runs the Streamlit UI with optional agent integration"""
+    import threading
+    import subprocess
+    
+    console = Console()
+    
+    # Set up environment for Streamlit
+    env = os.environ.copy()
+    
+    if agent_path:
+        console.print(f"[bold green]Starting agent from {agent_path}...[/bold green]")
+        agent_thread = threading.Thread(
+            target=serve,
+            args=(agent_path, use_ray, agent_port),
+            daemon=True
+        )
+        agent_thread.start()
+    
+    # Start Streamlit as a subprocess instead of replacing the current process
+    console.print(f"\n[bold green]Starting Streamlit UI on port {port}...[/bold green]")
+    
+    streamlit_args = [
+        "streamlit", 
+        "run", 
+        "src/agentic/streamlit/app.py",
+        "--server.port", 
+        str(port)
+    ]
+    
+    streamlit_process = subprocess.Popen(
+        streamlit_args,
+        env=env,
+        stdout=None,
+        stderr=None
+    )
+    
+    try:
+        # Wait for the Streamlit process to finish
+        streamlit_process.wait()
+    except KeyboardInterrupt:
+        console.print("[yellow]Shutting down...[/yellow]")
+        if streamlit_process:
+            streamlit_process.terminate()
+            streamlit_process.wait()
 
 def find_agent_instances(file_path):
     """Find Agent instances in a module file"""
