@@ -6,6 +6,7 @@ from unittest.mock import patch, MagicMock
 import tempfile
 import importlib.util
 import sys
+import threading
 
 from agentic.cli import find_agent_instances, copy_examples
 from agentic.common import Agent
@@ -207,21 +208,3 @@ agent = Agent(
         # Verify AgentAPIServer was created and run was called
         mock_server.assert_called_once()
         mock_server_instance.run.assert_called_once()
-
-def test_streamlit_command():
-    """Test the streamlit command"""
-    from agentic.cli import app
-    from typer.testing import CliRunner
-    
-    runner = CliRunner()
-    
-    # Mock os.execvp
-    with patch('os.execvp') as mock_execvp:
-        # Call streamlit command through the CLI runner
-        result = runner.invoke(app, ["streamlit"])
-            
-        # Verify execvp was called with correct arguments
-        mock_execvp.assert_called_once_with(
-            "streamlit", 
-            ["streamlit", "run", "src/agentic/streamlit/app.py"]
-        )

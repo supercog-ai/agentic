@@ -1,6 +1,14 @@
 import pytest
 from agentic.common import Agent, AgentRunner
+from unittest.mock import patch
 
+@pytest.fixture(autouse=True)
+def mock_secrets():
+    """Mock the secrets manager to avoid database issues"""
+    with patch('agentic.agentic_secrets.agentic_secrets') as mock:
+        mock.list_secrets.return_value = []
+        mock.get_secret.return_value = None
+        yield mock
 
 def test_mock_llm_response():
     """Test that an agent using a mock model returns the expected response"""
