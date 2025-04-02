@@ -210,12 +210,15 @@ agent = Agent(
 
 def test_streamlit_command():
     """Test the streamlit command"""
-    from agentic.cli import streamlit
+    from agentic.cli import app
+    from typer.testing import CliRunner
+    
+    runner = CliRunner()
     
     # Mock os.execvp
     with patch('os.execvp') as mock_execvp:
-        # Call streamlit command
-        streamlit()
+        # Call streamlit command through the CLI runner
+        result = runner.invoke(app, ["streamlit"])
             
         # Verify execvp was called with correct arguments
         mock_execvp.assert_called_once_with(
