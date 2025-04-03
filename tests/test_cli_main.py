@@ -7,6 +7,7 @@ import tempfile
 import importlib.util
 import sys
 import threading
+import subprocess
 
 from agentic.cli import find_agent_instances, copy_examples
 from agentic.common import Agent
@@ -53,6 +54,24 @@ def mock_agent():
         tools=[],
         model="test-model"
     )
+
+@pytest.fixture
+def mock_subprocess():
+    """Mock subprocess.Popen"""
+    with patch('subprocess.Popen') as mock:
+        process = MagicMock()
+        process.wait.return_value = None
+        process.terminate.return_value = None
+        mock.return_value = process
+        yield mock
+
+@pytest.fixture
+def mock_thread():
+    """Mock threading.Thread"""
+    with patch('threading.Thread') as mock:
+        thread = MagicMock()
+        mock.return_value = thread
+        yield mock
 
 def test_init_command(temp_dir, mock_console, mock_status, mock_resources):
     """Test the init command"""
@@ -208,3 +227,63 @@ agent = Agent(
         # Verify AgentAPIServer was created and run was called
         mock_server.assert_called_once()
         mock_server_instance.run.assert_called_once()
+
+def test_streamlit_command_basic(mock_console, mock_subprocess):
+    """Test the streamlit command with basic configuration"""
+    from agentic.cli import streamlit
+    
+    # Mock serve to prevent thread creation
+    with patch('agentic.cli.serve'):
+        # Run streamlit command with default settings
+        streamlit(port=8501)
+        
+        # Verify subprocess.Popen was called with correct arguments
+        mock_subprocess.assert_called_once_with(
+            ['streamlit', 'run', 'src/agentic/streamlit/app.py', '--server.port', '8501'],
+            env=mock_subprocess.call_args[1]['env'],
+            stdout=None,
+            stderr=None
+        )
+        
+        # Verify process.wait() was called
+        mock_subprocess.return_value.wait.assert_called_once()
+
+def test_streamlit_command_with_agent(mock_console, mock_subprocess):
+    """Test the streamlit command with agent integration"""
+    from agentic.cli import streamlit
+    
+    # Mock the threading.Thread class
+    with patch('threading.Thread') as mock_thread:
+        thread_instance = MagicMock()
+        mock_thread.return_value = thread_instance
+        
+        # Run streamlit command with agent configuration
+        streamlit(
+            port=8501,
+            agent_path="test_agent.py",
+            agent_port=8086,
+            use_ray=True
+        )
+        
+        # Verify thread was created with correct arguments
+        mock_thread.assert_called_once()
+        args, kwargs = mock_thread.call_args
+        assert kwargs['target'].__name__ == 'serve'  # Verify the target function is 'serve'
+        assert kwargs['args'] == ("test_agent.py", True, 8086)  # Verify serve arguments
+        assert kwargs['daemon'] is True  # Verify thread is daemon
+        
+        # Verify thread was started
+        thread_instance.start.assert_called_once()
+        
+        # Verify subprocess.Popen was called for streamlit
+        mock_subprocess.assert_called_once_with(
+            ['streamlit', 'run', 'src/agentic/streamlit/app.py', '--server.port', '8501'],
+            env=mock_subprocess.call_args[1]['env'],
+            stdout=None,
+            stderr=None
+        )
+        
+        # Verify process.wait() was called
+        mock_subprocess.return_value.wait.assert_called_once()
+
+
