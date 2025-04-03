@@ -1,7 +1,7 @@
 import pytest
 import os
 from pathlib import Path
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 import tempfile
 
 from agentic.cli import secrets_set, secrets_list, secrets_get, secrets_delete

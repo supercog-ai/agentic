@@ -1,9 +1,7 @@
 import pytest
-import os
 from pathlib import Path
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 import tempfile
-import sys
 
 # Import settings first so we can patch it
 from agentic.settings import Settings

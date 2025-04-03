@@ -4,7 +4,6 @@ from unittest.mock import patch, MagicMock
 from pathlib import Path
 from agentic.cli import app
 from contextlib import contextmanager
-import os
 
 runner = CliRunner()
 

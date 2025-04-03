@@ -1,10 +1,9 @@
 import pytest
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch
 from typer.testing import CliRunner
 from agentic.cli import app
 from weaviate.collections.collections.sync import _Collections
 from weaviate.collections.collection import Collection
-from rich.console import Console
 
 runner = CliRunner()
 

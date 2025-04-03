@@ -1,18 +1,11 @@
 import pytest
-import os
-import shutil
 from pathlib import Path
 from unittest.mock import patch, MagicMock
 import tempfile
-import importlib.util
-import sys
-import threading
-import subprocess
 
 from agentic.cli import find_agent_instances, copy_examples
 from agentic.common import Agent
 from agentic.settings import settings
-from agentic.agentic_secrets import agentic_secrets
 
 @pytest.fixture
 def temp_dir():

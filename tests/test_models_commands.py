@@ -1,4 +1,3 @@
-import pytest
 from typer.testing import CliRunner
 from unittest.mock import patch, MagicMock, ANY
 from agentic.cli import app
