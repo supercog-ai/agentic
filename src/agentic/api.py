@@ -1,9 +1,10 @@
-from fastapi import FastAPI, APIRouter, Request, Depends, Path as FastAPIPath, HTTPException
+from fastapi import FastAPI, APIRouter, Request, Depends, Path as FastAPIPath, HTTPException, Header
 from fastapi.middleware.cors import CORSMiddleware
 from sse_starlette.sse import EventSourceResponse
 import json
+import os
 import uvicorn
-from typing import List
+from typing import List, Optional, Dict, Any, Callable
 import asyncio
 
 from agentic.actor_agents import ProcessRequest, ResumeWithInputRequest
@@ -13,6 +14,13 @@ from agentic.utils.json import make_json_serializable
 from agentic.swarm.types import RunContext
 from agentic.db.db_manager import DatabaseManager
 
+from agentic.events import (
+    ToolResult,
+    ToolError,
+    TurnEnd,
+    StartCompletion,
+    FinishCompletion,
+)
 
 class AgentAPIServer:
     """
@@ -20,7 +28,12 @@ class AgentAPIServer:
     This encapsulates the API server functionality previously contained in the CLI serve command.
     """
     
-    def __init__(self, agent_instances: List, port: int = 8086):
+    def __init__(
+            self, 
+            agent_instances: List, 
+            port: int = 8086, 
+            lookup_user: Optional[Callable[[str], Optional[str]]] = None
+        ):
         """
         Initialize the API server with agent instances.
         
@@ -32,9 +45,32 @@ class AgentAPIServer:
         self.port = port
         self.app = FastAPI(title="Agentic API")
         self.agent_registry = {agent.safe_name: agent for agent in self.agent_instances}
+        self.lookup_user = lookup_user
+        self.debug = DebugLevel(os.environ.get("AGENTIC_DEBUG") or "")
         
         self._setup_app()
-        
+
+    async def get_current_user(self, authorization: Optional[str] = Header(None)):
+            """
+            Call "lookup_user" from our caller to resolve the current user ID based on the Authorization header.
+            """
+            if authorization is None or self.lookup_user is None:
+                return None
+                
+            # Here you would implement your actual authorization logic
+            if authorization.startswith("Bearer "):
+                token = authorization.replace("Bearer ", "")
+            else:
+                token = authorization
+
+            # Call the lookup_user function to resolve the user ID
+            # call async if needed
+            if asyncio.iscoroutinefunction(self.lookup_user):
+                return await self.lookup_user(token)
+            else:
+                # Call the synchronous function 
+                return self.lookup_user(token)
+                    
     def _setup_app(self):
         """Configure the FastAPI application with middleware and routes"""
         # Add CORS middleware
@@ -45,6 +81,36 @@ class AgentAPIServer:
             allow_methods=["*"],
             allow_headers=["*"],
         )
+        
+        # Create router for agent endpoints
+        agent_router = APIRouter()
+        
+        # Dependency to get the agent from the path parameter
+
+        def get_agent(
+            agent_name: str = FastAPIPath(...),
+            current_user: Optional[Any] = Depends(self.get_current_user)
+        ):
+            # Check if the agent exists
+            if agent_name not in self.agent_registry:
+                raise HTTPException(status_code=404, detail=f"Agent '{agent_name}' not found")
+            
+            # If no user, return the default agent instance
+            if current_user is None:
+                # This was the original logic with no user specified
+                return self.agent_registry[agent_name]
+            
+            user_agent_name = agent_name + ":" + str(hash(current_user))
+            
+            # If this user doesn't have an instance of this agent yet, create one
+            if user_agent_name not in self.agent_registry:
+                # Get the default agent as a template
+                base_agent = self.agent_registry[agent_name]
+                new_agent = base_agent.__class__(**base_agent.agent_config)
+                self.agent_registry[user_agent_name] = new_agent
+                
+            # Return the user-specific agent instance
+            return self.agent_registry[user_agent_name]
         
         # Add discovery endpoint
         @self.app.get("/_discovery")
@@ -102,7 +168,7 @@ class AgentAPIServer:
             run_context = RunContext(
                 agent=agent._agent,
                 agent_name=agent.name,
-                debug_level=DebugLevel(""),
+                debug_level=self.debug,
                 run_id=run_id,
             )
 
@@ -125,28 +191,26 @@ class AgentAPIServer:
                 }
             }
 
-        # Create router for agent endpoints
-        agent_router = APIRouter()
-        
-        # Dependency to get the agent from the path parameter
-        def get_agent(agent_name: str = FastAPIPath(...)) -> Agent:
-            if agent_name not in self.agent_registry:
-                raise HTTPException(status_code=404, detail=f"Agent '{agent_name}' not found")
-            return self.agent_registry[agent_name]
-        
         # Process endpoint
         @agent_router.post("/{agent_name}/process")
         async def process_request(
             request: ProcessRequest, 
-            agent = Depends(get_agent)
+            agent = Depends(get_agent),
+            user = Depends(self.get_current_user),
         ):
             """Process a new request"""
-            return agent.start_request(
+            ctx = {"user": user} if user else {}
+            print("In process request, context is: ", ctx)
+            req_event = agent.start_request(
                 request=request.prompt,
+                request_context=ctx,
                 run_id=request.run_id,
-                debug=DebugLevel(request.debug or "")
+                debug=DebugLevel(request.debug) if request.debug else self.debug
             )
-        
+            # abusing the "registry" to track the agent per request
+            self.agent_registry[req_event.request_id] = agent
+            return req_event
+                
         # Resume endpoint
         @agent_router.post("/{agent_name}/resume")
         async def resume_request(
@@ -158,7 +222,7 @@ class AgentAPIServer:
                 request=json.dumps(request.continue_result),
                 continue_result=request.continue_result,
                 run_id=request.run_id,
-                debug=DebugLevel(request.debug or "")
+                debug=DebugLevel(request.debug) if request.debug else self.debug
             )
 
         # Reset endpoint. Need to use this for now to create a new session
@@ -174,14 +238,20 @@ class AgentAPIServer:
         @agent_router.get("/{agent_name}/getevents")
         async def get_events(
             request_id: str, 
+            agent_name: str,
             stream: bool = False, 
-            agent: Agent = Depends(get_agent)
         ):
             """Get events for a request"""
+            if request_id in self.agent_registry:
+                agent = self.agent_registry[request_id]
+            else:
+                agent: Agent = get_agent(agent_name)
+
             if not stream:
                 # Non-streaming response
                 results = []
                 for event in agent.get_events(request_id):
+                    self.debug_event(event)
                     event_data = {
                         "type": event.type,
                         "agent": event.agent,
@@ -196,6 +266,7 @@ class AgentAPIServer:
                 # Streaming response
                 async def event_generator():
                     for event in agent.get_events(request_id):
+                        self.debug_event(event)
                         event_data = {
                             "type": event.type,
                             "agent": event.agent,
@@ -297,6 +368,27 @@ class AgentAPIServer:
         # Include the router in the main app
         self.app.include_router(agent_router)
     
+    def debug_event(self, event):
+        def should_print(event):
+            if isinstance(event, ToolError):
+                return self.debug != ""
+            elif isinstance(event, ToolResult):
+                return self.debug.debug_tools()
+            # elif isinstance(event, PromptStarted):
+            #     return self.debug.debug_llm() or self.debug.debug_agents()
+            # elif isinstance(event, ChatOutput):
+            #     if self.debug.debug_llm() or self.debug.debug_agents():
+            #         print(str(event), end="")        
+            elif isinstance(event, TurnEnd):
+                return self.debug.debug_agents()
+            elif isinstance(event, (StartCompletion, FinishCompletion)):
+                return self.debug.debug_llm()
+            return False
+        
+        if should_print(event):
+            print(str(event))
+
+
     def setup_agent_endpoints(self):
         """
         Update API endpoints for each agent.

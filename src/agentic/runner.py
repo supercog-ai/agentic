@@ -96,7 +96,7 @@ class RayAgentRunner:
         self.debug = DebugLevel(level)
         self.facade.set_debug_level(self.debug)
 
-    def repl_loop(self):
+    def repl_loop(self, default_context: dict = {}):
         hist = os.path.expanduser("~/.agentic_history")
         if os.path.exists(hist):
             readline.read_history_file(hist)
@@ -133,6 +133,7 @@ class RayAgentRunner:
 
                 request_id = self.facade.start_request(
                     line, 
+                    request_context=default_context,
                     debug=self.debug, 
                     continue_result=continue_result
                 ).request_id

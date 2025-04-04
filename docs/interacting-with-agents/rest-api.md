@@ -127,3 +127,45 @@ http://0.0.0.0:8086/<agent_name>/docs
 ```
 
 This interactive documentation allows you to test endpoints directly in your browser.
+
+## Supporting multiple users
+
+By default `agentic serve` will use the single Agent instance that you create in
+your code to handle all requests. This works well for simple cases.
+
+In a real production application however you may want to support multiple users.
+In this case each user gets a separate instance of the agent to handle their requests.
+
+Follow these steps to support multiple users:
+
+1. Instead of using `agentic serve`, construct the API server and run it manually:
+
+```
+from agentic.api import AgentAPIServer
+server = AgentAPIServer(agent_instances=agent_instances, port=port, lookup_user=get_current_user_from_token)
+uvicorn.run(server.app, host="0.0.0.0", port=port)
+```
+
+you should pass a callback into the `lookup_user` parameter. This function takes an auth token
+and returns the _user_ object based on that token.
+
+2. Your client should pass the `Authorization` header and include a JWT or other
+token to authenticate the user, like:
+
+```Authorization: Bearer <token>```
+
+3. In your callback you should lookup the user by the token. For a JWT you might do this:
+
+```
+async def get_current_user_from_token(session_token: str) -> Optional[User]:
+    payload = jwt.decode(session_token, SECRET_KEY)
+    user = User(
+        id=payload.get("sub"),
+        email=payload.get("email"),
+        name=payload.get("name"),
+    )
+    return user
+```
+
+4. The object you return as the "user" is opaque. But the framework will call `hash` on it and construct
+and re-use a dedicated instance of your Agent class mapped to that id.

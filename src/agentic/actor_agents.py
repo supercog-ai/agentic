@@ -1485,10 +1485,12 @@ class LocalAgentProxy(BaseAgentProxy):
         self.agent_config = {
             "name": self.name,
             "instructions": self.instructions,
+            "tools": self._tools.copy(),
             "model": self.model,
             "max_tokens": self.max_tokens,
             "memories": self.memories,
             "debug": self.debug,
+            "handle_turn_start": self._handle_turn_start,
             "result_model": self.result_model,
             # Functions will be added when creating instances
         }
@@ -1498,7 +1500,7 @@ class LocalAgentProxy(BaseAgentProxy):
     def _create_agent_instance(self, request_id: str|None=None):
         """Create a new local agent instance for a request"""
         agent = ActorBaseAgent(name=self.name)
-        
+
         # Set initial state
         agent.set_state(
             SetState(
