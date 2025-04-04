@@ -5,6 +5,14 @@ import sys
 from agentic.common import Agent
 from agentic.runner import RayAgentRunner
 
+@pytest.fixture(autouse=True)
+def mock_secrets():
+    """Mock the secrets manager to avoid database issues"""
+    with patch('agentic.agentic_secrets.agentic_secrets') as mock:
+        mock.list_secrets.return_value = []
+        mock.get_secret.return_value = None
+        yield mock
+
 @pytest.fixture
 def test_agent():
     return Agent(

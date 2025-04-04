@@ -2,9 +2,17 @@ import os
 import pytest
 import tempfile
 import yaml
+from unittest.mock import patch
 
 from agentic.actor_agents import AgentProxyClass
 
+@pytest.fixture(autouse=True)
+def mock_secrets():
+    """Mock the secrets manager to avoid database issues"""
+    with patch('agentic.agentic_secrets.agentic_secrets') as mock:
+        mock.list_secrets.return_value = []
+        mock.get_secret.return_value = None
+        yield mock
 
 class TestTemplateDiscoveryAgent(AgentProxyClass):
     """Simple agent class for testing template discovery"""
