@@ -134,6 +134,7 @@ packages = [
     "agentic", 
     "agentic.custom_models",
     "agentic.tools",
+    "agentic.tools.utils",
     "agentic.swarm",
     "agentic.streamlit",
     "agentic.dashboard",
