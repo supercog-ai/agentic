@@ -100,12 +100,12 @@ text-to-speech = [
     "pydub>=0.25.1",
 ]
 
-tools = [
+all-tools = [
     "agentic-framework[airbnb,browser-use,database,duckduckgo,github,google-news,image-generator,mcp,meeting-baas,playwright,text-to-speech]",
 ]
 
 all = [
-    "agentic-framework[tools,rag,dashboard,streamlit]",
+    "agentic-framework[all-tools,rag,dashboard,streamlit]",
 ]
 
 dev = [
