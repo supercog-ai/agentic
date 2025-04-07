@@ -58,7 +58,7 @@ nav:
       - AuthorizedRestApiTool: tools/tool-library/authorized-rest-api-tool.md
       - BrowserUseTool: tools/tool-library/browser-use-tool.md
       - DatabaseTool: tools/tool-library/database-tool.md
-      - DuckDuckGoTool: tools/tool-library/duckduckgo-search-tool.md
+      - DuckDuckGoTool: tools/tool-library/duckduckgo-tool.md
       - FileDownloadTool: tools/tool-library/file-download-tool.md
       - GithubTool: tools/tool-library/github-tool.md
       - GoogleNewsTool: tools/tool-library/google-news-tool.md
