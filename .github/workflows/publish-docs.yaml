@@ -9,7 +9,6 @@ on:
   push:
     branches:
       - main
-      - github-actions-docs-fix
     paths:
       - 'docs/**'
       - 'mkdocs.yml'
