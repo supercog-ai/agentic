@@ -1,6 +1,5 @@
 # pip install playwright
 # pip install browser-use
-import traceback
 from typing import Optional
 import os
 
