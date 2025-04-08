@@ -1,5 +1,6 @@
 # pip install playwright
 # pip install browser-use
+import traceback
 from typing import Optional
 import os
 
@@ -83,33 +84,46 @@ class BrowserUseTool(BaseAgenticTool):
             instructions: str,
             model: Optional[str] = None
     ) -> list[str|FinishCompletion]:
-        """ Execute a set of instructions via browser automation. Instructions can be in natural language. 
-            The history of browsing actions taken is returned.
+        """Execute a set of instructions via browser automation. Instructions can be in natural language. 
+
+            Args:
+                run_context (RunContext): Run context of the current run
+                instructions (str): Instructions to give to the browser automation.
+                model (Optioanl[str]): The model name to use for the agent. Unless specified by the user do not add a model jcust pass None
+            
+            Returns:
+                The history of browsing actions taken in a list format. 
         """
         browser = None
-        print(f"BrowserTool, Using model: {self.model}")
+        used_model = model or self.model
+        
         if self.chrome_instance_path:
             browser = Browser(
                 config=BrowserConfig(
                     chrome_instance_path=self.chrome_instance_path
                 )
             )
-        
+        else:
+            browser = Browser()
+     
         token_counter = TokenCounterStdOutCallback()
-        llm = self._initialize_llm(model or self.model)
-
+        llm = self._initialize_llm(used_model)        
         agent = BrowserAgent(   
             task=instructions,
             llm=llm,
             browser=browser,
         )
+        
         result = await agent.run()
+        extracted_content = result.extracted_content()
+        content_text = "\n".join(extracted_content) if extracted_content else "No content was extracted."
+        
         return [
-            "\n".join(result.extracted_content()),
+            content_text,
             FinishCompletion.create(
                 agent=run_context.agent.name,
                 llm_message=f"Tokens used - Input: {token_counter.total_input_tokens}, Output: {token_counter.total_output_tokens}",
-                model=self.model,
+                model=used_model,
                 cost=0,
                 input_tokens=token_counter.total_input_tokens,
                 output_tokens=token_counter.total_output_tokens,
@@ -117,8 +131,6 @@ class BrowserUseTool(BaseAgenticTool):
                 depth=0,
             )
         ]
-    
-
 
 class TokenCounterStdOutCallback(StdOutCallbackHandler):
     def __init__(self):
@@ -139,4 +151,3 @@ class TokenCounterStdOutCallback(StdOutCallbackHandler):
             print(f"[AGENTIC] Total tokens - Input: {self.total_input_tokens}, Output: {self.total_output_tokens}")
         else:
             print("[AGENTIC] No token usage data available.")
-
