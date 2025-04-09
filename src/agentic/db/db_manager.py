@@ -7,6 +7,7 @@ from copy import deepcopy
 from agentic.db.models import Run, RunLog
 from agentic.events import FinishCompletion
 from agentic.utils.directory_management import get_runtime_filepath
+from agentic.utils.json import make_json_serializable
 
 # Database setup and management
 class DatabaseManager:
@@ -33,7 +34,7 @@ class DatabaseManager:
             id=run_id,
             agent_id=agent_id,
             user_id=user_id,
-            initial_prompt=initial_prompt,
+            initial_prompt=make_json_serializable(initial_prompt),
             description=description,
             usage_data=usage_data or {},
             run_metadata=run_metadata or {}
@@ -46,7 +47,7 @@ class DatabaseManager:
             return run
 
     def log_event(self,
-                  run_id: int,
+                  run_id: str,
                   agent_id: str,
                   user_id: str,
                   role: str,
@@ -117,11 +118,11 @@ class DatabaseManager:
                 return run
             return None
 
-    def get_run(self, run_id: int) -> Optional[Run]:
+    def get_run(self, run_id: str) -> Optional[Run]:
         with self.get_session() as session:
             return session.get(Run, run_id)
 
-    def get_run_logs(self, run_id: int) -> list[RunLog]:
+    def get_run_logs(self, run_id: str) -> list[RunLog]:
         with self.get_session() as session:
             return session.exec(select(RunLog).where(RunLog.run_id == run_id).order_by(asc(RunLog.created_at))).all()
 

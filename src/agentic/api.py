@@ -309,6 +309,7 @@ class AgentAPIServer:
         ):
             """Get logs for a specific run"""
             run_logs = agent.get_run_logs(run_id)
+            print(f"Run logs: {run_id}")
             return [run_log.model_dump() for run_log in run_logs]
         
         # Webhook endpoint

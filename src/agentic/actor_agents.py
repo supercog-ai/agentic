@@ -401,6 +401,7 @@ class ActorBaseAgent:
             yield event
 
     def _handlePromptOrResume(self, actor_message: Prompt | ResumeWithInput, request_id: str):
+        print("HANDLING PROMPT OR RESUME: ", request_id)
         if isinstance(actor_message, Prompt):
             self.run_context = (
                 RunContext(
@@ -617,6 +618,8 @@ class ActorBaseAgent:
                     message,
                     depth=depth,
                     debug=self.debug,
+                    request_context=self.run_context.context,
+                    request_id=str(uuid.uuid4())
                 )
             )
         
@@ -1171,6 +1174,7 @@ class BaseAgentProxy:
                      continue_result: dict = {}, run_id: Optional[str] = None,
                      debug: DebugLevel = DebugLevel(DebugLevel.OFF)) -> StartRequestResponse:
         """Start a new agent request"""
+        print(f"Starting request: {request}, run_id: {run_id}")
         self.debug.raise_level(debug)
 
         if not hasattr(depthLocal, 'depth'):
@@ -1200,7 +1204,7 @@ class BaseAgentProxy:
 
         def producer(queue, request_obj, continue_result):
             depthLocal.depth = request_obj.depth
-            for event in self.next_turn(request_obj, request_context=request_context, continue_result=continue_result, request_id=request_id):
+            for event in self._next_turn(request_obj, request_context=request_context, continue_result=continue_result, request_id=request_id):
                 queue.put(event)
             queue.put(self.queue_done_sentinel)
             # Cleanup the agent instance when done
@@ -1224,64 +1228,109 @@ class BaseAgentProxy:
             time.sleep(0.01)
         depthLocal.depth -= 1
 
-    def next_turn(self, request: str|Prompt, request_context: dict = {},
-                 request_id: str = None, continue_result: dict = {},
-                 debug: DebugLevel = DebugLevel(DebugLevel.OFF)) -> Generator[Event, Any, Any]:
-        """This is the key agent loop generator."""
+    def next_turn(self, request: str | Prompt, request_context: dict = {},
+              request_id: str = None, continue_result: dict = {},
+              debug: DebugLevel = DebugLevel(DebugLevel.OFF)) -> Generator[Event, Any, Any]:
+        """
+        Default agent orchestration logic. Subclasses may override this.
+        If not overridden, this handles prompt/resume and returns generator from agent.
+        """
+        # Get agent instance
+        agent_instance = self._get_agent_for_request(request_id)
+
+        # Prepare the prompt or resume input
+        if not continue_result:
+            prompt = (
+                request if isinstance(request, Prompt)
+                else Prompt(
+                    self.name,
+                    request,
+                    debug=debug,
+                    request_context=request_context,
+                    request_id=request_id,
+                )
+            )
+
+
+            # Transmit depth through the Prompt
+            if hasattr(depthLocal, 'depth') and depthLocal.depth > prompt.depth:
+                prompt.depth = depthLocal.depth
+
+            return self._get_prompt_generator(agent_instance, prompt)
+
+        else:
+            resume_input = ResumeWithInput(
+                self.name,
+                continue_result,
+                self.name,
+                continue_result,
+                request_id=request_id
+            )
+            return self._get_resume_generator(agent_instance, resume_input)
+
+
+    def _next_turn(self, request: str | Prompt, request_context: dict = {},
+               request_id: str = None, continue_result: dict = {},
+               debug: DebugLevel = DebugLevel(DebugLevel.OFF)) -> Generator[Event, Any, Any]:
+        """
+        Wraps `next_turn` to add run tracking and handle_event logging.
+        Always used internally by the proxy to ensure consistent behavior.
+        """
         self.cancelled = False
         self.debug.raise_level(debug)
-        
-        # Get or create request ID
+
         if not request_id:
             request_id = continue_result.get("request_id") or str(uuid.uuid4())
             if isinstance(request, Prompt):
                 request.request_id = request_id
 
-        # Handle mock settings - subclasses should implement this
         self._handle_mock_settings(self.mock_settings)
 
-        # Get the agent instance for this request
+        # Get agent instance for the run
         agent_instance = self._get_agent_for_request(request_id)
+
+        # Initialize run tracking if needed
         if not self.run_id and self.db_path:
             self.init_run_tracking(agent_instance)
 
-        # Prepare the prompt or resume input
-        if not continue_result:
-            prompt = (
-                request if isinstance(request, Prompt) 
-                else Prompt(
-                    self.name, 
-                    request, 
-                    debug=self.debug, 
-                    request_context=request_context,
-                    request_id=request_id
-                )
-            )
-            # Transmit depth through the Prompt
-            if hasattr(depthLocal, 'depth') and depthLocal.depth > prompt.depth:
-                prompt.depth = depthLocal.depth
-                
-            # Get generator from agent
-            agent_gen = self._get_prompt_generator(agent_instance, prompt)
-        else:
-            # Handle resuming with input
-            resume_input = ResumeWithInput(
-                self.name, 
-                continue_result, 
-                request_id=request_id
-            )
-            agent_gen = self._get_resume_generator(agent_instance, resume_input)
-            
-        # Process events from generator
-        for event in self._process_generator(agent_gen):
+        # Add run_id into context explicitly so child agents inherit it
+        request_context = {**request_context, "run_id": self.run_id}
+
+        # Call the user’s or default next_turn
+        event_gen = self.next_turn(
+            request=request,
+            request_context=request_context,
+            request_id=request_id,
+            continue_result=continue_result,
+            debug=debug
+        )
+
+        # Central logging of all events
+        for event in self._process_generator(event_gen):
             if self.cancelled:
                 raise TurnCancelledError()
-                
-            # Process results if needed
+
+            # Handle TurnEnd result validation
             if isinstance(event, TurnEnd):
                 event = self._process_turn_end(event)
+
+            print(f"Yielding event: {event.type}, run_id: {self.run_id}, agent: {self.name}")
             yield event
-            
+
+            # Only now: do logging after yielding
+            callback = self._agent.get_callback("handle_event") if hasattr(self, "_agent") else None
+            if callback:
+                context = RunContext(agent=self._agent, agent_name=self.name, run_id=self.run_id)
+                callback(event, context)
+
+
+
+    def handle_event_wrapper(self, event: Event):
+        callback = self._agent.get_callback("handle_event") if hasattr(self, "_agent") else None
+        if callback:
+            context = RunContext(agent=self._agent, agent_name=self.name, run_id=self.run_id)
+            callback(event, context)
+        
     def _get_prompt_generator(self, agent_instance, prompt):
         """Get generator for a new prompt - to be implemented by subclasses"""
         pass

@@ -21,7 +21,7 @@ class RunLog(SQLModel, table=True):
     __tablename__ = "run_logs"
 
     id: str = Field(primary_key=True, default_factory=lambda: str(uuid4()))
-    run_id: int = Field(index=True, foreign_key="runs.id")
+    run_id: str = Field(index=True, foreign_key="runs.id")
     agent_id: str = Field(index=True)
     user_id: str = Field(index=True)
     role: str

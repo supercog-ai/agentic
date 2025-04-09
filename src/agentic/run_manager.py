@@ -15,6 +15,7 @@ from agentic.common import RunContext
 from agentic.utils.json import make_json_serializable
 from agentic.db.db_manager import DatabaseManager
 from agentic.utils.directory_management import get_runtime_filepath
+import json
 
 class RunManager:
     """
@@ -26,6 +27,7 @@ class RunManager:
         self.user_id = user_id
         self.initial_run_id: Optional[str] = initial_run_id
         self.current_run_id: Optional[str] = current_run_id
+        # Should this not be propagated from the next_turn?
         self.usage_data: Dict = {}
         self.db_path = get_runtime_filepath(db_path)
     
@@ -33,13 +35,19 @@ class RunManager:
         """Generic event handler that processes all events and logs them appropriately"""
         db_manager = DatabaseManager(db_path=self.db_path)
         # Initialize a new run when we see a Prompt event
+        self.current_run_id = run_context.run_id
+        if not self.current_run_id:
+            run_context.run_id = self.initial_run_id
+            self.current_run_id = self.initial_run_id
+        print(f"Handling event: {event.type}, run ID: {self.current_run_id}")
 
         if isinstance(event, PromptStarted) and not self.current_run_id:
+            print(f"Creating run with ID: {self.initial_run_id}")
             run = db_manager.create_run(
                 run_id=self.initial_run_id,
                 agent_id=run_context.agent_name,
                 user_id=self.user_id,
-                initial_prompt=event.payload,
+                initial_prompt=json.dumps(make_json_serializable(event.payload)),
             )
             self.current_run_id = run.id
             run_context.run_id = run.id 
