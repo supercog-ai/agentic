@@ -284,42 +284,22 @@ Thank you for listening to Supercog News. Stay informed, stay ahead.
         if "error" in result_dict:
             print("   ✗ Error in audio generation")
             raise Exception(f"Error generating speech: {result_dict['error']}")
-        
+
         print("   ✓ Audio file generated successfully")
         
-        # Use formatted_news instead of combined_news for TTS
-        yield ChatOutput(self.name, {"content": "Converting formatted news to speech..."})
-        result = self.tts_tool.generate_speech_file_from_text(
-            voice="nova",
-            text=formatted_news
-        )
-        yield ChatOutput(self.name, {"content": "Text-to-speech conversion complete"})
-        
-        # Parse the JSON response to get the audio URL
-        result_dict = json.loads(result)
-        if "error" in result_dict:
-            raise Exception(f"Error generating speech: {result_dict['error']}")
-        
-        audio_url = result_dict["audio_url"]
-        yield ChatOutput(self.name, {"content": f"Audio generated successfully: {audio_url}"})
-        
         # Handle local file path
-        if audio_url.startswith("file:///"):
-            local_path = audio_url[8:]  # Remove file:/// prefix
-            yield ChatOutput(self.name, {"content": f"Reading local audio file: {local_path}"})
+        if result_dict["audio_url"].startswith("file:///"):
+            local_path = result_dict["audio_url"][8:]  # Remove file:/// prefix
             with open(local_path, "rb") as f:
                 audio_data = f.read()
-            yield ChatOutput(self.name, {"content": f"Audio data read: {len(audio_data)} bytes"})
-            yield ChatOutput(self.name, {"content": f"Local file saved at: {os.path.abspath(local_path)}"})
-            
+    
             # Clean up the temporary file
             try:
                 os.unlink(local_path)
-                yield ChatOutput(self.name, {"content": f"Cleaned up temporary file: {local_path}"})
-            except Exception as e:
-                yield ChatOutput(self.name, {"content": f"Warning: Could not clean up temporary file: {str(e)}"})
+            except Exception:
+                pass  # Silently handle cleanup failures
         else:
-            raise Exception(f"Unexpected audio URL format: {audio_url}")
+            raise Exception(f"Unexpected audio URL format: {result_dict['audio_url']}")
         
         # Save audio to file in current directory with date
         current_date = datetime.now().strftime("%Y-%m-%d")
