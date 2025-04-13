@@ -287,17 +287,24 @@ Thank you for listening to Supercog News. Stay informed, stay ahead.
 
         print("   ✓ Audio file generated successfully")
         
+        # Clean up temporary files
+        temp_files = [f for f in os.listdir('.') if f.startswith('chunk_') and f.endswith('.mp3')]
+        for temp_file in temp_files:
+            try:
+                os.unlink(temp_file)
+            except OSError:
+                print(f"   ! Warning: Could not delete temporary file {temp_file}")
+        
         # Handle local file path
         if result_dict["audio_url"].startswith("file:///"):
             local_path = result_dict["audio_url"][8:]  # Remove file:/// prefix
-            with open(local_path, "rb") as f:
-                audio_data = f.read()
-    
-            # Clean up the temporary file
             try:
-                os.unlink(local_path)
-            except Exception:
-                pass  # Silently handle cleanup failures
+                with open(local_path, "rb") as f:
+                    audio_data = f.read()
+                os.unlink(local_path)  # Clean up the temporary file
+            except Exception as e:
+                print(f"   ! Warning: Issue processing audio file: {e}")
+                raise
         else:
             raise Exception(f"Unexpected audio URL format: {result_dict['audio_url']}")
         
