@@ -14,7 +14,6 @@ and `TurnEnd` events.
 To track usage you should process `FinishCompletion` events which will contain
 token usage data.
 
-
 ## Event depth
 
 Events have a `depth` attribute which indicates how deep is the agent that is
