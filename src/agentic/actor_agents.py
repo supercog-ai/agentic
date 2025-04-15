@@ -1027,7 +1027,7 @@ class BaseAgentProxy:
         """Get the conversation history"""
         return self._get_agent_history()
 
-    def init_run_tracking(self, agent, run_id: Optional[str] = None):
+    def init_run_tracking(self, agent, run_id: Optional[str] = None, user_id: Optional[str] = None):
         """Initialize run tracking"""
         pass
 
@@ -1182,7 +1182,7 @@ class BaseAgentProxy:
 
         agent_instance = self._get_agent_for_request(request_id)
         if (self.run_id != run_id or not self.run_id) and self.db_path:
-            self.init_run_tracking(agent_instance, run_id)
+            self.init_run_tracking(agent_instance, run_id, user_id=request_context.get("user"))
 
         # Initialize new request
         request_obj = Prompt(
@@ -1442,10 +1442,10 @@ class RayAgentProxy(BaseAgentProxy):
 
         return agent
 
-    def init_run_tracking(self, agent, run_id: Optional[str] = None):
+    def init_run_tracking(self, agent, run_id: Optional[str] = None, user_id: Optional[str] = None):
         """Initialize run tracking"""
         from .run_manager import init_run_tracking
-        self.run_id, callback = init_run_tracking(self, db_path=self.db_path, resume_run_id=run_id)
+        self.run_id, callback = init_run_tracking(self, user_id=user_id, db_path=self.db_path, resume_run_id=run_id)
         agent.set_callback.remote('handle_event', callback)
 
     def _handle_mock_settings(self, mock_settings):
@@ -1558,11 +1558,11 @@ class LocalAgentProxy(BaseAgentProxy):
             self._agent = agent
 
         return agent
-            
-    def init_run_tracking(self, agent, run_id: Optional[str] = None):
+
+    def init_run_tracking(self, agent, run_id: Optional[str] = None, user_id: Optional[str] = None):
         """Initialize run tracking"""
         from .run_manager import init_run_tracking
-        self.run_id, callback = init_run_tracking(self, db_path=self.db_path, resume_run_id=run_id)
+        self.run_id, callback = init_run_tracking(self, user_id=user_id, db_path=self.db_path, resume_run_id=run_id)
         agent.set_callback('handle_event', callback)
 
     def _handle_mock_settings(self, mock_settings):

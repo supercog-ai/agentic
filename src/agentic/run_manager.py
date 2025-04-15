@@ -108,12 +108,13 @@ class RunManager:
 
 def init_run_tracking(
         agent,
-        user_id: str = "default",
+        user_id: str|None = "default",
         db_path: str = "agent_runs.db",
         resume_run_id: Optional[str] = None
     ) -> tuple[str,Callable]:
     """Helper function to set up run tracking for an agent"""
     run_id = str(uuid4()) if resume_run_id is None else resume_run_id
+    user_id = user_id or "default"
     run_manager = RunManager(
         initial_run_id=run_id,
         current_run_id=resume_run_id,
