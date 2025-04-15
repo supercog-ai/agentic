@@ -1039,12 +1039,12 @@ class BaseAgentProxy:
             db_manager = DatabaseManager()
         return db_manager
 
-    def get_runs(self) -> list[Run]:
+    def get_runs(self, user_id: str|None) -> list[Run]:
         """Get all runs for this agent"""
         db_manager = self.get_db_manager()
         
         try:
-            return db_manager.get_runs_by_agent(self.name)
+            return db_manager.get_runs_by_agent(self.name, user_id=user_id)
         except Exception as e:
             print(f"Error getting runs: {e}")
             return []
@@ -1518,6 +1518,7 @@ class LocalAgentProxy(BaseAgentProxy):
         self.agent_config = {
             "name": self.name,
             "instructions": self.instructions,
+            "welcome": self.welcome,
             "tools": self._tools.copy(),
             "model": self.model,
             "max_tokens": self.max_tokens,

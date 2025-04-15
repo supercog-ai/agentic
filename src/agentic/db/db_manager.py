@@ -129,6 +129,12 @@ class DatabaseManager:
         with self.get_session() as session:
             return session.exec(select(Run).where(Run.user_id == user_id).order_by(desc(Run.updated_at))).all()
 
-    def get_runs_by_agent(self, agent_id: str) -> list[Run]:
+    def get_runs_by_agent(self, agent_id: str, user_id: str|None) -> list[Run]:
         with self.get_session() as session:
-            return session.exec(select(Run).where(Run.agent_id == agent_id).order_by(desc(Run.updated_at))).all()
+            query = select(Run).where(Run.agent_id == agent_id)
+        
+            # Add user_id filter if it's not None
+            if user_id is not None:
+                query = query.where(Run.user_id == user_id)
+                
+            return session.exec(query.order_by(desc(Run.updated_at))).all()

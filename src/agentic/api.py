@@ -4,8 +4,9 @@ from sse_starlette.sse import EventSourceResponse
 import json
 import os
 import uvicorn
-from typing import List, Optional, Dict, Any, Callable
+from typing import List, Optional, Dict, Any, Callable, Annotated
 import asyncio
+import uuid
 
 from agentic.actor_agents import ProcessRequest, ResumeWithInputRequest
 from agentic.common import Agent
@@ -45,6 +46,8 @@ class AgentAPIServer:
         self.port = port
         self.app = FastAPI(title="Agentic API")
         self.agent_registry = {agent.safe_name: agent for agent in self.agent_instances}
+        # When multiple users are running, keep their separate agent instances
+        self.per_user_agents: dict[str, Agent] = {}
         self.lookup_user = lookup_user
         self.debug = DebugLevel(os.environ.get("AGENTIC_DEBUG") or "")
         
@@ -54,7 +57,7 @@ class AgentAPIServer:
         """
         Call "lookup_user" from our caller to resolve the current user ID based on the Authorization header.
         """
-        if authorization is None or self.lookup_user is None:
+        if authorization is None:
             return None
             
         # Here you would implement your actual authorization logic
@@ -63,6 +66,10 @@ class AgentAPIServer:
         else:
             token = authorization
 
+        if self.lookup_user is None:
+            # Just use the token itself as the user ID
+            return token
+        
         # Call the lookup_user function to resolve the user ID
         # call async if needed
         if asyncio.iscoroutinefunction(self.lookup_user):
@@ -90,8 +97,8 @@ class AgentAPIServer:
         def get_agent(
             agent_name: str = FastAPIPath(...),
             current_user: Optional[Any] = Depends(self.get_current_user)
-        ):
-            # Check if the agent exists
+        ) -> Optional[Agent]:
+            # Check if the agent (original registry instance) exists
             if agent_name not in self.agent_registry:
                 raise HTTPException(status_code=404, detail=f"Agent '{agent_name}' not found")
             
@@ -103,20 +110,27 @@ class AgentAPIServer:
             user_agent_name = agent_name + ":" + str(hash(current_user))
             
             # If this user doesn't have an instance of this agent yet, create one
-            if user_agent_name not in self.agent_registry:
+            if user_agent_name not in self.per_user_agents:
                 # Get the default agent as a template
                 base_agent = self.agent_registry[agent_name]
                 new_agent = base_agent.__class__(**base_agent.agent_config)
-                self.agent_registry[user_agent_name] = new_agent
+                self.per_user_agents[user_agent_name] = new_agent
                 
             # Return the user-specific agent instance
-            return self.agent_registry[user_agent_name]
+            ag = self.per_user_agents[user_agent_name]
+            print("Returning user specific agent: ", ag, " hash ", hash(ag), " for user: ", current_user)
+            return ag
         
         # Add discovery endpoint
         @self.app.get("/_discovery")
         async def list_endpoints():
             """Discovery endpoint that lists all available agents"""
             return [f"/{name}" for name in self.agent_registry.keys()]
+        
+        @self.app.post("/login")
+        async def login():
+            """Just generates a random token to represent the current user"""
+            return {"token": str(uuid.uuid4())}
         
         @self.app.get("/{agent_name}/oauth/callback/{tool_name}")
         async def handle_oauth_static_callback(
@@ -298,9 +312,12 @@ class AgentAPIServer:
         
         # Get runs endpoint
         @agent_router.get("/{agent_name}/runs")
-        async def get_runs(agent = Depends(get_agent)):
+        async def get_runs(
+            agent: Annotated[Agent, Depends(get_agent)],
+            current_user: Optional[Any] = Depends(self.get_current_user)
+        ):
             """Get all runs for this agent"""
-            runs = agent.get_runs()
+            runs = agent.get_runs(user_id=current_user)
             return [run.model_dump() for run in runs]
         
         # Get run logs endpoint
