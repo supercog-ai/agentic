@@ -142,20 +142,21 @@ export function useChat(agentPath: string, agentName: string, currentRunId: stri
               
               // Update the events state
               setEvents(prev => {
-                // Find if we already have a chat_output event for this turn
-                const chatOutputIndex = prev.findLastIndex(e => 
-                  e.type === AgentEventType.CHAT_OUTPUT && 
-                  e.agentName === event.agent && 
-                  prev.indexOf(e) > prev.findLastIndex(e => e.type === AgentEventType.PROMPT_STARTED && e.agentName === event.agent)
-                );
+                // Check if the previous event is a chat output from the same agent
+                const previousEventIndex = prev.length - 1;
+                const isPreviousEventChatOutput = 
+                  previousEventIndex >= 0 && 
+                  prev[previousEventIndex].type === AgentEventType.CHAT_OUTPUT && 
+                  prev[previousEventIndex].agentName === event.agent;
+
                 
-                if (chatOutputIndex >= 0) {
+                if (isPreviousEventChatOutput) {
                   // Update existing event
                   const updatedEvents = [...prev];
-                  updatedEvents[chatOutputIndex] = {
-                    ...updatedEvents[chatOutputIndex],
+                  updatedEvents[previousEventIndex] = {
+                    ...updatedEvents[previousEventIndex],
                     payload: {
-                      ...updatedEvents[chatOutputIndex].payload,
+                      ...updatedEvents[previousEventIndex].payload,
                       content: streamContentRef.current
                     }
                   };
