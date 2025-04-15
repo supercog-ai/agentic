@@ -209,7 +209,7 @@ class AgentAPIServer:
         @agent_router.post("/{agent_name}/process")
         async def process_request(
             request: ProcessRequest, 
-            agent = Depends(get_agent),
+            agent: Annotated[Agent, Depends(get_agent)],
             user = Depends(self.get_current_user),
         ):
             """Process a new request"""
