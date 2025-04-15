@@ -48,6 +48,7 @@ class AgentAPIServer:
         self.agent_registry = {agent.safe_name: agent for agent in self.agent_instances}
         # When multiple users are running, keep their separate agent instances
         self.per_user_agents: dict[str, Agent] = {}
+        self.request_agents: dict[str, Agent] = {}
         self.lookup_user = lookup_user
         self.debug = DebugLevel(os.environ.get("AGENTIC_DEBUG") or "")
         
@@ -220,9 +221,8 @@ class AgentAPIServer:
                 run_id=request.run_id,
                 debug=DebugLevel(request.debug) if request.debug else self.debug
             )
-            # abusing the "registry" to track the agent per request
-            # Commented out 4/21/25 because it breaks resume with input
-            # self.agent_registry[req_event.request_id] = agent
+            # track the agents that go with in progress requests
+            self.request_agents[req_event.request_id] = agent
             return req_event
                 
         # Resume endpoint
@@ -254,14 +254,12 @@ class AgentAPIServer:
             request_id: str, 
             agent_name: str,
             stream: bool = False, 
-            agent = Depends(get_agent)
         ):
             """Get events for a request"""
-            # Commented out 4/21/25 because it breaks resume with input
-            # if request_id in self.agent_registry:
-            #     agent = self.agent_registry[request_id]
-            # else:
-            #     agent: Agent = get_agent(agent_name)
+            if request_id in self.request_agents:
+                agent = self.request_agents[request_id]
+            else:
+                agent: Agent = get_agent(agent_name)
 
             if not stream:
                 # Non-streaming response
