@@ -22,10 +22,8 @@ class RunManager:
     This is automatically initialized for all agents unless disabled with db_path=None.
     """
     
-    def __init__(self, initial_run_id: Optional[str] = None, current_run_id: Optional[str] = None, user_id: str = "default", db_path: str = "agent_runs.db"):
-        self.user_id = user_id
+    def __init__(self, initial_run_id: Optional[str] = None, user_id: str = "default", db_path: str = "agent_runs.db"):
         self.initial_run_id: Optional[str] = initial_run_id
-        self.current_run_id: Optional[str] = current_run_id
         self.usage_data: Dict = {}
         self.db_path = get_runtime_filepath(db_path)
     
@@ -34,18 +32,17 @@ class RunManager:
         db_manager = DatabaseManager(db_path=self.db_path)
         # Initialize a new run when we see a Prompt event
 
-        if isinstance(event, PromptStarted) and not self.current_run_id:
+        if isinstance(event, PromptStarted) and not run_context.run_id:
             run = db_manager.create_run(
                 run_id=self.initial_run_id,
                 agent_id=run_context.agent_name,
-                user_id=self.user_id,
+                user_id=str(run_context.get("user") or "default"),
                 initial_prompt=event.payload,
             )
-            self.current_run_id = run.id
             run_context.run_id = run.id 
             
         # Skip if we haven't initialized a run yet
-        if not self.current_run_id:
+        if not run_context.run_id:
             return
             
         # Special handling for completion events to track usage
@@ -85,9 +82,9 @@ class RunManager:
             
         # Log the event
         db_manager.log_event(
-            run_id=self.current_run_id,
+            run_id=run_context.run_id,
             agent_id=run_context.agent_name,
-            user_id=self.user_id,
+            user_id=str(run_context.get("user") or "default"),
             role=role,
             event_name=event_name,
             event_data=event_data
@@ -108,7 +105,6 @@ def init_run_tracking(
     user_id = user_id or "default"
     run_manager = RunManager(
         initial_run_id=run_id,
-        current_run_id=resume_run_id,
         user_id=user_id,
         db_path=db_path
     )
