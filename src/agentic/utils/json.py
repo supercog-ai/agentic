@@ -8,6 +8,13 @@ def get_tc_args(tc):
     else:
         return make_json_serializable(tc.function.arguments)
     
+def get_tc_name(tc):
+    if isinstance(tc, dict):
+        print("TC: ", tc)
+        return str(tc)
+    else:
+        return tc.function.name
+                
 def make_json_serializable(obj):
     """Recursively convert dictionary values to JSON-serializable types."""
     if isinstance(obj, dict):
@@ -28,7 +35,7 @@ def make_json_serializable(obj):
                 tool_calls.append({
                     "function": {
                         "arguments": get_tc_args(tc),
-                        "name": tc.function.name
+                        "name": get_tc_name(tc)
                     },
                     "id": tc.id,
                     "type": tc.type
