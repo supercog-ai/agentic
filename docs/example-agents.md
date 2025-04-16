@@ -56,7 +56,7 @@ This agent demonstrates how Agentic can be used for practical workplace applicat
 
 ## Podcast Producer
 
-The [Podcast Producer](https://github.com/supercog-ai/agentic/blob/main/examples/podcast.py) agent automatically creates and publishes daily podcasts by orchestrating a team of specialist agents. This agent demonstrates the power of agent teams and pipelines in Agentic:
+The [Podcast Producer](https://github.com/supercog-ai/agentic/blob/main/examples/podcast) agent automatically creates and publishes daily podcasts by orchestrating a team of specialist agents. This agent demonstrates the power of agent teams and pipelines in Agentic:
 
 - An AI News Reporter agent researches current AI developments
 - A Sports Reporter agent collects sports updates

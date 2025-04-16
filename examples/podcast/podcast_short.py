@@ -1,7 +1,7 @@
-from agentic.common import Agent, AgentRunner, RunContext
-from agentic.events import Event, ChatOutput, WaitForInput, Prompt, PromptStarted, TurnEnd
+from agentic.common import Agent, AgentRunner
+from agentic.events import Event, ChatOutput, Prompt, PromptStarted, TurnEnd
 from agentic.models import GPT_4O_MINI, CLAUDE
-from agentic.tools import GoogleNewsTool, TavilySearchTool, TextToSpeechTool, AuthorizedRestApiTool
+from agentic.tools import GoogleNewsTool, TavilySearchTool, TextToSpeechTool
 import os
 from datetime import datetime
 from typing import Generator, Any
@@ -11,13 +11,13 @@ import sys
 import json
 
 # Load prompts from YAML file
-prompts_file = os.path.join(os.path.dirname(__file__), 'podcast.prompts.yaml')
+prompts_file = os.path.join(os.path.dirname(__file__), 'podcast_short.prompts.yaml')
 try:
     with open(prompts_file, 'r') as f:
         prompts = yaml.safe_load(f)
 except FileNotFoundError:
     print(f"Error: Could not find prompts file at {prompts_file}")
-    print("Please ensure podcast.prompts.yaml exists in the examples directory")
+    print("Please ensure podcast_short.prompts.yaml exists in the examples directory")
     sys.exit(1)
 except yaml.YAMLError as e:
     print(f"Error: Invalid YAML in prompts file: {e}")
@@ -82,7 +82,7 @@ class PodcastAgent(Agent):
             max_tokens=8192
         )
 
-    def publish_to_transistor(self, audio_file_path: str) -> str:
+    def publish_to_transistor(self, audio_file_path: str) -> Generator[Event, Any, Any]:
         """Publish the episode to Transistor.fm"""
         print("\n9. Transistor.fm Publication")
         yield ChatOutput(self.name, {"content": "\n=== Publishing to Transistor.fm ==="})

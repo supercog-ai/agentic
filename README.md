@@ -53,7 +53,7 @@ understand the code).
 
 ...full browser automation, including using authenticated sessions...
 
-### [Podcast Producer](https://github.com/supercog-ai/agentic/blob/main/examples/podcast.py)
+### [Podcast Producer](https://github.com/supercog-ai/agentic/blob/main/examples/podcast)
 
 An agent team which auto-produces and publishes a daily podcast. Customize for your news interests.
 
