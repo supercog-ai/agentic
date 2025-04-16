@@ -65,7 +65,7 @@ Agentic comes with several pre-built agents you can run immediately:
 
 - **[OSS Deep Researcher](https://github.com/supercog-ai/agentic/blob/main/examples/deep_research/oss_deep_research.py){target="_blank"}**: Writes detailed research papers on any topic with references
 - **[OSS Operator](https://github.com/supercog-ai/agentic/blob/main/examples/oss_operator.py){target="_blank"}**: Full browser automation with authenticated sessions
-- **[Podcast Producer](https://github.com/supercog-ai/agentic/blob/main/examples/podcast.py){target="_blank"}**: Auto-produces and publishes daily podcasts
+- **[Podcast Producer](https://github.com/supercog-ai/agentic/blob/main/examples/podcast){target="_blank"}**: Auto-produces and publishes daily podcasts
 - **[Meeting Notetaker](https://github.com/supercog-ai/agentic/blob/main/examples/meeting_notetaker.py){target="_blank"}**: Records and summarizes meetings
 - **[Database Agent](https://github.com/supercog-ai/agentic/blob/main/examples/database/database_agent.py){target="_blank"}**: Text-to-SQL for data analysis using natural language
 
