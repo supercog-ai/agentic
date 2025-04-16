@@ -2,6 +2,12 @@ from litellm.types.utils import Message
 from pydantic import BaseModel
 from datetime import datetime
 
+def get_tc_args(tc):
+    if isinstance(tc, dict):
+        return make_json_serializable(tc)
+    else:
+        return make_json_serializable(tc.function.arguments)
+    
 def make_json_serializable(obj):
     """Recursively convert dictionary values to JSON-serializable types."""
     if isinstance(obj, dict):
@@ -16,7 +22,7 @@ def make_json_serializable(obj):
             "tool_calls": [
                 {
                     "function": {
-                        "arguments": make_json_serializable(tc.function.arguments),
+                        "arguments": get_tc_args(tc),
                         "name": tc.function.name
                     },
                     "id": tc.id,
