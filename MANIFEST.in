@@ -7,3 +7,4 @@ include src/agentic/dashboard/next-env.d.ts
 include src/agentic/dashboard/types.d.ts
 include src/agentic/dashboard/README.md
 include src/agentic/dashboard/components.json
+include src/agentic/dashboard/package.json
