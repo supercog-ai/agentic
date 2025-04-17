@@ -19,10 +19,57 @@ export enum AgentEventType {
   WAIT_FOR_INPUT = 'wait_for_input'
 }
 
+  // Create a wrapper around fetch that handles authentication
+  const authFetch = async (url: string, options: RequestInit = {}): Promise<Response> => {
+  // Try to get JWT from storage
+  let jwt = localStorage.getItem('auth_token');
+  
+  // If JWT is empty or null, attempt to get it from login endpoint
+  if (!jwt) {
+    try {
+      const loginResponse = await fetch('/api/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        // Add any credentials or info needed for authentication
+        body: '',
+      });
+      
+      if (loginResponse.ok) {
+        const authData = await loginResponse.json();
+        jwt = authData.token; // Adjust based on your API response structure
+        
+        // Store the JWT for future use
+        if (jwt) {
+          localStorage.setItem('auth_token', jwt);
+        }
+      } else {
+        console.error('Failed to retrieve JWT token');
+      }
+    } catch (error) {
+      console.error('Error during authentication:', error);
+    }
+  }
+  
+  // Merge the default headers with any provided headers
+  const headers = {
+    ...options.headers,
+    ...(jwt ? { 'Authorization': `Bearer ${jwt}` } : {})
+  };
+  
+  // Return the fetch call with the merged options
+  return fetch(url, {
+    ...options,
+    headers
+  });
+};
+
 export const agenticApi = {
-  // Send a prompt to an agent, optionally continuing from a run
+  
+    // Send a prompt to an agent, optionally continuing from a run
   sendPrompt: async (agentPath: string, prompt: string, runId?: string): Promise<Api.SendPromptResponse> => {
-    const response = await fetch(`/api${agentPath}/process`, {
+    const response = await authFetch(`/api${agentPath}/process`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -42,7 +89,7 @@ export const agenticApi = {
   },
 
   resumeWithInput: async (agentPath: string, continueResult: Record<string, string>, runId?: string): Promise<Api.SendPromptResponse> => {
-    const response = await fetch(`/api${agentPath}/resume`, {
+    const response = await authFetch(`/api${agentPath}/resume`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -93,7 +140,7 @@ export const agenticApi = {
 
   // Get agent description
   getAgentInfo: async (agentPath: string): Promise<Api.AgentInfo> => {
-    const response = await fetch(`/api${agentPath}/describe`, {
+    const response = await authFetch(`/api${agentPath}/describe`, {
       headers: {
         'Accept': 'application/json',
       }
@@ -108,7 +155,7 @@ export const agenticApi = {
 
   // Get list of available agents
   getAvailableAgents: async (): Promise<string[]> => {
-    const response = await fetch('/api/_discovery', {
+    const response = await authFetch('/api/_discovery', {
       headers: {
         'Accept': 'application/json',
       }
@@ -123,7 +170,7 @@ export const agenticApi = {
 
   // Get run history for an agent
   getRuns: async (agentPath: string): Promise<Api.Run[]> => {
-    const response = await fetch(`/api${agentPath}/runs`, {
+    const response = await authFetch(`/api${agentPath}/runs`, {
       headers: {
         'Accept': 'application/json',
       }
@@ -138,7 +185,7 @@ export const agenticApi = {
 
   // Get logs for a specific run
   getRunLogs: async (agentPath: string, runId: string): Promise<Api.RunLog[]> => {
-    const response = await fetch(`/api${agentPath}/runs/${runId}/logs`, {
+    const response = await authFetch(`/api${agentPath}/runs/${runId}/logs`, {
       headers: {
         'Accept': 'application/json',
       }
