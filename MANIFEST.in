@@ -8,3 +8,8 @@ include src/agentic/dashboard/types.d.ts
 include src/agentic/dashboard/README.md
 include src/agentic/dashboard/components.json
 include src/agentic/dashboard/package.json
+
+recursive-include examples *.py *.md *.yaml *.db
+recursive-include src/agentic/tools *.py
+
+recursive-exclude * __pycache__
