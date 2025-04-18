@@ -23,7 +23,7 @@ pip install uv
 uv venv
 source .venv/bin/activate
 
-pip install agentic-framework[all]
+uv pip install agentic-framework[all]
 ```
 
 ### 2. Project Setup
