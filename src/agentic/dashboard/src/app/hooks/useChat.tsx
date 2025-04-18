@@ -21,13 +21,14 @@ export function useChat(agentPath: string, agentName: string, currentRunId: stri
   
   // Fetch run logs when runId changes
   // If running Deep Researcher or other custom next_turn agents uncomment this line and comment out the next one
-  // const { data: runLogs, isLoading: isLoadingRunLogs } = useRunLogs(agentPath, null);
-  const { data: runLogs, isLoading: isLoadingRunLogs } = useRunLogs(agentPath, currentRunId ?? null);
+  const { data: runLogs, isLoading: isLoadingRunLogs } = useRunLogs(agentPath, null);
+  // const { data: runLogs, isLoading: isLoadingRunLogs } = useRunLogs(agentPath, currentRunId ?? null);
   
   // Reset events when currentRunId changes to undefined/null
   useEffect(() => {
     // If currentRunId changed from a value to undefined/null, reset events
     if (prevRunIdRef.current && !currentRunId) {
+      console.log("HERE RESET")
       setEvents([]);
     }
     // Update the ref for next comparison
@@ -91,6 +92,7 @@ export function useChat(agentPath: string, agentName: string, currentRunId: stri
       setEvents(processedEvents);
     } else if (runLogs && runLogs.length === 0) {
       // Reset events when we get empty logs
+      console.log("HERE RESET RUNLOGS")
       setEvents([]);
     }
   }, [runLogs]);
@@ -161,6 +163,7 @@ export function useChat(agentPath: string, agentName: string, currentRunId: stri
                       content: streamContentRef.current
                     }
                   };
+                  console.log("HERE", updatedEvents.length)
                   return updatedEvents;
                 } else {
                   // Add new event
@@ -170,6 +173,7 @@ export function useChat(agentPath: string, agentName: string, currentRunId: stri
             } 
             // Add non-chat output events to the events list
             else if (uiEvent.type !== AgentEventType.CHAT_OUTPUT || !isBackground) {
+              console.log("ELSE HERE", [...events, uiEvent].length)
               setEvents(prev => [...prev, uiEvent]);
             }
 
@@ -400,6 +404,8 @@ export function useChat(agentPath: string, agentName: string, currentRunId: stri
       content: ''
     });
   }
+
+  console.log(messages.length)
 
   return {
     sendPrompt,

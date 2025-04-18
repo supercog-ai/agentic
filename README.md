@@ -78,7 +78,7 @@ and so your pythonpath is set correctly.
 
 You can also try installing just the package:
 
-`pip install agentic-framework`
+`pip install agentic-framework[all]`
 
 Now setup your folder to hold your agents:
 

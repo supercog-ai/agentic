@@ -21,7 +21,7 @@ These commands will install the `agentic` package locally so that you can use th
 You can also install just the package from PyPI:
 
 ```bash
-pip install agentic-framework
+pip install agentic-framework[all]
 ```
 
 ## Setting Up Your Project

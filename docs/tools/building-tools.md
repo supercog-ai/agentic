@@ -22,7 +22,8 @@ If you haven't already installed the agentic framework, do so with pip. It is be
 pip install uv
 uv venv
 source .venv/bin/activate
-pip install agentic-framework
+
+pip install agentic-framework[all]
 ```
 
 ### 2. Project Setup
@@ -30,7 +31,7 @@ pip install agentic-framework
 Create a new project or navigate to your existing project directory and initialize it with agentic::
 
 ```bash
-agentic init
+agentic init .
 ```
 
 This will create the necessary directory structure, including a `tools` directory where your custom tools will live.
