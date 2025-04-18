@@ -12,6 +12,8 @@ from typing import Any, Dict, List, Optional
 from pydantic import ConfigDict, model_validator
 from agentic.tools.utils.registry import tool_registry
 from agentic.tools.base import BaseAgenticTool
+from agentic.tools.utils.registry import tool_registry
+
 
 @tool_registry.register(
     name="DuckDuckGoTool",
@@ -19,7 +21,7 @@ from agentic.tools.base import BaseAgenticTool
     dependencies=[
         tool_registry.Dependency(
             name="duckduckgo-search",
-            version="7.4.2",
+            version="7.5.5",
             type="pip",
         ),
     ],

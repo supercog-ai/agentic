@@ -2,18 +2,20 @@
 from typing import Callable
 import pandas as pd
 
-## Include a comment showing the package installations
-# required packages:
-#   pip install pydantic
-#   pip install requests
-
 from agentic.tools.base import BaseAgenticTool
+from agentic.tools.utils.registry import tool_registry
 from agentic.common import RunContext, PauseForInputResult
 
 ###
-## Comment describing the tool
+## Register the tool to the tool registry
 ###
 
+@tool_registry.register(
+    name="ExampleTool",
+    description="Example tool for demponstrating tool registration",
+    dependencies=[],
+    config_requirements=[],
+)
 
 class ExampleTool(BaseAgenticTool):
     # instance vars for authentication or other configuration

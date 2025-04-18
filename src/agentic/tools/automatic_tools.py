@@ -1,23 +1,24 @@
 from typing import Callable, Any, Optional, Type
 import re
-from collections import namedtuple
 from pydantic import BaseModel
 import pandas as pd
 
 from agentic.llm import llm_generate_with_format
 from agentic.common import RunContext
 from agentic.tools.base  import BaseAgenticTool
+from agentic.tools.utils.registry import tool_registry
 from agentic.tools.file_download import FileDownloadTool
 from agentic.tools.rag_tool import RAGTool
-
-ToolChoiceResult = namedtuple(
-    "ToolChoiceResult", ["name", "tool_factory_id", "credential_id", "help"]
-)
-
 
 def get_docstring(obj: Any) -> str:
     return obj.__doc__ or ""
 
+@tool_registry.register(
+    name="AutomaticTools",
+    description="Automatically detects which tool to use and applies it to the agent",
+    dependencies=[],
+    config_requirements=[],
+)
 
 class AutomaticTools(BaseAgenticTool):
     file_download_tool: Optional[FileDownloadTool] = None
@@ -127,7 +128,7 @@ Return no results if no tool fits the purpose.
                 file_name, self.run_context
             )
             if isinstance(value, str):
-                return LLMFullResult(value)
+                return value
             elif isinstance(value, pd.DataFrame):
                 return self.get_dataframe_preview(value)
         except ValueError as e:

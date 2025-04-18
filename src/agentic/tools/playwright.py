@@ -1,14 +1,23 @@
-import os
+import time
 from typing import Callable, List
 from playwright.sync_api import sync_playwright, Browser, Page
-import time
-
-# required packages:
-#   pip install playwright
-#   After installation, run: playwright install chromium
 
 from agentic.tools.base import BaseAgenticTool
+from agentic.tools.utils.registry import tool_registry, Dependency
 from agentic.common import RunContext
+
+@tool_registry.register(
+    name="PlaywrightTool",
+    description="Tool for browser automation using Playwright.",
+    dependencies=[
+        Dependency(
+            name="playwright",
+            version="1.51.0",
+            type="pip",
+        ),
+    ],
+    config_requirements=[],
+)
 
 class PlaywrightTool(BaseAgenticTool):
     """Tool for browser automation using Playwright."""

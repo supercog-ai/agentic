@@ -9,6 +9,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from agentic.common import RunContext, PauseForInputResult
 from agentic.tools.base import BaseAgenticTool
+from agentic.tools.utils.registry import tool_registry, Dependency
 
 
 class DatabaseConnectionError(Exception):
@@ -18,6 +19,23 @@ class DatabaseConnectionError(Exception):
 class LocalhostConnectionError(DatabaseConnectionError):
     pass
 
+@tool_registry.register(
+    name="DatabaseTool",
+    description="Connect to SQL databases to analyze and operate on data",
+    dependencies=[
+        Dependency(
+            name="sqlalchemy",
+            version="2.0.26",
+            type="pip",
+        ),
+        Dependency(
+            name="psycopg2-binary",
+            version="2.9.9",
+            type="pip",
+        )
+    ],
+    config_requirements=[],
+)
 
 class DatabaseTool(BaseAgenticTool):
     """Accessing any SQL database."""

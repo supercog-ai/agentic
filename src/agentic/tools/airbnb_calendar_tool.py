@@ -4,19 +4,20 @@ import json
 from datetime import datetime, date, timedelta, time
 import icalendar
 from agentic.common import RunContext
-from agentic.tools.utils.registry import tool_registry
+from agentic.tools.utils.registry import tool_registry, Dependency
 from agentic.tools.base import BaseAgenticTool
 
 @tool_registry.register(
     name="AirbnbCalendarTool",
     description="Get information from Airbnb calendar iCal feeds",
     dependencies=[
-        tool_registry.Dependency(
+        Dependency(
             name="icalendar",
-            version="5.0.11",
+            version="6.1.3",
             type="pip",
         ),
     ])
+
 class AirbnbCalendarTool(BaseAgenticTool):
     """Tool for accessing and analyzing Airbnb calendar data from iCal feeds."""
     

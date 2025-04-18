@@ -1,8 +1,15 @@
 from typing import Callable
 
-from agentic.agentic_secrets import agentic_secrets as secrets
 from agentic.common import RunContext
+from agentic.tools.utils.registry import tool_registry
 from agentic.tools.rest_api_tool import RestApiTool
+
+@tool_registry.register(
+    name="AuthorizedRestApiTool",
+    description="Extends the RestApiTool to include authorization",
+    dependencies=[],
+    config_requirements=[],
+)
 
 class AuthorizedRestApiTool(RestApiTool):
     token_type: str = "bearer"

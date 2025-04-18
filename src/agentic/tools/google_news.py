@@ -8,6 +8,25 @@ from google_news_feed import GoogleNewsFeed, NewsItem
 
 from agentic.tools.scaleserp_browser import ScaleSerpBrowserTool
 from agentic.tools.base import BaseAgenticTool
+from agentic.tools.utils.registry import tool_registry, Dependency
+
+@tool_registry.register(
+    name="GoogleNewsTool",
+    description="Functions for accessing Google News.",
+    dependencies=[
+        Dependency(
+            name="google-news-feed",
+            version="1.1.0",
+            type="pip",
+        ),
+        Dependency(
+            name="googlenewsdecoder",
+            version="0.1.7",
+            type="pip",
+        ),
+    ],
+    config_requirements=[],
+)
 
 class GoogleNewsTool(BaseAgenticTool):
     """Functions for accessing Google News."""

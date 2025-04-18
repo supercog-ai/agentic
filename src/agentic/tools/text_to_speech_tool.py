@@ -14,19 +14,23 @@ from agentic.agentic_secrets import agentic_secrets
 
 with tool_registry.safe_imports():
     from pydub import AudioSegment
-    from pydub.playback import play
-    from pydub import AudioSegment
 
 
 @tool_registry.register(
     name="TextToSpeechTool",
     description="Convert text to speech with different voices",
     dependencies=[
-        Dependency("pydub", type="pip", version="0.25.1"),
+        Dependency(
+            name="pydub",
+            type="pip",
+            version="0.25.1"
+        ),
     ],
     config_requirements=[
         ConfigRequirement(
-            key="OPENAI_API_KEY", description="OpenAI API key", required=True
+            key="OPENAI_API_KEY",
+            description="OpenAI API key",
+            required=True
         ),
     ],
 )

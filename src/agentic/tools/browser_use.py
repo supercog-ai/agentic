@@ -1,33 +1,42 @@
-# pip install playwright
-# pip install browser-use
 from typing import Optional
 import os
 
-from agentic.tools.utils.registry import tool_registry
 from agentic.models import GPT_4O_MINI
 from agentic.common import RunContext
 from agentic.events import FinishCompletion
 from agentic.tools.base import BaseAgenticTool
+from agentic.tools.utils.registry import tool_registry, Dependency
 from browser_use import Agent as BrowserAgent
 from browser_use import Browser, BrowserConfig
 from langchain.callbacks import StdOutCallbackHandler
 from langchain_google_genai import ChatGoogleGenerativeAI
 
 @tool_registry.register(
-    name="Browser-use Tool",
+    name="BrowserUseTool",
     description="Automate browser interactions with a smart agent. https://docs.browser-use.com/",
     dependencies=[
-        tool_registry.Dependency(
+        Dependency(
             name="playwright",
-            version="1.50.0",
+            version="1.51.0",
             type="pip",
         ),
-        tool_registry.Dependency(
+        Dependency(
             name="browser-use",
-            version="0.1.37",
+            version="0.1.40",
             type="pip",
         ),
+        Dependency(
+            name="langchain",
+            version="0.3.22",
+            type="pip",
+        ),
+        Dependency(
+            name="langchain-google-genai",
+            version="2.1.2",
+            type="pip",
+        )
     ],
+    config_requirements=[]
 )
 class BrowserUseTool(BaseAgenticTool):
     # Automates browser interactions with a smart agent.

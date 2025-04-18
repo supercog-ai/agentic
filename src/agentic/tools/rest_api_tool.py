@@ -8,16 +8,12 @@ import pandas as pd
 import math
 import numpy as np
 import random
+import httpx
 from urllib.parse import urlparse, parse_qsl, urlencode
 
 from agentic.tools.base import BaseAgenticTool
 from agentic.tools.utils.registry import tool_registry, Dependency
 from agentic.common import RunContext
-
-with tool_registry.safe_imports():
-    from httpx import BasicAuth
-    import httpx
-
 
 class AsyncRequestBuilder:
     def __init__(self, base_url: str, logger_func: Callable[..., Awaitable[None]]):
@@ -26,7 +22,7 @@ class AsyncRequestBuilder:
         self.base_path = parsed_url.path
         self.headers: Dict[str, str] = {}
         self.auth_params: Dict[str, str] = {}
-        self.auth: Optional[BasicAuth] = None
+        self.auth: Optional[httpx.BasicAuth] = None
         self.client: Optional[httpx.AsyncClient] = None
         self.logger_func = logger_func
 
@@ -35,7 +31,7 @@ class AsyncRequestBuilder:
         return self
 
     def with_basic_auth(self, username: str, password: str):
-        self.auth = BasicAuth(username, password)
+        self.auth = httpx.BasicAuth(username, password)
         return self
 
     def with_header(self, key: str, value: str):
@@ -112,15 +108,10 @@ class AsyncRequestBuilder:
 
 
 @tool_registry.register(
-    name="rest_api_v2",
+    name="RestApiTool",
     description="REST API Tool",
-    dependencies=[
-        Dependency(
-            name="httpx",
-            version="0.24.1",
-            type="pip",
-        )
-    ],
+    dependencies=[],
+    config_requirements=[],
 )
 class RestApiTool(BaseAgenticTool):
     request_map: dict[str, AsyncRequestBuilder] = {}

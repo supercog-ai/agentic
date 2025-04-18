@@ -1,4 +1,4 @@
-from typing import Any, Callable, Optional
+from typing import Callable
 import requests
 from datetime import datetime, timedelta
 import zoneinfo
@@ -6,24 +6,6 @@ import statistics
 
 from agentic.tools.base import BaseAgenticTool
 from agentic.tools.utils.registry import tool_registry
-
-"""
-import openmeteopy  #pip inst
-from openmeteo_py import OWmanager
-from openmeteo_py.Hourly.HourlyForecast import HourlyForecast
-from openmeteo_py.Daily.DailyForecast import DailyForecast
-from openmeteo_py.Options.ForecastOptions import ForecastOptions
-from openmeteo_py.Utils.constants import *
-
-"""
-"""
-                "strategy_token": {
-                    "api_key":  "API KEY - Currently we don't need an API-KEY but for furture commercial use we will need one",
-                    "help": "
-Create this in the app under tools-.options->API key and set the value here."
-                }
-            """
-
 
 @tool_registry.register(
     name="WeatherTool",

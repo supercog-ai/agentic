@@ -1,9 +1,16 @@
 from typing import Callable
 
 from agentic.tools.base import BaseAgenticTool
+from agentic.tools.utils.registry import tool_registry
 from agentic.events import PauseForInputResult
 from agentic.common import RunContext
 
+@tool_registry.register(
+    name="HumanInterruptTool",
+    description="A tool that allows the user to interrupt the agent and provide input.",
+    dependencies=[],
+    config_requirements=[],
+)
 
 class HumanInterruptTool(BaseAgenticTool):
     def __init__(self):

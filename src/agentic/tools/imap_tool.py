@@ -14,7 +14,7 @@ import smtplib
 
 from bs4 import BeautifulSoup
 from agentic.common import RunContext
-from agentic.tools.utils.registry import tool_registry
+from agentic.tools.utils.registry import tool_registry, Dependency
 from agentic.tools.base import BaseAgenticTool
 
 from sqlmodel import SQLModel, Field, Session, select
@@ -31,17 +31,12 @@ class EmailMsgsProcessed(SQLModel, table=True):
 
 
 @tool_registry.register(
-    name="IMAP Tool",
+    name="IMAPTool",
     description="Email Inbox access with IMAP",
     dependencies=[
-        tool_registry.Dependency(
+        Dependency(
             name="beautifulsoup4",
-            version="4.13.3",
-            type="pip",
-        ),
-        tool_registry.Dependency(
-            name="sqlmodel",
-            version="0.0.22",
+            version="4.13.4",
             type="pip",
         ),
     ],

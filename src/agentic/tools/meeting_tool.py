@@ -43,14 +43,31 @@ class Meeting(Base):
     recording_url = Column(String)
 
 @tool_registry.register(
-    name="MeetingTool",
+    name="MeetingBaasTool",
     description="A tool for managing video meetings, recording transcripts, getting meeting info and summaries",
     dependencies=[
-        Dependency("openai", type="pip", version="1.63.2")
+        Dependency(
+            name="openai",
+            version="1.75.0",
+            type="pip",
+        ),
+        Dependency(
+            name="sqlalchemy",
+            version="2.0.26",
+            type="pip",
+        )
     ],
     config_requirements=[
-        ConfigRequirement("MEETINGBAAS_API_KEY", description="MEETINGBAAS API key", required=True),
-        ConfigRequirement("OPENAI_API_KEY", description="OpenAI API key", required=True),
+        ConfigRequirement(
+            key="MEETINGBAAS_API_KEY",
+            description="MEETINGBAAS API key",
+            required=True
+        ),
+        ConfigRequirement(
+            key="OPENAI_API_KEY",
+            description="OpenAI API key",
+            required=True
+        ),
     ],
 )
 

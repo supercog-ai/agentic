@@ -5,6 +5,21 @@ from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 from litellm import experimental_mcp_client
 from agentic.tools.base import BaseAgenticTool
+from agentic.tools.utils.registry import tool_registry, Dependency
+
+@tool_registry.register(
+    name="MCPTool",
+    description="Universal wrapper for MCP tools that can work with any MCP server.",
+    dependencies=[
+        Dependency(
+            name="mcp",
+            version="1.5.0",
+            type="pip",
+        ),
+    ],
+    config_requirements=[]
+)
+
 
 class MCPTool(BaseAgenticTool):
     """Universal wrapper for MCP tools that can work with any MCP server."""

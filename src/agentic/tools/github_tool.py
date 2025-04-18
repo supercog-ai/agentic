@@ -9,10 +9,21 @@ import pandas as pd
 
 from agentic.common import RunContext
 from agentic.events import OAuthFlowResult
-from .oauth_tool import OAuthTool, OAuthConfig
+from agentic.tools.oauth_tool import OAuthTool, OAuthConfig
+from agentic.tools.utils.registry import tool_registry, Dependency
 from agentic.utils.directory_management import get_runtime_filepath
 
-
+@tool_registry.register(
+    name="GithubTool",
+    description="A tool for interacting with GitHub repositories.",
+    dependencies=[
+        Dependency(
+            name="gitpython",
+            version="3.1.44",
+            type="pip",
+        ),
+    ]
+)
 
 class GithubTool(OAuthTool):
     repo_dir: str = get_runtime_filepath("git_tool")  # Local path to store the git repos

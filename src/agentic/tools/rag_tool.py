@@ -2,7 +2,7 @@ from typing import List, Callable
 import glob
 
 from agentic.common import RunContext
-from agentic.tools.utils.registry import tool_registry
+from agentic.tools.utils.registry import tool_registry, Dependency
 from agentic.tools.base import BaseAgenticTool
 from agentic.utils.rag_helper import (
     list_collections,
@@ -17,20 +17,21 @@ from agentic.utils.rag_helper import (
 )
 
 from agentic.utils.summarizer import generate_document_summary
+from agentic.utils.file_reader import read_file
 from weaviate.classes.query import Filter, HybridFusion
 from weaviate.collections.classes.grpc import Sort
-from agentic.utils.file_reader import read_file
 from weaviate.classes.config import VectorDistances
-
-#import warnings
-#warnings.filterwarnings("ignore")
-
 
 
 @tool_registry.register(
-    name="RAG Knowledge Manager",
+    name="RAGTool",
     description="Manage and query knowledge bases using RAG",
     dependencies=[
+        Dependency(
+            name="weaviate-client",
+            version="4.10.4",
+            type="pip",
+        ),
     ]
 )
 class RAGTool(BaseAgenticTool):

@@ -1,10 +1,28 @@
 from typing import Callable
 from litellm import image_generation
 
-# required packages:
-
 from agentic.tools.base import BaseAgenticTool
+from agentic.tools.utils.registry import tool_registry, ConfigRequirement, Dependency
 from agentic.common import RunContext, PauseForInputResult
+
+@tool_registry.register(
+    name="ImageGeneratorTool",
+    description="A tool for generating images using OpenAI's GPT-4V model and storing them in an S3 bucket.",
+    dependencies=[
+        Dependency(
+            name="boto3",
+            version="1.36.19",
+            type="pip",
+        )
+    ],
+    config_requirements=[
+        ConfigRequirement(
+            key="OPENAI_API_KEY",
+            description="The OpenAI API key.",
+            required=True,
+        )
+    ],
+)
 
 class ImageGeneratorTool(BaseAgenticTool):
     api_key: str

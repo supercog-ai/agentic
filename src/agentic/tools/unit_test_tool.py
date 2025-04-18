@@ -3,12 +3,17 @@ import os
 from typing import Callable
 
 from agentic.tools.base import BaseAgenticTool
+from agentic.tools.utils.registry import tool_registry
 from agentic.common import RunContext
-
-# A dummy tool created just for unit testing
 
 STATE_FILE = "test_state.txt"
 
+@tool_registry.register(
+    name="UnitTestingTool",
+    description="A dummy tool created just for unit testing",
+    dependencies=[],
+    config_requirements=[],
+)
 
 class UnitTestingTool(BaseAgenticTool):
     def __init__(self, story_log: str="log.txt"):

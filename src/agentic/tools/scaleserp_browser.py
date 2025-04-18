@@ -1,15 +1,19 @@
 import asyncio
 import os
 import re
+import html2text
+import httpx
 from typing import Callable
 
-import html2text
-
-# import requests
-import httpx
-
 from agentic.tools.base import BaseAgenticTool
+from agentic.tools.utils.registry import tool_registry
 
+@tool_registry.register(
+    name="ScaleSerpBrowserTool",
+    description="Browse the web using ScaleSerp",
+    dependencies=[],
+    config_requirements=[],
+)
 
 class ScaleSerpBrowserTool(BaseAgenticTool):
     def __init__(self):

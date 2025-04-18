@@ -6,6 +6,14 @@ import html2text
 import requests
 
 from agentic.tools.base import BaseAgenticTool
+from agentic.tools.utils.registry import tool_registry
+
+@tool_registry.register(
+    name="FileDownloadTool",
+    description="Download files from the internet",
+    dependencies=[],
+    config_requirements=[],
+)
 
 class FileDownloadTool(BaseAgenticTool):
     def __init__(self):

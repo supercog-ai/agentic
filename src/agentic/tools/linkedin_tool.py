@@ -1,11 +1,17 @@
+import httpx
 import os
+import pandas as pd
 from typing import Dict, Callable, ClassVar, Optional
 
-import httpx
-import pandas as pd
-
 from agentic.tools.base import BaseAgenticTool
+from agentic.tools.utils.registry import tool_registry
 
+@tool_registry.register(
+    name="LinkedinDataTool",
+    description="A tool for interacting with LinkedIn data.",
+    dependencies=[],
+    config_requirements=[],
+)
 
 class LinkedinDataTool(BaseAgenticTool):
     BASE_URL: ClassVar[str] = "https://linkedin-data-api.p.rapidapi.com"

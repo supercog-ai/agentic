@@ -84,12 +84,18 @@ image-generator = [
    "boto3>=1.36.19",
 ]
 
+imap = [
+    "beautifulsoup4>=4.13.4",
+]
+
 mcp = [
     "mcp[cli]>=1.5.0",
 ]
 
 meeting-baas = [
     "agentic-framework[rag]",
+    "openai>=1.75.0",
+    "sqlalchemy>=2.0.26",
 ]
 
 playwright = [
@@ -101,7 +107,7 @@ text-to-speech = [
 ]
 
 all-tools = [
-    "agentic-framework[airbnb,browser-use,database,duckduckgo,github,google-news,image-generator,mcp,meeting-baas,playwright,text-to-speech]",
+    "agentic-framework[airbnb,browser-use,database,duckduckgo,github,google-news,image-generator,imap,mcp,meeting-baas,playwright,text-to-speech]",
 ]
 
 all = [

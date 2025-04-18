@@ -4,8 +4,16 @@ import httpx
 
 from agentic.common import RunContext, PauseForInputResult
 from agentic.tools.base import BaseAgenticTool
+from agentic.tools.utils.registry import tool_registry, Dependency
 
 TAVILY_API_URL = "https://api.tavily.com"
+
+@tool_registry.register(
+    name="TavilySearchTool",
+    description="Search the web using Tavily",
+    dependencies=[],
+    config_requirements=[],
+)
 
 class TavilySearchTool(BaseAgenticTool):
     def __init__(self, api_key: str = None):
