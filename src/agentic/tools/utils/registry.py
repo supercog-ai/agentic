@@ -1,21 +1,17 @@
 from dataclasses import dataclass
-from typing import List, Callable, Optional, Dict, Any, Type
+from typing import List, Callable, Optional, Dict, Any, Type, Union
 import importlib
-import importlib.util
+import inspect
 
 import shutil
 import subprocess
 from contextlib import contextmanager
-
-from agentic.tools.base import BaseAgenticTool
-
 
 @dataclass
 class Dependency:
     name: str
     type: str  # 'pip' or 'system'
     version: Optional[str] = None
-
 
 @dataclass
 class ConfigRequirement:
@@ -54,12 +50,12 @@ class Tool:
     def __post_init__(self):
         self.config_requirements = self.config_requirements or []
 
-
 class ToolRegistry:
     Dependency = Dependency
 
     def __init__(self, auto_install: bool = False):
-        self.tools: Dict[Type, Tool] = {}
+        self._tools: Dict[str, Tool] = {}  # Map of tool names to Tool objects
+        self._class_tools: Dict[Type, str] = {}  # Map of class types to tool names
         self.auto_install = auto_install
 
     def register(
@@ -72,26 +68,59 @@ class ToolRegistry:
         """Decorator to register a new tool with its dependencies."""
 
         def decorator(target):
+            tool = Tool(
+                name=name,
+                description=description,
+                function=target,
+                dependencies=dependencies or [],
+                config_requirements=config_requirements or [],
+            )
+            
+            # Store by name for direct lookup
+            self._tools[name] = tool
+            
+            # Also store class reference for when we need to look up by class
             if isinstance(target, type):
-                self.tools[target] = Tool(
-                    name=name,
-                    description=description,
-                    function=target,
-                    dependencies=dependencies or [],
-                    config_requirements=config_requirements or [],
-                )
-                return target
-            else:
-                self.tools[target] = Tool(
-                    name=name,
-                    description=description,
-                    function=target,
-                    dependencies=dependencies or [],
-                    config_requirements=config_requirements or [],
-                )
-                return target
+                self._class_tools[target] = name
+                
+            return target
 
         return decorator
+
+    def get_tool(self, name_or_class: Union[str, Type]) -> Optional[Tool]:
+        """
+        Get a tool by name or class.
+        
+        Args:
+            name_or_class: Either a string tool name or a class type
+            
+        Returns:
+            The Tool object if found, or None if not found
+        """
+        if isinstance(name_or_class, str):
+            # Direct lookup by name
+            return self._tools.get(name_or_class)
+        elif isinstance(name_or_class, type):
+            # Lookup by class
+            tool_name = self._class_tools.get(name_or_class)
+            if tool_name:
+                return self._tools.get(tool_name)
+                
+            # If not found directly, try to find by class hierarchy
+            for cls in inspect.getmro(name_or_class):
+                if cls in self._class_tools:
+                    return self._tools.get(self._class_tools[cls])
+                    
+        return None
+
+    def get_tools(self) -> Dict[str, Tool]:
+        """
+        Get all registered tools.
+        
+        Returns:
+            Dictionary mapping tool names to Tool objects
+        """
+        return self._tools.copy()
 
     @contextmanager
     def safe_imports(self):
@@ -137,7 +166,7 @@ class ToolRegistry:
 
     def check_dependencies(self, tool_name: str) -> Dict[str, bool]:
         """Check all dependencies for a tool."""
-        tool = self.tools.get(tool_name)
+        tool = self.get_tool(tool_name)
         if not tool:
             raise ValueError(f"Tool '{tool_name}' not found")
 
@@ -150,21 +179,32 @@ class ToolRegistry:
         return status
 
     def ensure_dependencies(
-            self, tool,
+            self, tool_or_name: Union[str, Type, object],
             always_install: bool = False
         ) -> bool:
-        """Check and optionally install missing dependencies."""
-        if hasattr(tool, "__class__"):
-            toolcls = tool.__class__
-            while True:
-                tool_spec = self.tools.get(toolcls)
-                if tool_spec:
-                    break
-                toolcls = toolcls.__bases__[0]
-                if toolcls in [BaseAgenticTool, object]:
-                    break
+        """
+        Check and optionally install missing dependencies.
+        
+        Args:
+            tool_or_name: Either a tool name, class, or instance
+            always_install: Whether to install dependencies without prompting
+            
+        Returns:
+            True if all dependencies are satisfied, False otherwise
+        """
+        # Find the tool spec
+        tool_spec = None
+        
+        if isinstance(tool_or_name, str):
+            # Direct lookup by name
+            tool_spec = self.get_tool(tool_or_name)
+        elif inspect.isclass(tool_or_name):
+            # Lookup by class
+            tool_spec = self.get_tool(tool_or_name)
         else:
-            tool_spec = self.tools.get(tool)
+            # Lookup by instance class
+            tool_spec = self.get_tool(tool_or_name.__class__)
+            
         if not tool_spec:
             # Skip the dependency check for tools not registered. Up to the user
             # to ensure packages are installed.
@@ -189,18 +229,27 @@ class ToolRegistry:
                     all_satisfied = False
         return all_satisfied
 
-    def validate_config(self, tool, config: Dict[str, Any]) -> Dict[str, Any]:
-        """Validate and process configuration for a tool."""
-        tool = self.tools.get(tool)
-        if not tool:
-            raise ValueError(f"Tool '{tool}' not found")
+    def validate_config(self, tool_or_name: Union[str, Type, object], config: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Validate and process configuration for a tool.
+        
+        Args:
+            tool_or_name: Either a tool name, class, or instance
+            config: The configuration to validate
+            
+        Returns:
+            Processed configuration
+        """
+        tool_spec = self.get_tool(tool_or_name)
+        if not tool_spec:
+            raise ValueError(f"Tool '{tool_or_name}' not found")
 
         # Start with provided config
         processed_config = config.copy()
 
         # Check all requirements
         missing_required = []
-        for req in tool.config_requirements:
+        for req in tool_spec.config_requirements:
             if req.key not in config:
                 if req.required and req.default is None:
                     missing_required.append(req.key)
@@ -209,19 +258,26 @@ class ToolRegistry:
 
         if missing_required:
             raise ValueError(
-                f"Tool '{tool}' is missing required configuration: {', '.join(missing_required)}"
+                f"Tool '{tool_spec.name}' is missing required configuration: {', '.join(missing_required)}"
             )
 
         return processed_config
 
-    def execute(self, tool: Any, config: Dict[str, Any] = None, *args, **kwargs) -> Any:
-        """Execute a tool, checking dependencies and configuration first."""
-        if hasattr(tool, "__class__"):
-            tool_spec = self.tools.get(tool.__class__)
-        else:
-            tool_spec = self.tools.get(tool)
+    def execute(self, tool_or_name: Union[str, Type, object], config: Dict[str, Any] = None, *args, **kwargs) -> Any:
+        """
+        Execute a tool, checking dependencies and configuration first.
+        
+        Args:
+            tool_or_name: Either a tool name, class, or instance
+            config: Configuration for the tool
+            *args, **kwargs: Arguments to pass to the tool
+            
+        Returns:
+            Result of executing the tool
+        """
+        tool_spec = self.get_tool(tool_or_name)
         if not tool_spec:
-            raise ValueError(f"Tool '{tool}' not found")
+            raise ValueError(f"Tool '{tool_or_name}' not found")
 
         # Check dependencies
         if not self.ensure_dependencies(tool_spec):
@@ -232,7 +288,7 @@ class ToolRegistry:
                 or (dep.type == "system" and not self.check_system_dependency(dep))
             ]
             raise RuntimeError(
-                f"Tool '{tool}' has missing dependencies: {', '.join(missing)}"
+                f"Tool '{tool_spec.name}' has missing dependencies: {', '.join(missing)}"
             )
 
         # Validate and process configuration
@@ -241,19 +297,32 @@ class ToolRegistry:
 
     def load_tool(
         self, tool_name: str, requires: List[str] = None, always_install: bool = False
-    ) -> Tool:
+    ) -> Any:
+        """
+        Load a tool by its fully qualified name.
+        
+        Args:
+            tool_name: Fully qualified name (module.class)
+            requires: List of package requirements
+            always_install: Whether to install dependencies without prompting
+            
+        Returns:
+            An instance of the tool
+        """
+        requires = requires or []
         for req in requires:
             dep = Dependency(name=req, type="pip")
             if not self.is_package_installed(dep.name):
                 if self.auto_install:
                     if not always_install:
-                        choice = input(f"Install {dep}? (y/n)")
+                        choice = input(f"Install {dep.name}? (y/n)")
                         if choice == "y":
                             always_install = True
                     if always_install:
                         success = self.install_pip_dependency(dep)
                         if not success:
-                            raise RuntimeError(f"Failed to install {dep}")
+                            raise RuntimeError(f"Failed to install {dep.name}")
+                            
         module_path, class_name = tool_name.rsplit(".", 1)
 
         # Import the module
@@ -263,10 +332,12 @@ class ToolRegistry:
         return getattr(module, class_name)()
 
 
-# Example usage:
 tool_registry = ToolRegistry(auto_install=True)
 
-# @registry.register(
+# Example usage:
+# from agentic.tools.utils.registry import tool_registry
+#
+# @tool_registry.register(
 #     name="weather",
 #     description="Get weather information for a location",
 #     dependencies=[

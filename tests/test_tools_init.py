@@ -1,41 +1,8 @@
 import os
 import importlib
-import inspect
 import sys
 import pytest
-from pathlib import Path
-
-def find_tools_directory():
-    """
-    Find the tools directory by searching up from the current directory.
-    Returns the Path object for the tools directory if found.
-    """
-    # Start with the current working directory
-    current_dir = Path.cwd()
-    
-    # Try to find the tools directory by walking up the directory tree
-    while current_dir != current_dir.parent:  # Stop at the root directory
-        # Check if 'agentic/tools' exists in this directory
-        tools_path = current_dir / 'src' / 'agentic' / 'tools'
-        if tools_path.exists() and tools_path.is_dir():
-            return tools_path
-        
-        # Also check for direct 'agentic/tools' pattern
-        alt_path = current_dir / 'agentic' / 'tools'
-        if alt_path.exists() and alt_path.is_dir():
-            return alt_path
-            
-        # Move up one directory
-        current_dir = current_dir.parent
-    
-    # If we couldn't find it, one last attempt by using the module info
-    try:
-        import agentic.tools
-        return Path(inspect.getfile(agentic.tools)).parent
-    except (ImportError, TypeError):
-        pass
-        
-    raise FileNotFoundError("Could not find the tools directory in any parent directory")
+from .utils.tools_utils import find_tools_directory, get_tool_classes_from_module
 
 def test_all_tools_are_imported_and_listed():
     """
@@ -70,28 +37,21 @@ def test_all_tools_are_imported_and_listed():
     missing_in_all = []
     
     for tool_file in tool_files:
-        module_name = tool_file[:-3]  # Remove .py extension
-            
         # Try to import the module to get its classes
         try:
-            module = importlib.import_module(f'agentic.tools.{module_name}')
-            
-            # Find tool classes in the module
-            # Assuming tool classes end with 'Tool' by convention
-            tool_classes = [name for name, obj in inspect.getmembers(module)
-                           if inspect.isclass(obj) and name.endswith('Tool') 
-                           and obj.__module__ == f'agentic.tools.{module_name}']
+            module_name = tool_file.removesuffix(".py")
+            tool_classes = get_tool_classes_from_module(module_name)
             
             # Check if all tool classes are in the mapping and __all__
-            for class_name in tool_classes:
+            for cls in tool_classes:
                 # Check if in mapping
-                if class_name not in tool_mapping or tool_mapping[class_name] != module_name:
-                    missing_in_mapping.append(f"{class_name} -> {module_name}")
+                if cls not in tool_mapping or tool_mapping[cls] != module_name:
+                    missing_in_mapping.append(f"{cls} -> {module_name}")
                 
                 # Check if in __all__
-                if class_name not in all_list:
-                    missing_in_all.append(class_name)
-                    
+                if cls not in all_list:
+                    missing_in_all.append(cls)
+
         except (ImportError, AttributeError) as e:
             print(f"Warning: Could not inspect module {module_name}: {e}")
     
@@ -137,25 +97,16 @@ def test_tools_inherit_from_base_class():
     # Tool classes that don't inherit from BaseAgenticTool
     non_compliant_tools = []
     
-    for tool_file in tool_files:
-        module_name = tool_file[:-3]  # Remove .py extension
-            
+    for tool_file in tool_files:            
         # Try to import the module to get its classes
         try:
-            module = importlib.import_module(f'agentic.tools.{module_name}')
-            
-            # Find tool classes in the module
-            tool_classes = [
-                (name, obj) for name, obj in inspect.getmembers(module)
-                if (inspect.isclass(obj) and 
-                    name.endswith('Tool') and 
-                    obj.__module__ == f'agentic.tools.{module_name}')
-            ]
+            module_name = tool_file.removesuffix(".py")
+            tool_classes = get_tool_classes_from_module(module_name)
             
             # Check inheritance
-            for class_name, cls in tool_classes:
-                if not issubclass(cls, BaseAgenticTool):
-                    non_compliant_tools.append(f"{module_name}.{class_name}")
+            for cls in tool_classes:
+                if not issubclass(tool_classes[cls], BaseAgenticTool):
+                    non_compliant_tools.append(f"{module_name}.{cls}")
                     
         except (ImportError, AttributeError) as e:
             print(f"Warning: Could not inspect module {module_name}: {e}")
@@ -163,6 +114,66 @@ def test_tools_inherit_from_base_class():
     # Fail the test if any tools don't inherit from BaseAgenticTool
     assert not non_compliant_tools, f"The following tool classes don't inherit from BaseAgenticTool: {', '.join(non_compliant_tools)}"
 
+def test_all_tools_have_get_tools_function():
+    """
+    Test that ensures all tool classes have a get_tools method.
+    """
+    # Get the tools directory path
+    try:
+        tools_dir = find_tools_directory()
+    except FileNotFoundError as e:
+        pytest.skip(f"Skipping test: {str(e)}")
+    
+    # Import the tools module
+    if str(tools_dir.parent) not in sys.path:
+        sys.path.insert(0, str(tools_dir.parent))
+    
+    # Find all Python files in the tools directory (excluding __init__.py)
+    tool_files = [f for f in os.listdir(tools_dir) 
+                 if f.endswith('.py') and f != '__init__.py']
+    
+    # Tool classes that don't have a get_tools method
+    missing_get_tools = []
+    non_callable_get_tools = []
+    empty_get_tools = []
+    
+    for tool_file in tool_files:            
+        # Try to import the module to get its classes
+        try:
+            module_name = tool_file.removesuffix(".py")
+            tool_classes = get_tool_classes_from_module(module_name)
+            
+            # Check for get_tools method
+            for cls in tool_classes:
+                # Check if get_tools exists
+                if not hasattr(tool_classes[cls], 'get_tools'):
+                    missing_get_tools.append(f"{module_name}.{cls}")
+                    continue
+                
+                # Check if get_tools is callable
+                get_tools_attr = getattr(tool_classes[cls], 'get_tools')
+                if not callable(get_tools_attr):
+                    non_callable_get_tools.append(f"{module_name}.{cls}")
+                    continue
+                    
+        except (ImportError, AttributeError) as e:
+            print(f"Warning: Could not inspect module {module_name}: {e}")
+    
+    # Build error messages
+    errors = []
+    
+    if missing_get_tools:
+        errors.append(f"The following tool classes are missing the get_tools method: {', '.join(missing_get_tools)}")
+    
+    if non_callable_get_tools:
+        errors.append(f"The following tool classes have a get_tools attribute that is not callable: {', '.join(non_callable_get_tools)}")
+    
+    if empty_get_tools:
+        # This is a warning, not an error
+        print(f"Warning: The following tool classes have get_tools methods that return empty lists: {', '.join(empty_get_tools)}")
+    
+    # Fail the test if any errors
+    assert not errors, '\n'.join(errors)
 
 def test_lazy_loading_works():
     """
