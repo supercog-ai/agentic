@@ -12,7 +12,7 @@ import httpx
 from urllib.parse import urlparse, parse_qsl, urlencode
 
 from agentic.tools.base import BaseAgenticTool
-from agentic.tools.utils.registry import tool_registry, Dependency
+from agentic.tools.utils.registry import tool_registry
 from agentic.common import RunContext
 
 class AsyncRequestBuilder:
@@ -114,9 +114,16 @@ class AsyncRequestBuilder:
     config_requirements=[],
 )
 class RestApiTool(BaseAgenticTool):
-    request_map: dict[str, AsyncRequestBuilder] = {}
-    return_dataframe: bool = False
-    run_context: RunContext | None = None
+    def __init__(
+        self,
+        request_map:  dict[str, AsyncRequestBuilder] = {},
+        return_dataframe: bool = False,
+        run_context: Optional[RunContext] = None
+    ):
+        super().__init__()
+        self.request_map = request_map
+        self.return_dataframe = return_dataframe
+        self.run_context = run_context
 
     def get_tools(self) -> list[Callable]:
         return [

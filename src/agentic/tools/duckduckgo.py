@@ -31,32 +31,26 @@ class DuckDuckGoTool(BaseAgenticTool):
 
     Free and does not require any setup.
     """
-
-    region: Optional[str] = "wt-wt"
-    """
-    See https://pypi.org/project/duckduckgo-search/#regions
-    """
-    safesearch: str = "moderate"
-    """
-    Options: strict, moderate, off
-    """
-    time: Optional[str] = "y"
-    """
-    Options: d, w, m, y
-    """
-    max_results: int = 5
-    backend: str = "auto"
-    """
-    Options: auto, html, lite
-    """
-    source: str = "text"
-    """
-    Options: text, news, images
-    """
-
     model_config = ConfigDict(
         extra="forbid",
     )
+
+    def __init__(
+        self,
+        region: Optional[str] = "wt-wt", # Options: see https://pypi.org/project/duckduckgo-search/#regions
+        safesearch: str = "moderate", # Options: strict, moderate, off
+        time: Optional[str] = "y", # Options: d, w, m, y
+        max_results: int = 5,
+        backend: str = "auto", # Options: auto, html, lite
+        source: str = "text", # Options: text, news, images
+    ):
+        self.region = region
+        self.safesearch = safesearch
+        self.time = time
+        self.max_results = max_results
+        self.backend = backend
+        self.source = source
+        super().__init__()
 
     def get_tools(self):
         return [self.web_search_with_duckduckgo]

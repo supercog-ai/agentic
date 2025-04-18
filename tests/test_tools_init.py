@@ -2,7 +2,13 @@ import os
 import importlib
 import sys
 import pytest
-from .utils.tools_utils import find_tools_directory, get_tool_classes_from_module
+import inspect
+from .utils.tools_utils import (
+    find_tools_directory,
+    get_base_tool_class,
+    get_tool_classes_from_module,
+    get_tool_files_in_directory
+)
 
 def test_all_tools_are_imported_and_listed():
     """
@@ -17,20 +23,12 @@ def test_all_tools_are_imported_and_listed():
         tools_dir = find_tools_directory()
     except FileNotFoundError as e:
         pytest.skip(f"Skipping test: {str(e)}")
-    
-    # Import the tools module to inspect its __all__ variable
-    if str(tools_dir.parent) not in sys.path:
-        sys.path.insert(0, str(tools_dir.parent))
-    
+
     tools_module = importlib.import_module('agentic.tools')
     all_list = getattr(tools_module, '__all__', [])
     
-    # Get the tool mapping dictionary
-    tool_mapping = getattr(tools_module, '_TOOL_MAPPING', {})
-    
-    # Find all Python files in the tools directory (excluding __init__.py)
-    tool_files = [f for f in os.listdir(tools_dir) 
-                 if f.endswith('.py') and f != '__init__.py']
+    tool_mapping = getattr(tools_module, '_TOOL_MAPPING', {})    
+    tool_files = get_tool_files_in_directory(tools_dir)
     
     # Check each tool file
     missing_in_mapping = []
@@ -43,14 +41,14 @@ def test_all_tools_are_imported_and_listed():
             tool_classes = get_tool_classes_from_module(module_name)
             
             # Check if all tool classes are in the mapping and __all__
-            for cls in tool_classes:
+            for cls_name in tool_classes:
                 # Check if in mapping
-                if cls not in tool_mapping or tool_mapping[cls] != module_name:
-                    missing_in_mapping.append(f"{cls} -> {module_name}")
+                if cls_name not in tool_mapping or tool_mapping[cls_name] != module_name:
+                    missing_in_mapping.append(f"{cls_name} -> {module_name}")
                 
                 # Check if in __all__
-                if cls not in all_list:
-                    missing_in_all.append(cls)
+                if cls_name not in all_list:
+                    missing_in_all.append(cls_name)
 
         except (ImportError, AttributeError) as e:
             print(f"Warning: Could not inspect module {module_name}: {e}")
@@ -142,21 +140,9 @@ def test_tools_inherit_from_base_class():
         tools_dir = find_tools_directory()
     except FileNotFoundError as e:
         pytest.skip(f"Skipping test: {str(e)}")
-    
-    # Import the tools module
-    if str(tools_dir.parent) not in sys.path:
-        sys.path.insert(0, str(tools_dir.parent))
-    
-    # Import the base tool class directly from the module to avoid lazy loading issues
-    try:
-        base_module = importlib.import_module('agentic.tools.base')
-        BaseAgenticTool = getattr(base_module, 'BaseAgenticTool')
-    except (ImportError, AttributeError) as e:
-        pytest.fail(f"Could not import BaseAgenticTool: {e}")
-    
-    # Find all Python files in the tools directory (excluding __init__.py)
-    tool_files = [f for f in os.listdir(tools_dir) 
-                 if f.endswith('.py') and f != '__init__.py' and f != 'base.py']
+
+    BaseAgenticTool = get_base_tool_class()
+    tool_files = get_tool_files_in_directory(tools_dir, exclude_files=['__init__.py', 'base.py'])
     
     # Tool classes that don't inherit from BaseAgenticTool
     non_compliant_tools = []
@@ -168,15 +154,79 @@ def test_tools_inherit_from_base_class():
             tool_classes = get_tool_classes_from_module(module_name)
             
             # Check inheritance
-            for cls in tool_classes:
-                if not issubclass(tool_classes[cls], BaseAgenticTool):
-                    non_compliant_tools.append(f"{module_name}.{cls}")
+            for cls_name, cls in tool_classes.items():
+                if not issubclass(cls, BaseAgenticTool):
+                    non_compliant_tools.append(f"{module_name}.{cls_name}")
                     
         except (ImportError, AttributeError) as e:
             print(f"Warning: Could not inspect module {module_name}: {e}")
     
     # Fail the test if any tools don't inherit from BaseAgenticTool
     assert not non_compliant_tools, f"The following tool classes don't inherit from BaseAgenticTool: {', '.join(non_compliant_tools)}"
+
+def test_all_tools_have_init_function():
+    """
+    Test that ensures all tool classes have a __init__ method.
+    """
+    # Get the tools directory path
+    try:
+        tools_dir = find_tools_directory()
+    except FileNotFoundError as e:
+        pytest.skip(f"Skipping test: {str(e)}")
+
+    BaseAgenticTool = get_base_tool_class()
+    base_init_function = BaseAgenticTool.__init__
+    tool_files = get_tool_files_in_directory(tools_dir, exclude_files=['__init__.py', 'base.py'])
+    
+    # Tool classes that don't have a __init__ method
+    missing_init = []
+    non_callable_init = []
+    non_overridden_init = []
+    
+    for tool_file in tool_files:            
+        # Try to import the module to get its classes
+        try:
+            module_name = tool_file.removesuffix(".py")
+            tool_classes = get_tool_classes_from_module(module_name)
+            
+            # Check for __init__ method
+            for cls_name, cls in tool_classes.items():
+                # Check if __init__ exists
+                if not hasattr(cls, '__init__'):
+                    missing_init.append(f"{module_name}.{cls_name}")
+                    continue                
+                
+                # Check if __init__ is callable
+                init_attr = getattr(cls, '__init__')
+                if not callable(init_attr):
+                    non_callable_init.append(f"{module_name}.{cls_name}")
+                    continue
+
+                # Check if get_tools has different signature than BaseAgenticTool
+                init_function = cls.__dict__.get('__init__')
+                print(f"get_tools_function: {init_function}\nBaseAgenticTool.__init__: {base_init_function}")
+                
+                if init_function is None or init_function is base_init_function:
+                    non_overridden_init.append(f"{module_name}.{cls_name}")
+                    continue
+                    
+        except (ImportError, AttributeError) as e:
+            print(f"Warning: Could not inspect module {module_name}: {e}")
+    
+    # Build error messages
+    errors = []
+    
+    if missing_init:
+        errors.append(f"The following tool classes are missing the __init__ method: {', '.join(missing_init)}")
+    
+    if non_callable_init:
+        errors.append(f"The following tool classes have a __init__ attribute that is not callable: {', '.join(non_callable_init)}")
+
+    if non_overridden_init:
+        errors.append(f"The following tool classes have a __init__ method that doesn't override the BaseAgenticTool's __init__ method: {', '.join(non_overridden_init)}")
+    
+    # Fail the test if any errors
+    assert not errors, '\n'.join(errors)
 
 def test_all_tools_have_get_tools_function():
     """
@@ -188,18 +238,14 @@ def test_all_tools_have_get_tools_function():
     except FileNotFoundError as e:
         pytest.skip(f"Skipping test: {str(e)}")
     
-    # Import the tools module
-    if str(tools_dir.parent) not in sys.path:
-        sys.path.insert(0, str(tools_dir.parent))
-    
-    # Find all Python files in the tools directory (excluding __init__.py)
-    tool_files = [f for f in os.listdir(tools_dir) 
-                 if f.endswith('.py') and f != '__init__.py']
+    BaseAgenticTool = get_base_tool_class()
+    base_get_tools = BaseAgenticTool.get_tools
+    tool_files = get_tool_files_in_directory(tools_dir, exclude_files=['__init__.py', 'base.py'])
     
     # Tool classes that don't have a get_tools method
     missing_get_tools = []
     non_callable_get_tools = []
-    empty_get_tools = []
+    non_overridden_get_tools = []
     
     for tool_file in tool_files:            
         # Try to import the module to get its classes
@@ -208,17 +254,22 @@ def test_all_tools_have_get_tools_function():
             tool_classes = get_tool_classes_from_module(module_name)
             
             # Check for get_tools method
-            for cls in tool_classes:
+            for cls_name, cls in tool_classes.items():
                 # Check if get_tools exists
-                if not hasattr(tool_classes[cls], 'get_tools'):
-                    missing_get_tools.append(f"{module_name}.{cls}")
+                if not hasattr(cls, 'get_tools'):
+                    missing_get_tools.append(f"{module_name}.{cls_name}")
                     continue
-                
+
                 # Check if get_tools is callable
-                get_tools_attr = getattr(tool_classes[cls], 'get_tools')
+                get_tools_attr = getattr(cls, 'get_tools')
                 if not callable(get_tools_attr):
-                    non_callable_get_tools.append(f"{module_name}.{cls}")
+                    non_callable_get_tools.append(f"{module_name}.{cls_name}")
                     continue
+
+                # Check if get_tools has different signature than BaseAgenticTool
+                get_tools_function = cls.__dict__.get('get_tools')
+                if get_tools_function is None or get_tools_function is base_get_tools:
+                    non_overridden_get_tools.append(f"{module_name}.{cls_name}")
                     
         except (ImportError, AttributeError) as e:
             print(f"Warning: Could not inspect module {module_name}: {e}")
@@ -232,10 +283,9 @@ def test_all_tools_have_get_tools_function():
     if non_callable_get_tools:
         errors.append(f"The following tool classes have a get_tools attribute that is not callable: {', '.join(non_callable_get_tools)}")
     
-    if empty_get_tools:
-        # This is a warning, not an error
-        print(f"Warning: The following tool classes have get_tools methods that return empty lists: {', '.join(empty_get_tools)}")
-    
+    if non_overridden_get_tools:
+            errors.append(f"The following tool classes have a get_tools method that doesn't override the BaseAgenticTool's get_tools method: {', '.join(non_overridden_get_tools)}")
+
     # Fail the test if any errors
     assert not errors, '\n'.join(errors)
 

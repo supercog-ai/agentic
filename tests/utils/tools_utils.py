@@ -1,5 +1,6 @@
 import inspect
 import importlib
+import os
 from pathlib import Path
 from typing import Any
 
@@ -45,3 +46,22 @@ def get_tool_classes_from_module(module_name: str) -> dict[str, type[Any]]:
             tool_classes[name] = obj
 
     return tool_classes
+
+def get_base_tool_class():
+    """
+    Get the BaseAgenticTool class from the base module.
+    """
+    try:
+        base_module = importlib.import_module('agentic.tools.base')
+        return getattr(base_module, 'BaseAgenticTool')
+    except (ImportError, AttributeError) as e:
+        raise ImportError("Could not import BaseAgenticTool: " + str(e))
+
+def get_tool_files_in_directory(directory: Path | str, exclude_files: list[Path | str] = ['__init__.py']) -> list[Path]:
+    """
+    Get a list of all Python files in the given directory excluding the specified files.
+    """
+    return [
+        f for f in os.listdir(directory) 
+        if f.endswith('.py') and f not in exclude_files
+    ]
