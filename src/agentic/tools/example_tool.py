@@ -2,6 +2,7 @@ from typing import Callable, Dict, Optional, Union
 import pandas as pd
 
 from agentic.tools.base import BaseAgenticTool
+<<<<<<< HEAD
 from agentic.tools.utils.registry import tool_registry, ConfigRequirement
 from agentic.common import RunContext, PauseForInputResult
 
@@ -18,6 +19,22 @@ from agentic.common import RunContext, PauseForInputResult
         ),
     ],
 )
+=======
+from agentic.tools.utils.registry import tool_registry
+from agentic.common import RunContext, PauseForInputResult
+
+###
+## Register the tool to the tool registry
+###
+
+@tool_registry.register(
+    name="ExampleTool",
+    description="Example tool for demponstrating tool registration",
+    dependencies=[],
+    config_requirements=[],
+)
+
+>>>>>>> 7b27f0e (Register all tools)
 class ExampleTool(BaseAgenticTool):
     """
     A tool that demonstrates the standard patterns for implementing agentic tools.
