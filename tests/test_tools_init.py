@@ -67,6 +67,70 @@ def test_all_tools_are_imported_and_listed():
     # Fail the test if any issues found
     assert not failure_msgs, '\n'.join(failure_msgs)
 
+def test_type_stub_matches_init():
+    """
+    Test that the __init__.pyi type stub file correctly includes all the tool classes
+    that are in __all__ and _TOOL_MAPPING.
+    """
+    # Get the tools directory path
+    try:
+        tools_dir = find_tools_directory()
+    except FileNotFoundError as e:
+        pytest.skip(f"Skipping test: {str(e)}")
+    
+    # Path to the type stub file
+    pyi_path = tools_dir / "__init__.pyi"
+    
+    # Check if the type stub file exists
+    if not pyi_path.exists():
+        pytest.skip("__init__.pyi does not exist")
+    
+    # Import the tools module to get __all__ and _TOOL_MAPPING
+    if str(tools_dir.parent) not in sys.path:
+        sys.path.insert(0, str(tools_dir.parent))
+    
+    tools_module = importlib.import_module('agentic.tools')
+    all_list = getattr(tools_module, '__all__', [])
+    tool_mapping = getattr(tools_module, '_TOOL_MAPPING', {})
+    
+    # Read the content of the type stub file
+    with open(pyi_path, 'r') as f:
+        pyi_content = f.read()
+    
+    # Check if all tool classes from __all__ are imported in the type stub
+    missing_imports = []
+    for tool_name in all_list:
+        import_pattern = f"from .{tool_mapping.get(tool_name, '')} import {tool_name}"
+        if import_pattern not in pyi_content:
+            missing_imports.append(f"{tool_name} from {tool_mapping.get(tool_name, '')}")
+    
+    # Check if all tool classes are included in the __all__ list in the type stub
+    missing_in_all = []
+    
+    # This regex pattern matches the __all__ list in the type stub file
+    import re
+    all_pattern = r"__all__\s*=\s*\[(.*?)\]"
+    all_match = re.search(all_pattern, pyi_content, re.DOTALL)
+    
+    if all_match:
+        pyi_all_content = all_match.group(1)
+        for tool_name in all_list:
+            if f'"{tool_name}"' not in pyi_all_content:
+                missing_in_all.append(tool_name)
+    else:
+        missing_in_all = all_list  # All are missing if the __all__ list isn't found
+    
+    # Generate failure messages
+    failure_msgs = []
+    
+    if missing_imports:
+        failure_msgs.append(f"The following tool classes are missing from imports in __init__.pyi: {', '.join(missing_imports)}")
+    
+    if missing_in_all:
+        failure_msgs.append(f"The following tool classes are missing from __all__ in __init__.pyi: {', '.join(missing_in_all)}")
+    
+    # Fail the test if any issues found
+    assert not failure_msgs, '\n'.join(failure_msgs)
 
 def test_tools_inherit_from_base_class():
     """
