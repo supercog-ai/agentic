@@ -102,6 +102,11 @@ playwright = [
     "playwright>=1.51.0",
 ]
 
+podcast = [
+    "openai>=1.75.0",
+    "beautifulsoup4>=4.13.4",
+]
+
 text-to-speech = [
     "pydub>=0.25.1",
 ]

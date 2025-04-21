@@ -1,11 +1,35 @@
 from typing import Callable
-
-from agentic.tools.text_to_speech_tool import TextToSpeechTool
-from .base import BaseAgenticTool
-
 import requests
 from bs4 import BeautifulSoup
 import openai
+
+from agentic.tools.text_to_speech_tool import TextToSpeechTool
+from agentic.tools.base import BaseAgenticTool
+from agentic.tools.utils.registry import tool_registry, ConfigRequirement, Dependency
+
+@tool_registry.register(
+    name="PodcastTool",
+    description="Tool for downloading and summarizing articles and converting them to podcasts",
+    dependencies=[
+        Dependency(
+            name="beautifulsoup4",
+            version="4.13.4",
+            type="pip",
+        ),
+        Dependency(
+            name="openai",
+            version="1.75.0",
+            type="pip",
+        ),
+    ],
+    config_requirements=[
+        ConfigRequirement(
+            key="OPENAI_API_KEY",
+            description="OpenAI API key",
+            required=True,
+        )
+    ],
+)
 
 class PodcastTool(BaseAgenticTool):
     def __init__(self):
