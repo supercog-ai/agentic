@@ -181,7 +181,7 @@ def test_get_runs_by_agent(db_manager):
         initial_prompt="Test prompt"
     )
     
-    retrieved_runs = db_manager.get_runs_by_agent("agent1")
+    retrieved_runs = db_manager.get_runs_by_agent("agent1", user_id=None)
     assert len(retrieved_runs) == 2
     assert all(run.agent_id == "agent1" for run in retrieved_runs)
 
