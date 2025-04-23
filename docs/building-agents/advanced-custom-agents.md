@@ -1,4 +1,4 @@
-# Building a Custom `next_turn` Agent in Agentic
+# Advanced Agent Configuration
 
 This document explains how to implement your own agent using a custom `next_turn` method in the Agentic framework. It covers the use cases, benefits, tradeoffs, and best practices to follow.
 

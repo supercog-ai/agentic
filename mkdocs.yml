@@ -46,6 +46,7 @@ nav:
   - Building Agents:
     - building-agents/index.md
     - Debugging: building-agents/debugging.md
+    - Advanced Custom Agents: building-agents/advanced-custom-agents.md
     - Agent Teams: building-agents/agent-teams.md
   - Interacting with Agents:
     - interacting-with-agents/index.md
