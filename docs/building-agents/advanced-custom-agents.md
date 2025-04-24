@@ -14,19 +14,18 @@ The `next_turn` method is the **core orchestration loop** for an agent in Agenti
 - Waiting for user feedback or pausing between steps.
 
 **Example Use Case:**  
-(in examples/deep-research/oss_deep_research.py)
+(https://github.com/supercog-ai/agentic/blob/main/examples/deep_research/oss_deep_research.py)
+
 Research planning → web queries → content writing → final report revision.
+
+    Note: This workflow supports human-in-the-loop validation, where the agent pauses after an initial plan generation to wait for user feedback before continuing to allow for iterative refinement. 
 ---
 
 ## Pros of Writing a Custom `next_turn`
 
 | Benefit                       | Explanation                           |
 |------------------------------------|-------------------------------------------|
-| Full control over agent logic      | Define exactly how the workflow runs step-by-step. |
-| Conditional logic                 | Branch based on intermediate results (e.g., "if feedback is bad, retry"). |
-| Hierarchical coordination         | Easily manage subagents and tools.        |
-| Support for pause/resume flows     | Use `WaitForInput`, `PauseForInputResult`, and handle feedback gracefully. |
-| Better observability              | Yield `Event`s at each stage for clean logging and monitoring. |
+| Better custom observability              | Yield concise `Event`s for custom logging and monitoring. |
 
 ---
 
@@ -58,9 +57,15 @@ return  # Safely exit the generator after yielding pause
 queries = yield from self.query_planner.final_result("Generate queries", request_context={...})
 ```
 
+### 4. **Always finish with a `TurnEnd` event**
+```python
+yield TurnEnd(self.name, {"status": "Turn completed."})
+```
+
 This ensures that:
 - Events from the subagent are streamed up properly.
 - Subagent run tracking remains isolated.
+- The turn is ended properly
 
 ---
 
@@ -91,6 +96,7 @@ def next_turn(self, request: str | Prompt, request_context: dict = {}, **kwargs)
     yield ChatOutput(self.name, {"content": f"Plan: {plan}"})
 
     yield WaitForInput(self.name, {"feedback": "Approve the plan or provide feedback."})
+    yield TurnEnd(self.name, {"status": "Turn completed after waiting for input."})
 ```
 
 ---
