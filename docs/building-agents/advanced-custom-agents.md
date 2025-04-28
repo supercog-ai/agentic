@@ -13,25 +13,31 @@ The `next_turn` method is the **core orchestration loop** for an agent in Agenti
 - The logic for multi-step workflows (e.g., retries, research-plan-execute loops).
 - Waiting for user feedback or pausing between steps.
 
-**Example Use Case:**  
-(https://github.com/supercog-ai/agentic/blob/main/examples/deep_research/oss_deep_research.py)
+### Example Use Case 
+Our [Open Source Deep Research](https://github.com/supercog-ai/agentic/blob/main/examples/deep_research/oss_deep_research.py) agent uses a custom `next_turn` to orchestrate a multi-step workflow:
 
-Research planning → web queries → content writing → final report revision.
+Research planning → Human validation → Knowledge accumulation → Section writing → Final report assembly.
 
-    Note: This workflow supports human-in-the-loop validation, where the agent pauses after an initial plan generation to wait for user feedback before continuing to allow for iterative refinement. 
+This approach allows for iterative refinement and human-in-the-loop validation, making it suitable for complex research tasks. Each step along the way has its own subagent. The custom `next_turn` method calls the subagents and orchestrates the overall workflow.
+
+> **Note**: This workflow supports human-in-the-loop validation, where the agent pauses after an initial plan generation to wait for user feedback before continuing to allow for iterative refinement.
+
 ---
 
 ## Pros of Writing a Custom `next_turn`
 
-| Benefit                       | Explanation                           |
+| Benefit                            | Explanation                           |
 |------------------------------------|-------------------------------------------|
-| Better custom observability              | Yield concise `Event`s for custom logging and monitoring. |
+| Full control over agent logic      | Define exactly how the workflow runs step-by-step. |
+| Conditional logic                  | Branch based on intermediate results (e.g., "if feedback is bad, retry"). |
+| Hierarchical coordination          | Easily manage subagents and tools.        |
+| Better custom observability        | Yield concise `Event`s for custom logging and monitoring. |
 
 ---
 
 ## Cons and Tradeoffs
 
-| Challenge                      | Impact                                |
+| Challenge                          | Impact                                |
 |------------------------------------|-------------------------------------------|
 | More boilerplate                   | You'll have to manage event yielding manually and accurately for the agent to run correctly |
 | Less plug-and-play                 | Higher learning curve than basic function-based tools. |
@@ -41,31 +47,32 @@ Research planning → web queries → content writing → final report revision.
 
 ## Best Practices
 
-### 1. **Always Yield `PromptStarted` First**
+### 1. Always Yield `PromptStarted` First
 ```python
 yield PromptStarted(self.name, {"content": self.topic})
 ```
 
-### 2. **Use `WaitForInput` for Pauses (Don’t `return` Early)**
+### 2. Use `WaitForInput` for Pauses
 ```python
 yield WaitForInput(self.name, {"feedback": "Please provide feedback on the plan."})
 return  # Safely exit the generator after yielding pause
 ```
 
-### 3. **Subagent Calls Should Use `yield from`**
+### 3. Subagent Calls Should Use `yield from`
 ```python
 queries = yield from self.query_planner.final_result("Generate queries", request_context={...})
 ```
 
-### 4. **Always finish with a `TurnEnd` event**
+### 4. Always finish with a `TurnEnd` event
 ```python
 yield TurnEnd(self.name, {"status": "Turn completed."})
 ```
 
 This ensures that:
-- Events from the subagent are streamed up properly.
+
+- Events from the subagent are streamed properly.
 - Subagent run tracking remains isolated.
-- The turn is ended properly
+- The turn is ended properly.
 
 ---
 
@@ -125,7 +132,7 @@ def next_turn(self, request: str | Prompt, request_context: dict = {}, **kwargs)
 
 - **Multi-agent research assistants** (planner → researcher → writer).
 - **Interactive approval workflows** (wait for feedback before proceeding).
-- **Agents that retry based on intermediate results.**
+- **Branching agents for complex tasks** (e.g., "if else logic").
 
 ---
 
