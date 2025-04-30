@@ -15,6 +15,7 @@ agent = Agent(
     prompts = {
         "NYC": "What is the weather in New York City?",
         "LA": "What is the weather in Los Angeles?",
+        "DC": "What is the weather in Washington DC?",
     }
 )
 
