@@ -28,7 +28,7 @@ def db_manager(temp_db_path):
 @pytest.fixture
 def run_manager(temp_db_path):
     """Create a RunManager instance with test configuration."""
-    return RunManager(user_id="test_user", db_path=temp_db_path)
+    return RunManager(db_path=temp_db_path)
 
 @pytest.fixture
 def run_context():

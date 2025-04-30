@@ -26,7 +26,7 @@ dependencies = [
     "sse-starlette>=2.2.1",
     "sqlmodel>=0.0.22",
     "numpy>=2.1.3",
-    "textract<1.6.4",
+    "textract @ git+https://github.com/supercog-ai/textract.git",
     "pypdf2>=3.0.1",
 ]
 
