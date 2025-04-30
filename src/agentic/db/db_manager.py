@@ -136,5 +136,5 @@ class DatabaseManager:
             # Add user_id filter if it's not None
             if user_id is not None:
                 query = query.where(Run.user_id == user_id)
-                
+            
             return session.exec(query.order_by(desc(Run.updated_at))).all()

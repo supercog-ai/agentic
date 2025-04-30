@@ -1027,7 +1027,7 @@ class BaseAgentProxy:
         """Get the conversation history"""
         return self._get_agent_history()
 
-    def init_run_tracking(self, agent, run_id: Optional[str] = None, user_id: Optional[str] = None):
+    def init_run_tracking(self, agent, run_id: Optional[str] = None):
         """Initialize run tracking"""
         pass
 
@@ -1182,7 +1182,7 @@ class BaseAgentProxy:
 
         agent_instance = self._get_agent_for_request(request_id)
         if (self.run_id != run_id or not self.run_id) and self.db_path:
-            self.init_run_tracking(agent_instance, run_id, user_id=request_context.get("user"))
+            self.init_run_tracking(agent_instance, run_id)
 
         # Initialize new request
         request_obj = Prompt(
@@ -1312,7 +1312,7 @@ class BaseAgentProxy:
             # Only now: do logging after yielding
             callback = self._agent.get_callback("handle_event") if hasattr(self, "_agent") else None
             if callback:
-                context = RunContext(agent=self._agent, agent_name=self.name, run_id=self.run_id)
+                context = RunContext(agent=self._agent, agent_name=self.name, run_id=self.run_id, context=request_context)
                 callback(event, context)
         
     def _get_prompt_generator(self, agent_instance, prompt):
@@ -1408,6 +1408,7 @@ class RayAgentProxy(BaseAgentProxy):
             "memories": self.memories,
             "debug": self.debug,
             "result_model": self.result_model,
+            "prompts": self.prompts,
             # Functions will be added when creating instances
         }
         _AGENT_REGISTRY.append(self)
@@ -1442,10 +1443,10 @@ class RayAgentProxy(BaseAgentProxy):
 
         return agent
 
-    def init_run_tracking(self, agent, run_id: Optional[str] = None, user_id: Optional[str] = None):
+    def init_run_tracking(self, agent, run_id: Optional[str] = None):
         """Initialize run tracking"""
         from .run_manager import init_run_tracking
-        self.run_id, callback = init_run_tracking(self, user_id=user_id, db_path=self.db_path, resume_run_id=run_id)
+        self.run_id, callback = init_run_tracking(self, db_path=self.db_path, resume_run_id=run_id)
         agent.set_callback.remote('handle_event', callback)
 
     def _handle_mock_settings(self, mock_settings):
@@ -1526,6 +1527,7 @@ class LocalAgentProxy(BaseAgentProxy):
             "debug": self.debug,
             "handle_turn_start": self._handle_turn_start,
             "result_model": self.result_model,
+            "prompts": self.prompts,
             # Functions will be added when creating instances
         }
         _AGENT_REGISTRY.append(self)
@@ -1559,10 +1561,10 @@ class LocalAgentProxy(BaseAgentProxy):
 
         return agent
 
-    def init_run_tracking(self, agent, run_id: Optional[str] = None, user_id: Optional[str] = None):
+    def init_run_tracking(self, agent, run_id: Optional[str] = None):
         """Initialize run tracking"""
         from .run_manager import init_run_tracking
-        self.run_id, callback = init_run_tracking(self, user_id=user_id, db_path=self.db_path, resume_run_id=run_id)
+        self.run_id, callback = init_run_tracking(self, db_path=self.db_path, resume_run_id=run_id)
         agent.set_callback('handle_event', callback)
 
     def _handle_mock_settings(self, mock_settings):

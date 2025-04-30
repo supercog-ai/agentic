@@ -215,10 +215,17 @@ TEAMS_LIST = TeamList(teams=[
 class MarchMadnessAgent(Agent):
     tournament: Tournament | None = None
     
-    def __init__(self, name: str="March Madness Predictor", model: str=ANALYZER_MODEL, verbose: bool = False, **kwargs):
+    def __init__(
+        self,
+        name: str="March Madness Predictor",
+        welcome="I am the March Madness Prediction agent. I'll analyze matchups and build a complete tournament bracket prediction.",
+        model: str=ANALYZER_MODEL,
+        verbose: bool = False,
+        **kwargs
+    ):
         super().__init__(
             name, 
-            welcome="I am the March Madness Prediction agent. I'll analyze matchups and build a complete tournament bracket prediction.",
+            welcome=welcome,
             model=model,
             **kwargs
         )

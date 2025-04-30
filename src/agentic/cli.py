@@ -167,7 +167,8 @@ def thread(
 def serve(
     filename: str = typer.Argument(default="", show_default=False),
     use_ray: bool = typer.Option(False, "--ray", help="Use Ray for agent execution"),
-    port: int = typer.Option(8086, "--port", "-p", help="Port to run the server on")
+    port: int = typer.Option(8086, "--port", "-p", help="Port to run the server on"),
+    user_agents: bool = typer.Option(False, "--user-agents", help="Enable agents per browser user")
 ):
     """Runs the FastAPI server for an agent, supporting both Ray and threaded execution"""
     console = Console()
@@ -195,7 +196,12 @@ def serve(
     
     # Create and run the API server
     with Status("[bold green]Setting up API server...", console=console):
-        api_server = AgentAPIServer(agent_instances, port=port)
+        if user_agents:
+            def lookup_user(uuid: str) -> str:
+                return uuid
+            api_server = AgentAPIServer(agent_instances, port=port, lookup_user=lookup_user)
+        else:
+            api_server = AgentAPIServer(agent_instances, port=port)
         
     console.print(f"[bold green]✓ Starting server on port {port}[/bold green]")
     console.print(f"[blue]Server URL: http://0.0.0.0:{port}[/blue]")
@@ -296,6 +302,7 @@ def start(
     use_ray: bool = typer.Option(False, "--use-ray", help="Use Ray for agent execution"),
     agent_path: str = typer.Option(None, "--agent-path", help="Path to the agent configuration file, will start the agent if provided"),
     agent_port: int = typer.Option(8086, "--agent-port", help="Port to run the agent server on"),
+    user_agents: bool = typer.Option(False, "--user-agents", help="Use user specific agents per browser session"),
 ):
     """Start the dashboard server"""
     import threading
@@ -305,7 +312,7 @@ def start(
         typer.echo(f"Starting agent from {agent_path} in a background thread...")
         agent_thread = threading.Thread(
             target=serve, 
-            args=[agent_path, use_ray, agent_port],
+            args=[agent_path, use_ray, agent_port, user_agents],
             daemon=True  # This ensures the thread exits when the main program exits
         )
         agent_thread.start()

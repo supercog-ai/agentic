@@ -22,7 +22,7 @@ class RunManager:
     This is automatically initialized for all agents unless disabled with db_path=None.
     """
     
-    def __init__(self, initial_run_id: Optional[str] = None, user_id: str = "default", db_path: str = "agent_runs.db"):
+    def __init__(self, initial_run_id: Optional[str] = None, db_path: str = "agent_runs.db"):
         self.initial_run_id: Optional[str] = initial_run_id
         # Should this not be propagated from the next_turn?
         self.usage_data: Dict = {}
@@ -33,17 +33,21 @@ class RunManager:
         db_manager = DatabaseManager(db_path=self.db_path)
         # Initialize a new run when we see a Prompt event
 
-        if isinstance(event, PromptStarted) and not run_context.run_id:
+        if isinstance(event, PromptStarted):
             if type(event.payload)==dict:
                 prompt = event.payload['content']
             else:
                 prompt = str(event.payload)
-            run = db_manager.create_run(
-                run_id=self.initial_run_id,
-                agent_id=run_context.agent_name,
-                user_id=str(run_context.get("user") or "default"),
-                initial_prompt=prompt,
-            )
+
+            # Check if the run is in the database
+            run = db_manager.get_run(run_id=self.initial_run_id)
+            if not run:
+                run = db_manager.create_run(
+                    run_id=self.initial_run_id,
+                    agent_id=run_context.agent_name,
+                    user_id=str(run_context.get("user") or "default"),
+                    initial_prompt=prompt,
+                )
             run_context.run_id = run.id 
             
         self.current_run_id = run_context.run_id
@@ -105,16 +109,13 @@ class RunManager:
 
 def init_run_tracking(
         agent,
-        user_id: str|None = "default",
         db_path: str = "agent_runs.db",
         resume_run_id: Optional[str] = None
     ) -> tuple[str,Callable]:
     """Helper function to set up run tracking for an agent"""
     run_id = str(uuid4()) if resume_run_id is None else resume_run_id
-    user_id = user_id or "default"
     run_manager = RunManager(
         initial_run_id=run_id,
-        user_id=user_id,
         db_path=db_path
     )
     return run_id, run_manager.handle_event

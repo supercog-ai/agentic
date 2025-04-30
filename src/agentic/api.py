@@ -48,7 +48,6 @@ class AgentAPIServer:
         self.agent_registry = {agent.safe_name: agent for agent in self.agent_instances}
         # When multiple users are running, keep their separate agent instances
         self.per_user_agents: dict[str, Agent] = {}
-        self.request_agents: dict[str, Agent] = {}
         self.lookup_user = lookup_user
         self.debug = DebugLevel(os.environ.get("AGENTIC_DEBUG") or "")
         
@@ -58,7 +57,7 @@ class AgentAPIServer:
         """
         Call "lookup_user" from our caller to resolve the current user ID based on the Authorization header.
         """
-        if authorization is None:
+        if authorization is None or self.lookup_user is None:
             return None
             
         # Here you would implement your actual authorization logic
@@ -66,10 +65,6 @@ class AgentAPIServer:
             token = authorization.replace("Bearer ", "")
         else:
             token = authorization
-
-        if self.lookup_user is None:
-            # Just use the token itself as the user ID
-            return token
         
         # Call the lookup_user function to resolve the user ID
         # call async if needed
@@ -119,7 +114,6 @@ class AgentAPIServer:
                 
             # Return the user-specific agent instance
             ag = self.per_user_agents[user_agent_name]
-            print("Returning user specific agent: ", ag, " hash ", hash(ag), " for user: ", current_user)
             return ag
         
         # Add discovery endpoint
@@ -221,15 +215,14 @@ class AgentAPIServer:
                 run_id=request.run_id,
                 debug=DebugLevel(request.debug) if request.debug else self.debug
             )
-            # track the agents that go with in progress requests
-            self.request_agents[req_event.request_id] = agent
+
             return req_event
                 
         # Resume endpoint
         @agent_router.post("/{agent_name}/resume")
         async def resume_request(
             request: ResumeWithInputRequest, 
-            agent = Depends(get_agent)
+            agent: Annotated[Agent, Depends(get_agent)],
         ):
             """Resume an existing request"""
             return agent.start_request(
@@ -242,7 +235,7 @@ class AgentAPIServer:
         # Reset endpoint. Need to use this for now to create a new session
         @agent_router.post("/{agent_name}/reset")
         async def reset_agent(
-            agent = Depends(get_agent)
+            agent: Annotated[Agent, Depends(get_agent)],
         ):
             """Reset the agent"""
             agent.reset_history()
@@ -252,15 +245,10 @@ class AgentAPIServer:
         @agent_router.get("/{agent_name}/getevents")
         async def get_events(
             request_id: str, 
-            agent_name: str,
+            agent: Annotated[Agent, Depends(get_agent)],
             stream: bool = False, 
         ):
             """Get events for a request"""
-            if request_id in self.request_agents:
-                agent = self.request_agents[request_id]
-            else:
-                agent: Agent = get_agent(agent_name)
-
             if not stream:
                 # Non-streaming response
                 results = []
@@ -300,7 +288,7 @@ class AgentAPIServer:
         @agent_router.post("/{agent_name}/stream_request")
         async def stream_request(
             request: ProcessRequest, 
-            agent = Depends(get_agent)
+            agent: Annotated[Agent, Depends(get_agent)],
         ):
             """Stream a request response"""
             def render_events():
@@ -322,7 +310,7 @@ class AgentAPIServer:
         @agent_router.get("/{agent_name}/runs/{run_id}/logs")
         async def get_run_logs(
             run_id: str, 
-            agent = Depends(get_agent)
+            agent: Annotated[Agent, Depends(get_agent)],
         ):
             """Get logs for a specific run"""
             run_logs = agent.get_run_logs(run_id)
@@ -334,7 +322,7 @@ class AgentAPIServer:
             run_id: str, 
             callback_name: str,
             request: Request,
-            agent = Depends(get_agent)
+            agent: Annotated[Agent, Depends(get_agent)],
         ):
             """Handle webhook callbacks"""
             # Get query parameters
@@ -371,7 +359,9 @@ class AgentAPIServer:
         
         # Describe endpoint
         @agent_router.get("/{agent_name}/describe")
-        async def describe(agent = Depends(get_agent)):
+        async def describe(
+            agent: Annotated[Agent, Depends(get_agent)]
+        ):
             """Get agent description"""
             return AgentDescriptor(
                 name=agent.name,
