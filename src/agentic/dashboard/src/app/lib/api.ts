@@ -205,14 +205,13 @@ export const agenticApi = {
 
 interface AuthEventSourceOptions {
   withCredentials?: boolean;
-  [key: string]: any;
 }
 
 interface EventListeners {
   message: Array<(event: MessageEvent) => void>;
   error: Array<(event: Event) => void>;
   open: Array<(event: Event) => void>;
-  [key: string]: Array<(event: any) => void>;
+  [key: string]: Array<(event: Event) => void> | Array<(event: MessageEvent) => void>;
 }
 
 class AuthEventSource {
@@ -288,7 +287,7 @@ class AuthEventSource {
     }
   }
 
-  addEventListener(type: string, callback: (event: any) => void): this {
+  addEventListener(type: string, callback: (event: Event | MessageEvent) => void): this {
     if (this.listeners[type]) {
       this.listeners[type].push(callback);
     } else {
@@ -297,16 +296,18 @@ class AuthEventSource {
     return this;
   }
 
-  removeEventListener(type: string, callback: (event: any) => void): this {
+  removeEventListener(type: string, callback: (event: Event | MessageEvent) => void): this {
     if (this.listeners[type]) {
       this.listeners[type] = this.listeners[type].filter(cb => cb !== callback);
     }
     return this;
   }
 
-  dispatchEvent(type: string, event: any): void {
+  dispatchEvent<T extends Event | MessageEvent>(type: string, event: T): void {
     if (this.listeners[type]) {
-      this.listeners[type].forEach(callback => callback(event));
+      (this.listeners[type] as Array<(event: T) => void>).forEach(callback => {
+        callback(event);
+      });
     }
   }
 
