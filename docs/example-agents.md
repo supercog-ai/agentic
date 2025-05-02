@@ -135,12 +135,3 @@ The agent maintains context about recently viewed repositories and has built-in 
     - Create an agent that does people+company research from a list of leads in a spreadsheet,
     writing the research data back into the spreadsheet.
 
-## Long Podcast Agent
-
-Steps to set up ngrok devtunnel (to host audio url):
-1. Download ngrok
-2. Login, retreive auth token and run ngrok config add-authtoken <your_auth_token>
-3. Start local server by running python3 -m http.server 8000
-4. In a separate terminal, run ngrok http 8000
-5. Use the output url as the base_url (e.g. https://0551-135-180-147-242.ngrok-free.app)
-
