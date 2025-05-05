@@ -23,6 +23,23 @@
         }
       }
     },
+    "/login": {
+      "post": {
+        "summary": "Login",
+        "description": "Just generates a random token to represent the current user",
+        "operationId": "login_login_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
     "/{agent_name}/oauth/callback/{tool_name}": {
       "get": {
         "summary": "Handle Oauth Static Callback",

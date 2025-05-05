@@ -1,0 +1,48 @@
+# Version control
+.git/
+.gitignore
+
+# Terraform
+terraform/
+*.tf
+*.tfstate
+*.tfvars
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+htmlcov/
+.venv/
+venv/
+env/
+
+# Build and deploy scripts (not needed in the container)
+build-and-deploy.sh
+
+# AWS
+.aws/
+
+# IDE specific files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS specific files
+.DS_Store
+Thumbs.db
+
+# Docker
+Dockerfile
+.dockerignore
+
+# Documentation
+README.md
+docs/
+
+# Unnecessary files for container
+*.md
+LICENSE

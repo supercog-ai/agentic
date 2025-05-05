@@ -83,6 +83,7 @@ def init(
     console = Console()
     dest_path = Path(path + "/examples").resolve()
     runtime_path = Path(path + "/runtime").resolve()
+    deployment_path = Path(path + "/deployment").resolve()
 
     # Go to the path and create subdirectories
     os.chdir(path)
@@ -102,13 +103,26 @@ def init(
 
     with Status("[bold green]Copying example files...", console=console):
         try:
-            # Get the package's examples directory using importlib.resources
-            # Replace 'your_package_name' with your actual package name
+             # Get the package's examples directory using importlib.resources
             with resources.path("agentic_examples", "") as examples_path:
                 copy_examples(examples_path, dest_path, console)
 
-            console.print("\n✨ Examples copied successfully!", style="bold green")
-            console.print(f"📁 Location: {dest_path}", style="blue")
+            # Try to copy deployment files if they exist
+            try:
+                with resources.path("agentic_deployment", "") as src_deployment_path:
+                    # Create deployment directory only if we can find the source files
+                    os.makedirs(deployment_path, exist_ok=True)
+                    copy_deployment(src_deployment_path, deployment_path, console)
+                    console.print(f"✓ Deployment files copied to: {deployment_path}", style="green")
+            except ModuleNotFoundError:
+                # Deployment extras weren't installed, so we'll skip this
+                console.print(
+                    "ℹ️ Deployment files not available. Install with [deployment] extra to include them.",
+                    style="blue",
+                )
+                
+            console.print("\n✨ Project initialized successfully!", style="bold green")
+            console.print(f"📁 Examples Location: {dest_path}", style="blue")
 
         except ModuleNotFoundError:
             console.print(
@@ -849,6 +863,47 @@ def copy_examples(src_path: Path, dest_path: Path, console: Console) -> None:
     except Exception as e:
         console.print(f"Error copying examples: {str(e)}", style="red")
         raise typer.Exit(1)
+    
+def copy_deployment(src_path: Path, dest_path: Path, console: Console) -> None:
+    """
+    Recursively copy all non-Python files from the deployment directory
+    to the destination directory, preserving the directory structure.
+    """
+    # Create the destination directory if it doesn't exist
+    os.makedirs(dest_path, exist_ok=True)
+    
+    # Track the number of files copied for reporting
+    files_copied = 0
+    
+    # Walk through the source directory
+    for root, dirs, files in os.walk(src_path):
+        # Create the corresponding directory structure in the destination
+        relative_path = os.path.relpath(root, src_path)
+        dest_dir = os.path.join(dest_path, relative_path)
+        os.makedirs(dest_dir, exist_ok=True)
+        
+        # Copy all non-Python files
+        for file in files:
+            # Skip Python files and __pycache__ directories
+            if file.endswith('.py') or file.endswith('.pyc') or '__pycache__' in root:
+                continue
+                
+            src_file = os.path.join(root, file)
+            dest_file = os.path.join(dest_dir, file)
+            
+            # Copy the file
+            shutil.copy2(src_file, dest_file)
+            files_copied += 1
+            
+            # Make shell scripts executable
+            if file.endswith('.sh'):
+                os.chmod(dest_file, 0o755)
+    
+    if files_copied > 0:
+        console.print(f"✓ Copied {files_copied} deployment files", style="green")
+    else:
+        console.print("ℹ️ No non-Python deployment files found to copy", style="blue")
+
 
 if __name__ == "__main__":
     app()
