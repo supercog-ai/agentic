@@ -31,80 +31,80 @@ dependencies = [
 
 # Streamlit package
 streamlit = [
-    "streamlit>=1.41.1",
+    "streamlit==1.45.0",
 ]
 
 # RAG packages
 rag = [
-    "weaviate-client>=4.10.4",
-    "chonkie[semantic]>=0.4.1",
-    "transformers>=4.48.3",
+    "weaviate-client==4.14.1",
+    "chonkie[semantic]==1.0.6",
+    "transformers==4.51.3",
     'torch==2.6.0; platform_system == "Darwin"',
     'torch==2.6.0+cpu; platform_system == "Linux" or platform_system == "Windows"',
-    "grpcio>=1.70.0",
-    "fastembed>=0.5.1",
-    "extract-msg<=0.29.0",
+    "grpcio==1.71.0",
+    "fastembed==0.6.1",
+    "extract-msg==0.29.0",
 ]
 
 # Tool groups
 airbnb = [
-    "icalendar>=6.1.3",
+    "icalendar==6.1.3",
 ]
 
 browser-use = [
-    "browser-use>=0.1.40",
-    "playwright>=1.51.0",
-    "langchain>=0.3.22",
-    "langchain-google-genai>=2.1.2"
+    "browser-use==0.1.40",
+    "playwright==1.52.0",
+    "langchain==0.3.25",
+    "langchain-google-genai==2.1.4"
 ]
 
 database = [
-    "psycopg2-binary>=2.9.9",
-    "sqlalchemy>=2.0.26",
+    "psycopg2-binary==2.9.10",
+    "sqlalchemy==2.0.40",
 ]
 
 duckduckgo = [
-    "duckduckgo-search>=7.5.5",
+    "duckduckgo-search==8.0.1",
 ]
 
 github = [
-    "gitpython>=3.1.44",
+    "gitpython==3.1.44",
 ]
 
 google-news = [
-    "google-news-feed>=1.1.0",
-    "googlenewsdecoder>=0.1.7",
+    "google-news-feed==1.1.0",
+    "googlenewsdecoder==0.1.7",
 ]
 
 image-generator = [
-   "boto3>=1.36.19",
+   "boto3==1.38.9",
 ]
 
 imap = [
-    "beautifulsoup4>=4.13.4",
+    "beautifulsoup4==4.13.4",
 ]
 
 mcp = [
-    "mcp[cli]>=1.5.0",
+    "mcp[cli]==1.7.1",
 ]
 
 meeting-baas = [
     "agentic-framework[rag]",
-    "openai>=1.75.0",
-    "sqlalchemy>=2.0.26",
+    "openai==1.75.0",
+    "sqlalchemy==2.0.40",
 ]
 
 playwright = [
-    "playwright>=1.51.0",
+    "playwright==1.52.0",
 ]
 
 podcast = [
-    "openai>=1.75.0",
-    "beautifulsoup4>=4.13.4",
+    "openai==1.75.0",
+    "beautifulsoup4==4.13.4",
 ]
 
 text-to-speech = [
-    "pydub>=0.25.1",
+    "pydub==0.25.1",
 ]
 
 all-tools = [
@@ -116,13 +116,13 @@ all = [
 ]
 
 dev = [
-    "pytest",
-    "pytest-asyncio>=0.25.3",
-    "debugpy>=1.8.0",
-    "black",
-    "mkdocs-material>=9.6.4",
-    "mkdocs-swagger-ui-tag>=0.6.11",
-    "mike>=2.1.3"
+    "pytest==8.3.5",
+    "pytest-asyncio==0.26.0",
+    "debugpy==1.8.14",
+    "black==25.1.0",
+    "mkdocs-material==9.6.12",
+    "mkdocs-swagger-ui-tag==0.7.1",
+    "mike==2.1.3"
 ]
 
 [project.scripts]
