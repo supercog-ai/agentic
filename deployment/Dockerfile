@@ -18,13 +18,13 @@ COPY ./tools /app/tools
 COPY ./.env* /app/.env
 
 # Install Python dependencies
-RUN pip install --no-cache-dir "agentic-framework[all-tools]"
+RUN pip install --no-cache-dir "agentic-framework[all]" --extra-index-url https://download.pytorch.org/whl/cpu
 
 # Expose the port the app runs on
 EXPOSE 8086
 
 # Set the entrypoint that handles environment variables
-COPY ./deploy/docker-entrypoint.sh /docker-entrypoint.sh
+COPY ./deployment/docker-entrypoint.sh /docker-entrypoint.sh
 RUN chmod +x /docker-entrypoint.sh
 
 # Set the entrypoint script

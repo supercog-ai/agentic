@@ -7,7 +7,7 @@ This package provides a Next.js-based web dashboard for monitoring and interacti
 The dashboard is an optional component of the agentic-framework. To install it:
 
 ```bash
-pip install agentic-framework[dashboard]
+pip install agentic-framework
 ```
 
 ### Prerequisites

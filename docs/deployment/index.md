@@ -32,7 +32,7 @@ source .venv/bin/activate
 Next, install the Agentic framework with all optional dependencies:
 
 ```bash
-pip install agentic-framework[all, deployment]
+pip install agentic-framework[all]
 ```
 
 ## Step 3: Initialize Your Project

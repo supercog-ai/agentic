@@ -26,15 +26,24 @@ Agentic is an opinionated framework that provides:
 
 ## Quick Install
 
-> **Note**: Agentic requires Python 3.12. It does not work with Python 3.13+ due to [Ray compatibility issues](https://github.com/ray-project/ray/issues/50226).
+> **Note** If you're on Linux or Windows and installing the `rag` extra you will need to add `--extra-index-url https://download.pytorch.org/whl/cpu` to install the CPU version of PyTorch.
 
 ```bash
 # Install from PyPI
-pip install "agentic-framework[all]"
+# For MacOS
+uv pip install "agentic-framework[all,dev]"
+
+# For Linux or Windows
+uv pip install "agentic-framework[all,dev]" --extra-index-url https://download.pytorch.org/whl/cpu
 
 # Or run from source
 git clone git@github.com:supercog-ai/agentic.git
+
+# For MacOS
 uv pip install -e "./agentic[all,dev]"
+
+# For Linux or Windows
+uv pip install -e "./agentic[all,dev]" --extra-index-url https://download.pytorch.org/whl/cpu
 
 # Initialize your project
 agentic init .

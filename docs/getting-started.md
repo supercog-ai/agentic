@@ -34,6 +34,8 @@ To install Agentic you can either install from source or from PyPI.
 
 > **Note**: In this guide we'll install the `all` extra which includes all tools and features. To customize your installation, see the [pyproject.toml](https://github.com/supercog-ai/agentic/blob/main/pyproject.toml) for a list of all available extras.
 
+> If you're on Linux or Windows you will need to add `--extra-index-url https://download.pytorch.org/whl/cpu` to install the CPU version of PyTorch.
+
 <table>
 <tr>
 <th> Source </th>
@@ -44,14 +46,25 @@ To install Agentic you can either install from source or from PyPI.
 
 ```bash
 git clone git@github.com:supercog-ai/agentic.git
-uv pip install "./agentic[all]"
+
+# For MacOS
+uv pip install -e "./agentic[all]"
+
+# For Linux or Windows
+uv pip install -e "./agentic[all]" \
+--extra-index-url https://download.pytorch.org/whl/cpu
 ```
 
 </td>
 <td>
 
 ```bash
+# For MacOS
 uv pip install "agentic-framework[all]"
+
+# For Linux or Windows
+uv pip install "agentic-framework[all]" \
+--extra-index-url https://download.pytorch.org/whl/cpu
 ```
 
 </td>

@@ -27,7 +27,7 @@ The dashboard requires:
 To install with dashboard support:
 
 ```bash
-pip install agentic-framework[dashboard]
+pip install agentic-framework
 ```
 
 ### Building the Dashboard

@@ -17,7 +17,7 @@ Start by installing the Agentic project:
     git clone git@github.com:supercog-ai/agentic.git
     uv venv --python 3.12
     source .venv/bin/activate
-    uv pip install -e "./agentic[all,dev]"
+    uv pip install -e "./agentic[all-tools,dev]"
 
 You need a `TAVILY_API_KEY`, and the API key for whatever model you are using, like `OPENAI_API_KEY`
 or `ANTHROPIC_API_KEY`.
