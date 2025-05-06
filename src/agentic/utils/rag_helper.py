@@ -159,10 +159,12 @@ def rag_index_file(
     """Index a file using configurable Weaviate Embedded and chunking parameters"""
 
     console = Console()
+    client_created = False
     try:
         with Status("[bold green]Initializing Weaviate..."):
             if client is None:
                 client = init_weaviate()
+                client_created = True
             create_collection(client, index_name, distance_metric)
             
         with Status("[bold green]Initializing models..."):
@@ -229,7 +231,7 @@ def rag_index_file(
                 
         console.print(f"[bold green]✅ Indexed {len(chunks)} chunks in {index_name}")
     finally:
-        if client:
+        if client and client_created:
             client.close()
     return "indexed"
         
