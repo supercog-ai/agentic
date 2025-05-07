@@ -30,8 +30,8 @@ agent = Agent(
 
     tools=[
         BrowserUseTool(
-            chrome_instance_path='/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
-            model="gemini/gemini-2.0-flash",
+            # chrome_instance_path='/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+            # model="gemini/gemini-2.0-flash",
         ),
     ],
 )

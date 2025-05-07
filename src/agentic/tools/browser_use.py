@@ -10,6 +10,7 @@ from browser_use import Agent as BrowserAgent
 from browser_use import Browser, BrowserConfig
 from langchain.callbacks import StdOutCallbackHandler
 from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_community.chat_models import ChatLiteLLM
 
 @tool_registry.register(
     name="BrowserUseTool",
@@ -81,10 +82,9 @@ class BrowserUseTool(BaseAgenticTool):
             model_name = model.split("/")[-1] if "/" in model else model
             return ChatGoogleGenerativeAI(model=model_name, api_key=api_key)
         else:
-            # For other models, use Litellm's completion
-            from litellm import completion
-            os.environ["OPENAI_API_KEY"] = api_key  # Ensure API key is set for Litellm
-            return completion
+            # For other models, use ChatLiteLLM
+            os.environ["OPENAI_API_KEY"] = api_key  # Ensure API key is set for LiteLLM
+            return ChatLiteLLM(model=model)
 
     async def run_browser_agent(
             self, 
