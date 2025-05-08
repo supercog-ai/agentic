@@ -35,6 +35,11 @@ from langchain_community.chat_models import ChatLiteLLM
             name="langchain-google-genai",
             version="2.1.2",
             type="pip",
+        ),
+        Dependency(
+            name="langchain-community",
+            version="0.3.19",
+            type="pip",
         )
     ],
     config_requirements=[]

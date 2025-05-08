@@ -55,7 +55,8 @@ browser-use = [
     "browser-use==0.1.40",
     "playwright==1.52.0",
     "langchain==0.3.25",
-    "langchain-google-genai==2.1.4"
+    "langchain-google-genai==2.1.4",
+    "langchain-community==0.3.19"
 ]
 
 database = [
