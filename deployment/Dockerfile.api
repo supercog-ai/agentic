@@ -5,7 +5,7 @@ ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 ENV AGENTIC_DEBUG=off
 ENV PORT=8086
-ENV AGENT_PATH="agents/basic_agent."
+ENV AGENT_PATH="agents/basic_agent.py"
 
 # Set working directory
 WORKDIR /app

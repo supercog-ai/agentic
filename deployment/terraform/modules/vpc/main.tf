@@ -3,17 +3,17 @@ resource "aws_vpc" "main" {
   enable_dns_hostnames = true
   enable_dns_support   = true
 
-  tags = {
+  tags = merge(var.tags, {
     Name = var.vpc_name
-  }
+  })
 }
 
 resource "aws_internet_gateway" "main" {
   vpc_id = aws_vpc.main.id
 
-  tags = {
+  tags = merge(var.tags, {
     Name = "${var.vpc_name}-igw"
-  }
+  })
 }
 
 resource "aws_subnet" "private" {
@@ -22,9 +22,10 @@ resource "aws_subnet" "private" {
   cidr_block        = var.private_subnets[count.index]
   availability_zone = var.azs[count.index % length(var.azs)]
 
-  tags = {
-    Name = "${var.vpc_name}-private-${count.index + 1}"
-  }
+  tags = merge(var.tags, {
+    Name = "${var.vpc_name}-private-${var.azs[count.index % length(var.azs)]}"
+    Type = "private"
+  })
 }
 
 resource "aws_subnet" "public" {
@@ -34,18 +35,19 @@ resource "aws_subnet" "public" {
   availability_zone       = var.azs[count.index % length(var.azs)]
   map_public_ip_on_launch = true
 
-  tags = {
-    Name = "${var.vpc_name}-public-${count.index + 1}"
-  }
+  tags = merge(var.tags, {
+    Name = "${var.vpc_name}-public-${var.azs[count.index % length(var.azs)]}"
+    Type = "public"
+  })
 }
 
 resource "aws_eip" "nat" {
-  count = length(var.public_subnets)
+  count  = length(var.public_subnets)
   domain = "vpc"
 
-  tags = {
+  tags = merge(var.tags, {
     Name = "${var.vpc_name}-nat-eip-${count.index + 1}"
-  }
+  })
 }
 
 resource "aws_nat_gateway" "main" {
@@ -53,9 +55,9 @@ resource "aws_nat_gateway" "main" {
   allocation_id = aws_eip.nat[count.index].id
   subnet_id     = aws_subnet.public[count.index].id
 
-  tags = {
-    Name = "${var.vpc_name}-nat-${count.index + 1}"
-  }
+  tags = merge(var.tags, {
+    Name = "${var.vpc_name}-nat-${var.azs[count.index % length(var.azs)]}"
+  })
 
   depends_on = [aws_internet_gateway.main]
 }
@@ -68,9 +70,10 @@ resource "aws_route_table" "public" {
     gateway_id = aws_internet_gateway.main.id
   }
 
-  tags = {
+  tags = merge(var.tags, {
     Name = "${var.vpc_name}-public-rt"
-  }
+    Type = "public"
+  })
 }
 
 resource "aws_route_table" "private" {
@@ -82,9 +85,10 @@ resource "aws_route_table" "private" {
     nat_gateway_id = aws_nat_gateway.main[count.index % length(aws_nat_gateway.main)].id
   }
 
-  tags = {
-    Name = "${var.vpc_name}-private-rt-${count.index + 1}"
-  }
+  tags = merge(var.tags, {
+    Name = "${var.vpc_name}-private-rt-${var.azs[count.index % length(var.azs)]}"
+    Type = "private"
+  })
 }
 
 resource "aws_route_table_association" "public" {

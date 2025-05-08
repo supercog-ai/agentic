@@ -41,14 +41,19 @@ if [ ! -z "$AWS_SECRET_NAME" ] && [ ! -z "$AWS_ACCESS_KEY_ID" ]; then
 import json, os, sys
 secrets = json.loads(sys.stdin.read())
 for key, value in secrets.items():
-  os.system(f\"agentic secrets set {key}='{value}'\" if value else f\"agentic secrets set {key}=''\")"
+  os.system(f\"agentic secrets set {key} '{value}'\" if value else f\"agentic secrets set {key} ''\")"
 fi
 
 # Configure runtime directory
 echo "Setting up runtime directory"
 mkdir -p /app/runtime
-agentic settings set AGENTIC_RUNTIME_DIR=/app/runtime
+agentic settings set AGENTIC_RUNTIME_DIR /app/runtime
 
-# Start the agent with the API server
-echo "Starting the API server for agent: $AGENT_PATH"
-exec agentic serve "$AGENT_PATH" --port ${PORT:-8086}
+# Start the appropriate service based on DEPLOYMENT_MODE
+if [ "$DEPLOYMENT_MODE" = "dashboard" ]; then
+  echo "Starting the dashboard for agent: $AGENT_PATH"
+  exec agentic dashboard start --agent-path "$AGENT_PATH" --agent-port ${AGENT_PORT:-8086} --port ${DASHBOARD_PORT:-3000} $([ "$USE_RAY" = "true" ] && echo "--use-ray") $([ "$USER_AGENTS" = "true" ] && echo "--user-agents")
+else
+  echo "Starting the API server for agent: $AGENT_PATH"
+  exec agentic serve "$AGENT_PATH" --port ${AGENT_PORT:-8086} $([ "$USE_RAY" = "true" ] && echo "--use-ray") $([ "$USER_AGENTS" = "true" ] && echo "--user-agents")
+fi

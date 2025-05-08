@@ -1,13 +1,29 @@
+variable "project" {
+  description = "Project name used for resource naming and tagging"
+  type        = string
+  default     = "agentic"
+}
+
+variable "environment" {
+  description = "Environment (dev, staging, prod)"
+  type        = string
+  default     = "dev"
+}
+
+variable "common_tags" {
+  description = "Common tags to apply to all resources"
+  type        = map(string)
+  default = {
+    Project     = "agentic"
+    Environment = "dev"
+    ManagedBy   = "terraform"
+  }
+}
+
 variable "aws_region" {
   description = "The AWS region to deploy resources"
   type        = string
   default     = "us-east-1"
-}
-
-variable "vpc_name" {
-  description = "Name of the VPC"
-  type        = string
-  default     = "agentic-vpc"
 }
 
 variable "vpc_cidr" {
@@ -34,18 +50,6 @@ variable "public_subnet_cidrs" {
   default     = ["10.0.101.0/24", "10.0.102.0/24"]
 }
 
-variable "ecr_repository_name" {
-  description = "Name of the ECR repository"
-  type        = string
-  default     = "agentic-api"
-}
-
-variable "ecs_cluster_name" {
-  description = "Name of the ECS cluster"
-  type        = string
-  default     = "agentic-cluster"
-}
-
 variable "task_cpu" {
   description = "CPU units for the ECS task"
   type        = string
@@ -64,10 +68,32 @@ variable "service_desired_count" {
   default     = 1
 }
 
+variable "deployment_mode" {
+  description = "Deployment mode - either 'api' or 'dashboard'"
+  type        = string
+  default     = "dashboard"
+  validation {
+    condition     = contains(["api", "dashboard"], var.deployment_mode)
+    error_message = "The deployment_mode must be either 'api' or 'dashboard'."
+  }
+}
+
 variable "agent_path" {
   description = "Path to the agent file inside the container"
   type        = string
   default     = "agents/basic_agent.py"
+}
+
+variable "agent_port" {
+  description = "Port for the agent api to expose"
+  type        = number
+  default     = 8086
+}
+
+variable "dashboard_port" {
+  description = "Port for the dashboard expose"
+  type        = number
+  default     = 3000
 }
 
 variable "user_agents" {
@@ -80,12 +106,6 @@ variable "use_ray" {
   description = "Use Ray for agent execution"
   type        = bool
   default     = false
-}
-
-variable "secrets_name" {
-  description = "Name of the SecretsManager secret"
-  type        = string
-  default     = "agentic-api-secrets"
 }
 
 variable "secrets_values" {

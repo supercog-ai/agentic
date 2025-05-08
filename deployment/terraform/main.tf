@@ -10,7 +10,7 @@ terraform {
   # backend "remote" {
   #   organization = "your-org-name"
   #   workspaces {
-  #     name = "agentic-api-workspace"
+  #     name = "${var.project}-workspace"
   #   }
   # }
 }
@@ -19,52 +19,67 @@ provider "aws" {
   region = var.aws_region
 }
 
+# Local values for name prefixing
+locals {
+  name_prefix = "${var.project}-${var.environment}"
+}
+
 # VPC and Network Configuration
 module "vpc" {
   source = "./modules/vpc"
 
-  vpc_name        = var.vpc_name
+  vpc_name        = "${local.name_prefix}-vpc"
   vpc_cidr        = var.vpc_cidr
   azs             = var.availability_zones
   private_subnets = var.private_subnet_cidrs
   public_subnets  = var.public_subnet_cidrs
+  
+  tags = merge(var.common_tags, {
+    Name = "${local.name_prefix}-vpc"
+  })
 }
 
 # ECR Repository
-resource "aws_ecr_repository" "agentic_api" {
-  name                 = var.ecr_repository_name
+resource "aws_ecr_repository" "app" {
+  name                 = "${local.name_prefix}-repo"
   image_tag_mutability = "MUTABLE"
 
   image_scanning_configuration {
     scan_on_push = true
   }
+  
+  tags = var.common_tags
 }
 
 # ECS Cluster
-resource "aws_ecs_cluster" "agentic_cluster" {
-  name = var.ecs_cluster_name
+resource "aws_ecs_cluster" "app_cluster" {
+  name = "${local.name_prefix}-cluster"
 
   setting {
     name  = "containerInsights"
     value = "enabled"
   }
+  
+  tags = var.common_tags
 }
 
 # SecretsManager for storing environment variables
-resource "aws_secretsmanager_secret" "agentic_secrets" {
-  name                    = var.secrets_name
+resource "aws_secretsmanager_secret" "app_secrets" {
+  name                    = "${local.name_prefix}-secrets"
   recovery_window_in_days = 0  # Set to 0 for easier testing/development, use 7+ for production
+  
+  tags = var.common_tags
 }
 
 # Example of creating a secret value - in production you'd use more secure methods
-resource "aws_secretsmanager_secret_version" "agentic_secrets_version" {
-  secret_id     = aws_secretsmanager_secret.agentic_secrets.id
+resource "aws_secretsmanager_secret_version" "app_secrets_version" {
+  secret_id     = aws_secretsmanager_secret.app_secrets.id
   secret_string = jsonencode(var.secrets_values)
 }
 
 # IAM Role for ECS Task Execution
 resource "aws_iam_role" "ecs_task_execution_role" {
-  name = "agentic-ecs-task-execution-role"
+  name = "${local.name_prefix}-ecs-task-exec-role"
   
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -78,6 +93,8 @@ resource "aws_iam_role" "ecs_task_execution_role" {
       }
     ]
   })
+  
+  tags = var.common_tags
 }
 
 resource "aws_iam_role_policy_attachment" "ecs_task_execution_role_policy" {
@@ -87,8 +104,8 @@ resource "aws_iam_role_policy_attachment" "ecs_task_execution_role_policy" {
 
 # Allow access to Secrets Manager
 resource "aws_iam_policy" "secrets_access" {
-  name        = "agentic-secrets-access"
-  description = "Allow ECS tasks to access Agentic secrets in Secrets Manager"
+  name        = "${local.name_prefix}-secrets-access"
+  description = "Allow ECS tasks to access ${var.project} secrets in Secrets Manager"
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -98,10 +115,12 @@ resource "aws_iam_policy" "secrets_access" {
           "secretsmanager:GetSecretValue",
         ]
         Effect   = "Allow"
-        Resource = aws_secretsmanager_secret.agentic_secrets.arn
+        Resource = aws_secretsmanager_secret.app_secrets.arn
       }
     ]
   })
+  
+  tags = var.common_tags
 }
 
 resource "aws_iam_role_policy_attachment" "secrets_access_attachment" {
@@ -110,8 +129,8 @@ resource "aws_iam_role_policy_attachment" "secrets_access_attachment" {
 }
 
 # ECS Task Definition
-resource "aws_ecs_task_definition" "agentic_api" {
-  family                   = "agentic-api"
+resource "aws_ecs_task_definition" "app" {
+  family                   = local.name_prefix
   network_mode             = "awsvpc"
   requires_compatibilities = ["FARGATE"]
   cpu                      = var.task_cpu
@@ -120,14 +139,20 @@ resource "aws_ecs_task_definition" "agentic_api" {
 
   container_definitions = jsonencode([
     {
-      name      = "agentic-api"
-      image     = "${aws_ecr_repository.agentic_api.repository_url}:latest"
+      name      = var.project
+      image     = "${aws_ecr_repository.app.repository_url}:latest"
       essential = true
       
-      portMappings = [
+      portMappings = var.deployment_mode == "dashboard" ? [
         {
-          containerPort = 8086
-          hostPort      = 8086
+          containerPort = var.dashboard_port
+          hostPort      = var.dashboard_port
+          protocol      = "tcp"
+        }
+      ] : [
+        {
+          containerPort = var.agent_port
+          hostPort      = var.agent_port
           protocol      = "tcp"
         }
       ]
@@ -139,7 +164,11 @@ resource "aws_ecs_task_definition" "agentic_api" {
         },
         {
           name  = "AGENT_PORT"
-          value = "8086"
+          value = tostring(var.agent_port)
+        },
+        {
+          name  = "DASHBOARD_PORT"
+          value = tostring(var.dashboard_port)
         },
         {
           name  = "USER_AGENTS"
@@ -148,42 +177,54 @@ resource "aws_ecs_task_definition" "agentic_api" {
         {
           name  = "USE_RAY"
           value = tostring(var.use_ray)
+        },
+        {
+          name  = "DEPLOYMENT_MODE"
+          value = var.deployment_mode
+        },
+        {
+          name  = "ENVIRONMENT"
+          value = var.environment
         }
       ]
       
       secrets = [for key, value in var.secrets_env_mapping : {
         name      = key
-        valueFrom = "${aws_secretsmanager_secret.agentic_secrets.arn}:${value}::"
+        valueFrom = "${aws_secretsmanager_secret.app_secrets.arn}:${value}::"
       }]
       
       logConfiguration = {
         logDriver = "awslogs"
         options = {
-          "awslogs-group"         = aws_cloudwatch_log_group.agentic_logs.name
+          "awslogs-group"         = aws_cloudwatch_log_group.app_logs.name
           "awslogs-region"        = var.aws_region
-          "awslogs-stream-prefix" = "agentic"
+          "awslogs-stream-prefix" = var.project
         }
       }
     }
   ])
+  
+  tags = var.common_tags
 }
 
 # CloudWatch Log Group
-resource "aws_cloudwatch_log_group" "agentic_logs" {
-  name              = "/ecs/agentic-api"
+resource "aws_cloudwatch_log_group" "app_logs" {
+  name              = "/ecs/${local.name_prefix}"
   retention_in_days = 30
+  
+  tags = var.common_tags
 }
 
 # Security Group for ECS Tasks
 resource "aws_security_group" "ecs_tasks" {
-  name        = "agentic-ecs-tasks"
-  description = "Allow inbound traffic to Agentic API"
+  name        = "${local.name_prefix}-ecs-tasks-sg"
+  description = "Allow inbound traffic to ${var.project} API or Dashboard"
   vpc_id      = module.vpc.vpc_id
 
   ingress {
     protocol         = "tcp"
-    from_port        = 8086
-    to_port          = 8086
+    from_port        = var.deployment_mode == "dashboard" ? var.dashboard_port : var.agent_port
+    to_port          = var.deployment_mode == "dashboard" ? var.dashboard_port : var.agent_port
     cidr_blocks      = ["0.0.0.0/0"]
     ipv6_cidr_blocks = ["::/0"]
   }
@@ -195,11 +236,15 @@ resource "aws_security_group" "ecs_tasks" {
     cidr_blocks      = ["0.0.0.0/0"]
     ipv6_cidr_blocks = ["::/0"]
   }
+  
+  tags = merge(var.common_tags, {
+    Name = "${local.name_prefix}-ecs-tasks-sg"
+  })
 }
 
 # ALB Security Group
 resource "aws_security_group" "alb" {
-  name        = "agentic-alb"
+  name        = "${local.name_prefix}-alb-sg"
   description = "Allow inbound traffic to ALB"
   vpc_id      = module.vpc.vpc_id
 
@@ -226,22 +271,28 @@ resource "aws_security_group" "alb" {
     cidr_blocks      = ["0.0.0.0/0"]
     ipv6_cidr_blocks = ["::/0"]
   }
+  
+  tags = merge(var.common_tags, {
+    Name = "${local.name_prefix}-alb-sg"
+  })
 }
 
 # Application Load Balancer
-resource "aws_lb" "agentic_alb" {
-  name               = "agentic-alb"
+resource "aws_lb" "app_alb" {
+  name               = "${local.name_prefix}-alb"
   internal           = false
   load_balancer_type = "application"
   security_groups    = [aws_security_group.alb.id]
   subnets            = module.vpc.public_subnet_ids
 
   enable_deletion_protection = false
+  
+  tags = var.common_tags
 }
 
-resource "aws_lb_target_group" "agentic_api" {
-  name        = "agentic-api"
-  port        = 8086
+resource "aws_lb_target_group" "app" {
+  name        = "${local.name_prefix}-tg"
+  port        = var.deployment_mode == "dashboard" ? var.dashboard_port : var.agent_port
   protocol    = "HTTP"
   vpc_id      = module.vpc.vpc_id
   target_type = "ip"
@@ -249,33 +300,38 @@ resource "aws_lb_target_group" "agentic_api" {
   health_check {
     enabled             = true
     interval            = 30
-    path                = "/_discovery"
+    path                = var.deployment_mode == "dashboard" ? "/api/_discovery" : "/_discovery"
     port                = "traffic-port"
     timeout             = 5
     healthy_threshold   = 3
     unhealthy_threshold = 3
     matcher             = "200"
   }
+  
+  tags = var.common_tags
 }
 
-resource "aws_lb_listener" "agentic_http" {
-  load_balancer_arn = aws_lb.agentic_alb.arn
+resource "aws_lb_listener" "app_http" {
+  load_balancer_arn = aws_lb.app_alb.arn
   port              = 80
   protocol          = "HTTP"
 
   default_action {
     type             = "forward"
-    target_group_arn = aws_lb_target_group.agentic_api.arn
+    target_group_arn = aws_lb_target_group.app.arn
   }
+  
+  tags = var.common_tags
 }
 
 # ECS Service
-resource "aws_ecs_service" "agentic_api" {
-  name            = "agentic-api"
-  cluster         = aws_ecs_cluster.agentic_cluster.id
-  task_definition = aws_ecs_task_definition.agentic_api.arn
+resource "aws_ecs_service" "app" {
+  name            = "${local.name_prefix}-service"
+  cluster         = aws_ecs_cluster.app_cluster.id
+  task_definition = aws_ecs_task_definition.app.arn
   desired_count   = var.service_desired_count
   launch_type     = "FARGATE"
+  health_check_grace_period_seconds = 600
 
   network_configuration {
     subnets          = module.vpc.private_subnet_ids
@@ -284,12 +340,14 @@ resource "aws_ecs_service" "agentic_api" {
   }
 
   load_balancer {
-    target_group_arn = aws_lb_target_group.agentic_api.arn
-    container_name   = "agentic-api"
-    container_port   = 8086
+    target_group_arn = aws_lb_target_group.app.arn
+    container_name   = var.project
+    container_port   = var.deployment_mode == "dashboard" ? var.dashboard_port : var.agent_port
   }
 
   depends_on = [
-    aws_lb_listener.agentic_http
+    aws_lb_listener.app_http
   ]
+  
+  tags = var.common_tags
 }
