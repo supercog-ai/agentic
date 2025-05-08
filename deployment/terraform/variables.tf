@@ -71,7 +71,7 @@ variable "service_desired_count" {
 variable "deployment_mode" {
   description = "Deployment mode - either 'api' or 'dashboard'"
   type        = string
-  default     = "dashboard"
+  default     = "api"
   validation {
     condition     = contains(["api", "dashboard"], var.deployment_mode)
     error_message = "The deployment_mode must be either 'api' or 'dashboard'."
