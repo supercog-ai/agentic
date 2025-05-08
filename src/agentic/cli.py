@@ -149,7 +149,7 @@ def init_runtime_directory(
 @app.command()
 def thread(
     agent_path: str = typer.Argument(..., help="Path to the agent file"),
-    use_ray: bool = typer.Option(False, "--ray", help="Use Ray for agent execution"),
+    use_ray: bool = typer.Option(False, "--use-ray", help="Use Ray for agent execution"),
 ):
     """Start an interactive CLI session with an agent"""
     if use_ray:
@@ -180,7 +180,7 @@ def thread(
 @app.command()
 def serve(
     filename: str = typer.Argument(default="", show_default=False),
-    use_ray: bool = typer.Option(False, "--ray", help="Use Ray for agent execution"),
+    use_ray: bool = typer.Option(False, "--use-ray", help="Use Ray for agent execution"),
     port: int = typer.Option(8086, "--port", "-p", help="Port to run the server on"),
     user_agents: bool = typer.Option(False, "--user-agents", help="Enable agents per browser user")
 ):

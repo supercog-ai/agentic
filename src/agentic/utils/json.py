@@ -11,7 +11,6 @@ def get_tc_args(tc):
     
 def get_tc_name(tc):
     if isinstance(tc, dict):
-        print("TC: ", tc)
         return str(tc)
     else:
         return tc.function.name

@@ -115,9 +115,7 @@ export const agenticApi = {
     requestId: string, 
     onEvent: (event: Api.AgentEvent) => void
   ) => {
-    // Get the base URL dynamically
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8086';
-    const url = `${baseUrl}${agentPath}/getevents?request_id=${requestId}&stream=true`;
+    const url = `api${agentPath}/getevents?request_id=${requestId}&stream=true`;
     
     const eventSource = new AuthEventSource(url, { withCredentials: false });
   
