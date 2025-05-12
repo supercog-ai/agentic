@@ -35,6 +35,10 @@ COPY ./deployment/.en[v] /app/.env
 # Install Python dependencies
 RUN pip install --no-cache-dir "agentic-framework[all]" --extra-index-url https://download.pytorch.org/whl/cpu
 
+# Pre-build the dashboard
+# This installs the Node.js dependencies and builds the Next.js app
+RUN agentic dashboard build
+
 # Expose the port the app runs on
 EXPOSE 3000
 

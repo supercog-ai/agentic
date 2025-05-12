@@ -116,3 +116,152 @@ def test_dashboard_command_without_package(mock_dashboard_imports):
     
     assert result.exit_code == 1
     assert "not installed" in result.stdout
+
+def test_dashboard_run_success(mock_dashboard_imports, mock_dashboard_setup):
+    """Test successful dashboard run command without rebuilding"""
+    # Create a mock for the run_built_dashboard function
+    with patch('agentic.dashboard.setup.run_built_dashboard') as mock_run, \
+         patch('time.sleep') as mock_sleep, \
+         patch('signal.SIGTERM') as mock_sigterm, \
+         patch('threading.Thread') as mock_thread:
+        
+        # Mock process that exits after first sleep
+        mock_process = MagicMock()
+        mock_process.poll.side_effect = [None, 0]
+        mock_process.returncode = 0
+        mock_run.return_value = mock_process
+        
+        # Mock SIGTERM signal value
+        mock_sigterm.value = 15
+        
+        # Test the basic run command
+        result = runner.invoke(app, ['dashboard', 'run'])
+    
+    assert result.exit_code == 0
+    mock_dashboard_setup['check_deps'].assert_called_once()
+    mock_run.assert_called_once_with(port=3000)
+    # Thread shouldn't be created without agent_path
+    mock_thread.assert_not_called()
+
+def test_dashboard_run_with_custom_port(mock_dashboard_imports, mock_dashboard_setup):
+    """Test dashboard run with custom port"""
+    with patch('agentic.dashboard.setup.run_built_dashboard') as mock_run, \
+         patch('time.sleep') as mock_sleep, \
+         patch('signal.SIGTERM') as mock_sigterm:
+        
+        # Mock process that exits after first sleep
+        mock_process = MagicMock()
+        mock_process.poll.side_effect = [None, 0]
+        mock_process.returncode = 0
+        mock_run.return_value = mock_process
+        
+        # Mock SIGTERM signal value
+        mock_sigterm.value = 15
+        
+        # Test with custom port
+        result = runner.invoke(app, ['dashboard', 'run', '--port', '4000'])
+    
+    assert result.exit_code == 0
+    mock_run.assert_called_once_with(port=4000)
+
+def test_dashboard_run_with_agent(mock_dashboard_imports, mock_dashboard_setup):
+    """Test dashboard run with agent in background thread"""
+    with patch('agentic.dashboard.setup.run_built_dashboard') as mock_run, \
+         patch('time.sleep') as mock_sleep, \
+         patch('signal.SIGTERM') as mock_sigterm, \
+         patch('threading.Thread') as mock_thread, \
+         patch('agentic.cli.serve') as mock_serve:
+        
+        # Mock process that exits after first sleep
+        mock_process = MagicMock()
+        mock_process.poll.side_effect = [None, 0]
+        mock_process.returncode = 0
+        mock_run.return_value = mock_process
+        
+        # Mock thread instance
+        mock_thread_instance = MagicMock()
+        mock_thread.return_value = mock_thread_instance
+        
+        # Mock SIGTERM signal value
+        mock_sigterm.value = 15
+        
+        # Test with agent path
+        result = runner.invoke(app, ['dashboard', 'run', '--agent-path', 'agent.py'])
+    
+    assert result.exit_code == 0
+    mock_run.assert_called_once_with(port=3000)
+    
+    # Thread should be created with agent_path
+    mock_thread.assert_called_once()
+    # Verify thread arguments
+    args, kwargs = mock_thread.call_args
+    assert kwargs['target'] == mock_serve
+    assert kwargs['args'] == ['agent.py', False, 8086, False]
+    assert kwargs['daemon'] is True
+    
+    # Verify thread was started
+    mock_thread_instance.start.assert_called_once()
+
+def test_dashboard_run_with_all_options(mock_dashboard_imports, mock_dashboard_setup):
+    """Test dashboard run with all available options"""
+    with patch('agentic.dashboard.setup.run_built_dashboard') as mock_run, \
+         patch('time.sleep') as mock_sleep, \
+         patch('signal.SIGTERM') as mock_sigterm, \
+         patch('threading.Thread') as mock_thread, \
+         patch('agentic.cli.serve') as mock_serve:
+        
+        # Mock process that exits after first sleep
+        mock_process = MagicMock()
+        mock_process.poll.side_effect = [None, 0]
+        mock_process.returncode = 0
+        mock_run.return_value = mock_process
+        
+        # Mock thread instance
+        mock_thread_instance = MagicMock()
+        mock_thread.return_value = mock_thread_instance
+        
+        # Mock SIGTERM signal value
+        mock_sigterm.value = 15
+        
+        # Test with all options
+        result = runner.invoke(app, [
+            'dashboard', 'run', 
+            '--port', '5000', 
+            '--agent-path', 'myagent.py',
+            '--agent-port', '9000',
+            '--use-ray', 
+            '--user-agents'
+        ])
+    
+    assert result.exit_code == 0
+    mock_run.assert_called_once_with(port=5000)
+    
+    # Thread should be created with all options
+    mock_thread.assert_called_once()
+    # Verify thread arguments
+    args, kwargs = mock_thread.call_args
+    assert kwargs['target'] == mock_serve
+    assert kwargs['args'] == ['myagent.py', True, 9000, True]
+    assert kwargs['daemon'] is True
+    
+    # Verify thread was started
+    mock_thread_instance.start.assert_called_once()
+
+def test_dashboard_run_missing_dependencies(mock_dashboard_imports, mock_dashboard_setup):
+    """Test dashboard run when dependencies are missing"""
+    mock_dashboard_setup['check_deps'].return_value = False
+    
+    result = runner.invoke(app, ['dashboard', 'run'])
+    
+    assert result.exit_code == 1
+    assert "Node.js" in result.stdout
+
+def test_dashboard_run_process_failure(mock_dashboard_imports, mock_dashboard_setup):
+    """Test dashboard run when process fails to start"""
+    with patch('agentic.dashboard.setup.run_built_dashboard') as mock_run:
+        mock_run.return_value = None
+        
+        result = runner.invoke(app, ['dashboard', 'run'])
+    
+    assert result.exit_code == 1
+    assert "Failed" in result.stdout

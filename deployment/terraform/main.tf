@@ -331,7 +331,6 @@ resource "aws_ecs_service" "app" {
   task_definition = aws_ecs_task_definition.app.arn
   desired_count   = var.service_desired_count
   launch_type     = "FARGATE"
-  health_check_grace_period_seconds = 600
 
   network_configuration {
     subnets          = module.vpc.private_subnet_ids

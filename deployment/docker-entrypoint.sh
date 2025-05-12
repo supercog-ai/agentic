@@ -51,8 +51,8 @@ agentic settings set AGENTIC_RUNTIME_DIR /app/runtime
 
 # Start the appropriate service based on DEPLOYMENT_MODE
 if [ "$DEPLOYMENT_MODE" = "dashboard" ]; then
-  echo "Starting the dashboard for agent: $AGENT_PATH"
-  exec agentic dashboard start --agent-path "$AGENT_PATH" --agent-port ${AGENT_PORT:-8086} --port ${DASHBOARD_PORT:-3000} $([ "$USE_RAY" = "true" ] && echo "--use-ray") $([ "$USER_AGENTS" = "true" ] && echo "--user-agents")
+  echo "Running pre-built dashboard for agent: $AGENT_PATH"
+  exec agentic dashboard run --agent-path "$AGENT_PATH" --agent-port ${AGENT_PORT:-8086} --port ${DASHBOARD_PORT:-3000} $([ "$USE_RAY" = "true" ] && echo "--use-ray") $([ "$USER_AGENTS" = "true" ] && echo "--user-agents")
 else
   echo "Starting the API server for agent: $AGENT_PATH"
   exec agentic serve "$AGENT_PATH" --port ${AGENT_PORT:-8086} $([ "$USE_RAY" = "true" ] && echo "--use-ray") $([ "$USER_AGENTS" = "true" ] && echo "--user-agents")

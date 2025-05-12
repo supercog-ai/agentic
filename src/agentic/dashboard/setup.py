@@ -90,6 +90,36 @@ def build_dashboard():
     except subprocess.SubprocessError as e:
         logger.error(f"Failed to build dashboard: {e}")
         return False
+    
+def run_built_dashboard(port: Optional[int] = None):
+    """
+    Run the pre-built dashboard without rebuilding it.
+    
+    Args:
+        port (Optional[int]): The port to run the dashboard on.
+    
+    Returns:
+        subprocess.Popen: The process running the dashboard, or None if startup failed.
+    """
+    print(f"Starting pre-built dashboard on port {port or 3000}...")
+    
+    if not check_npm_dependencies():
+        logger.error("Node.js or npm not found. Required to run the dashboard.")
+        return None
+    
+    command = ["npm", "run", "start"]
+    
+    if port:
+        command.extend(["--", "-p", str(port)])
+    
+    logger.info(f"Running dashboard with command: {command}")
+    
+    try:
+        process = subprocess.Popen(command, cwd=DASHBOARD_ROOT)
+        return process
+    except subprocess.SubprocessError as e:
+        logger.error(f"Failed to run dashboard: {e}")
+        return None
 
 def start_dashboard(port: Optional[int] = None, dev_mode: bool = False):
     """
@@ -184,34 +214,42 @@ def build_command():
         print("\nFailed to build dashboard.")
         sys.exit(1)
 
-def main():
-    """Main CLI entrypoint."""
-    import argparse
+def run_command(port: Optional[int] = None):
+    """
+    Run the pre-built dashboard.
     
-    parser = argparse.ArgumentParser(description="Agentic Framework Dashboard")
-    subparsers = parser.add_subparsers(dest="command", help="Commands")
+    Args:
+        port (Optional[int]): The port to run the dashboard on.
+    """
+    print("\nRunning Pre-built Agentic Framework Dashboard")
+    print("==========================================")
     
-    # Start command
-    start_parser = subparsers.add_parser("start", help="Start the dashboard")
-    start_parser.add_argument(
-        "--port", "-p", type=int, default=3000, help="Port to run the dashboard on"
-    )
-    start_parser.add_argument(
-        "--dev", action="store_true", help="Run in development mode"
-    )
+    if not check_npm_dependencies():
+        print(
+            "\nError: The dashboard requires Node.js (v18+) and npm (v8+).\n"
+            "Please install them from https://nodejs.org and try again."
+        )
+        sys.exit(1)
     
-    # Build command
-    build_parser = subparsers.add_parser("build", help="Build the dashboard")
+    dashboard_process = run_built_dashboard(port=port)
     
-    args = parser.parse_args()
+    if not dashboard_process:
+        print("\nFailed to run the dashboard.")
+        sys.exit(1)
     
-    if args.command == "start":
-        start_command(port=args.port, dev=args.dev)
-    elif args.command == "build":
-        build_command()
-    else:
-        parser.print_help()
-
-if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
-    main()
+    print(f"\nDashboard is running at http://localhost:{port or 3000}")
+    print("\nPress Ctrl+C to stop the dashboard\n")
+    
+    try:
+        # Keep the process running until interrupted
+        while dashboard_process.poll() is None:
+            time.sleep(1)
+    except KeyboardInterrupt:
+        print("\nShutting down dashboard...")
+        dashboard_process.send_signal(signal.SIGTERM)
+        dashboard_process.wait()
+        print("Dashboard stopped")
+    
+    if dashboard_process.returncode != 0 and dashboard_process.returncode != -signal.SIGTERM.value:
+        logger.error(f"Dashboard exited with code {dashboard_process.returncode}")
+        sys.exit(dashboard_process.returncode)

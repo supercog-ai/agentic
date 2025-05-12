@@ -61,7 +61,7 @@ export async function GET(
     }).then(backendResponse => {
       if (!backendResponse.ok) {
         const writer = writable.getWriter();
-        writer.write(new TextEncoder().encode(`data: {"error":"Backend error ${backendResponse.status}"}\n\n`));
+        writer.write(new TextEncoder().encode(`data: {'error':'Backend error ${backendResponse.status}'}\n\n`));
         writer.close();
         return;
       }
@@ -80,14 +80,14 @@ export async function GET(
         });
       } else {
         const writer = writable.getWriter();
-        writer.write(new TextEncoder().encode(`data: {"error":"No response body"}\n\n`));
+        writer.write(new TextEncoder().encode('data: {\'error\':\'No response body\'}\n\n'));
         writer.close();
       }
     }).catch(error => {
       // Handle fetch errors
       console.error('Fetch error:', error);
       const writer = writable.getWriter();
-      writer.write(new TextEncoder().encode(`data: {"error":"Fetch error"}\n\n`));
+      writer.write(new TextEncoder().encode('data: {\'error\':\'Fetch error\'}\n\n'));
       writer.close();
     });
     

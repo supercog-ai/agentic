@@ -343,6 +343,33 @@ def build():
     from agentic.dashboard.setup import build_command
     build_command()
 
+@dashboard_app.command()
+def run(
+    port: int = typer.Option(3000, "--port", "-p", help="Port to run the dashboard on"),
+    use_ray: bool = typer.Option(False, "--use-ray", help="Use Ray for agent execution"),
+    agent_path: str = typer.Option(None, "--agent-path", help="Path to the agent configuration file, will start the agent if provided"),
+    agent_port: int = typer.Option(8086, "--agent-port", help="Port to run the agent server on"),
+    user_agents: bool = typer.Option(False, "--user-agents", help="Use user specific agents per browser session"),
+):
+    """Run the pre-built dashboard without rebuilding it"""
+    import threading
+    
+    if agent_path:
+        # Start the agent in a separate thread
+        typer.echo(f"Starting agent from {agent_path} in a background thread...")
+        agent_thread = threading.Thread(
+            target=serve, 
+            args=[agent_path, use_ray, agent_port, user_agents],
+            daemon=True  # This ensures the thread exits when the main program exits
+        )
+        agent_thread.start()
+        typer.echo("Agent thread started")
+    
+    # Run the pre-built dashboard in the main thread
+    from agentic.dashboard.setup import run_command
+    typer.echo("Running pre-built dashboard...")
+    run_command(port=port)
+
 # index commands
 @index_app.command("list")
 def index_list():
