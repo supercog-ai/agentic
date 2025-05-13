@@ -18,7 +18,7 @@ def create_combined_podcast():
     summarizing their content, converting them to audio, and concatenating them into one MP3 file.
     """
     segment_sites=["https://www.nbcnews.com/news/us-news", "https://www.nbcnews.com/news/world", "https://www.nbcnews.com/tech"]
-    base_url='https://e4ed-73-15-6-205.ngrok-free.app'
+    base_url='https://<your-ngrok-id>.ngrok-free.app'
     
     ast = PodcastTool()
 

@@ -63,9 +63,11 @@ The [Podcast Producer](https://github.com/supercog-ai/agentic/blob/main/examples
 
 
 ### Short Podcast Agent
+
 The [Short Podcast Agent](https://github.com/supercog-ai/agentic/blob/main/examples/podcast/podcast_short.py) demonstrates the use of agent teams and pipelines in Agentic.
 
 Key features:
+
 - Multi-agent team with AI, sports, and finance reporters
 - Compiles short daily summary using a producer agent
 - Publishes audio via Transistor.fm API
@@ -73,19 +75,22 @@ Key features:
 This example is particularly valuable for understanding how to coordinate multiple agents to accomplish complex tasks that involve content creation, transformation, and distribution.
 
 ### Long Podcast Agent
+
 The [Long Podcast Agent](https://github.com/supercog-ai/agentic/blob/main/examples/podcast/podcast_long.py) creates longer, more in-depth podcasts.
 
 Key features:
+
 - Scrapes and downloads news articles
 - Summarizes articles and converts to audio
 - Stitches segments and publishes via Transistor.fm API
 
 Steps to set up ngrok devtunnel (to host audio url):
-1. Download ngrok
-2. Login, retrieve auth token and run ngrok config add-authtoken <your_auth_token>
-3. Start local server by running python3 -m http.server 8000
-4. In a separate terminal, run ngrok http 8000
-5. Use the output url as the base_url (e.g. https://0551-135-180-147-242.ngrok-free.app)
+
+1. [Download ngrok](https://ngrok.com/downloads/mac-os)
+2. Login, retrieve auth token and run `ngrok config add-authtoken <your_auth_token>`
+3. Start local server by running `python -m http.server 8000`
+4. In a separate terminal, run `ngrok http 8000`
+5. Use the output url as the `base_url` (e.g. `https://<your-ngrok-id>.ngrok-free.app`)
 
 This example demonstrates how to produce long-form content using external tools and APIs for content gathering, transformation, and distribution.
 

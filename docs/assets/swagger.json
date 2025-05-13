@@ -55,6 +55,7 @@
               "application/json": {
                 "schema": {
                   "type": "object",
+                  "additionalProperties": true,
                   "title": "Response Handle Oauth Static Callback  Agent Name  Oauth Callback  Tool Name  Get"
                 }
               }
@@ -114,6 +115,7 @@
               "application/json": {
                 "schema": {
                   "type": "object",
+                  "additionalProperties": true,
                   "title": "Response Handle Oauth Callback  Agent Name  Oauth  Run Id   Tool Name  Get"
                 }
               }
