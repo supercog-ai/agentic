@@ -75,6 +75,21 @@ This ensures that:
 - The turn is ended properly.
 
 ---
+## Subagent `run_id` Propagation for Subagents
+To ensure events from subagents (like planners or tools) are grouped with the top-level agent in the event-logs, you must pass run_id in request_context and ensure it is picked up by the subagent. 
+
+### What to do
+pass `run_id` in every subagent request:
+```python
+result = yield from self.section_planner.final_result(
+    "Plan sections",
+    request_context={
+        "topic": self.topic,
+        "run_id": run_context.run_id  # Required for shared logging
+    }
+)
+```
+
 
 ## Event Flow Cheat Sheet
 
@@ -97,7 +112,8 @@ def next_turn(self, request: str | Prompt, request_context: dict = {}, **kwargs)
 
     # Example: Plan → Research → Write
     plan = yield from self.planner_agent.final_result(
-        "Make a plan", request_context={"topic": topic}
+        "Make a plan", 
+        request_context={"topic": topic, "run_id": request_context.get("run_id")}
     )
 
     yield ChatOutput(self.name, {"content": f"Plan: {plan}"})
@@ -113,7 +129,6 @@ def next_turn(self, request: str | Prompt, request_context: dict = {}, **kwargs)
 - Don’t return early without yielding `TurnEnd`.
 - Don’t mix sync calls and generator calls (`yield from`) improperly.
 - Don’t directly call subagent methods like `.next_turn()` — use the proxy API (`final_result`, etc.).
-- Avoid sharing `RunContext` objects across agents.
 
 ---
 
@@ -122,8 +137,7 @@ def next_turn(self, request: str | Prompt, request_context: dict = {}, **kwargs)
 | Concept        | Expectation                             |
 |----------------|------------------------------------------|
 | `run_id`       | Must be consistent per top-level request. |
-| Subagents      | Should not share history directly with parent. |
-| Logging        | Only log events for the current agent, not subagent events. |
+| Logging        | Only logs events for current agent, unless propagating via shared `run_id` |
 | History        | Cleanly reset between runs if your agent doesn't need memory. |
 
 ---

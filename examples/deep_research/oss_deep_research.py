@@ -149,7 +149,8 @@ class DeepResearchAgent(Agent):
                 "Generate search queries that will help with planning the sections of the report.",
                 request_context={
                     "topic": self.topic, 
-                    "num_queries": self.num_queries
+                    "num_queries": self.num_queries,
+                    "run_id": request_context.get("run_id")
                 }
             )
 
@@ -168,6 +169,7 @@ class DeepResearchAgent(Agent):
                     "web_context": content, 
                     "topic": self.topic,
                     "feedback": feedback,
+                    "run_id": request_context.get("run_id")
                 }
             )
 
@@ -208,7 +210,8 @@ provide feedback to regenerate the report plan:\n
                     "section_title": section.name,
                     "section_topic": section.description, 
                     "report_context": draft_report,
-                    "section_content": section.content
+                    "section_content": section.content,
+                    "run_id": request_context.get("run_id")
                 },
             )
             finals.append(report_section)
@@ -216,7 +219,8 @@ provide feedback to regenerate the report plan:\n
         sources = yield from self.final_reference_writer.final_result(
             "Generate a list of important sources referenced from the full report content.",
             {
-                "report_context": draft_report
+                "report_context": draft_report,
+                "run_id": request_context.get("run_id")
             }
         )
 
@@ -242,7 +246,8 @@ provide feedback to regenerate the report plan:\n
             "Generate search queries on the provided topic.",
             request_context={
                 "section_topic": section.description, 
-                "num_queries": self.num_queries
+                "num_queries": self.num_queries,
+                "run_id": report_context.run_id if isinstance(report_context, RunContext) else None
             },
         )
         msg = f"Research queries for section {index+1} - {section.name}:\n" + "\n".join([q.search_query for q in queries.queries]) + "\n\n"
@@ -260,7 +265,8 @@ provide feedback to regenerate the report plan:\n
                 "section_title": section.name,
                 "section_topic": section.description,
                 "section_content": section.content,
-                "web_context": web_context
+                "web_context": web_context,
+                "run_id": report_context.run_id if isinstance(report_context, RunContext) else None
             }
         )
 

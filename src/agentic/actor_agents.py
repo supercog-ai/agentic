@@ -407,6 +407,8 @@ class ActorBaseAgent:
                 if self.run_context is None
                 else self.run_context.update(actor_message.request_context)
             )
+            if not self.run_context.run_id and "run_id" in actor_message.request_context:
+                self.run_context.run_id = actor_message.request_context["run_id"]  
 
             # Middleware to modify the input prompt (or change agent context)
             if self._callbacks.get('handle_turn_start'):
@@ -1177,6 +1179,9 @@ class BaseAgentProxy:
         if isinstance(request, str):
             request = self._check_for_prompt_match(request)
 
+        if not run_id and "run_id" in request_context:
+            run_id = request_context["run_id"]
+
         # Create request ID if not provided in continue_result
         request_id = continue_result.get("request_id") or str(uuid.uuid4())
 
@@ -1275,6 +1280,9 @@ class BaseAgentProxy:
                 request.request_id = request_id
 
         self._handle_mock_settings(self.mock_settings)
+
+        if not self.run_id and "run_id" in request_context:
+            self.run_id = request_context["run_id"]
 
         # Get agent instance for the run
         agent_instance = self._get_agent_for_request(request_id)
