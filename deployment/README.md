@@ -37,13 +37,13 @@ agentic init
 
 ### 4. Build Your Agent
 
-Create your agent in the `agents` directory. For example, `agents/my_agent.py`:
+Create your agent in the `agents` directory. For example, `agents/basic_agent.py`:
 
 ```python
 from agentic.common import Agent, AgentRunner
 from agentic.tools import WeatherTool
 
-my_agent = Agent(
+basic_agent = Agent(
     name="Weather Agent",
     welcome="I can give you weather reports! Just tell me which city.",
     instructions="You are a helpful assistant specializing in weather information.",
@@ -52,13 +52,13 @@ my_agent = Agent(
 )
 
 if __name__ == "__main__":
-    AgentRunner(my_agent).repl_loop()
+    AgentRunner(basic_agent).repl_loop()
 ```
 
 Test your agent locally:
 
 ```bash
-python agents/my_agent.py
+python agents/basic_agent.py
 ```
 
 ### 5. Configure Secrets
@@ -77,7 +77,7 @@ Add your secrets to `terraform/terraform.tfvars` in the `secrets_values` map.
 ### 6. Configure Terraform
 
 ```bash
-cp terraform/terraform.tfvars.example terraform/terraform.tfvars
+cp terraform/example.terraform.tfvars terraform/terraform.tfvars
 # Edit terraform/terraform.tfvars with your configuration
 ```
 

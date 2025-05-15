@@ -82,6 +82,7 @@ nav:
       - WeatherTool: tools/tool-library/weather-tool.md
   - Deployment:
     - deployment/index.md
+    - Updating Deployments: deployment/updating-deployments.md
   - rag-support.md
   - example-agents.md
   - glossary.md

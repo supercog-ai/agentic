@@ -2,6 +2,8 @@
 
 This guide provides step-by-step instructions for deploying your Agentic agents to AWS using Docker and Terraform. You can choose between deploying the API server or the dashboard interface.
 
+<div style="position: relative; padding-bottom: 56.25%;"><iframe width="100%" height="100%" style="position: absolute;" src="https://www.youtube.com/embed/fGS4c6MAgjA?si=zWEiB2pGCi4JpyX6" title="Getting Started With Agentic" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></div>
+
 > **Note:** If you have already completed the [Getting Started](../getting-started.md) guide, you can skip to [Step 5](#step-5-configure-secrets).
 
 ## Prerequisites
@@ -46,13 +48,13 @@ This will create the basic project structure with example agents and tools.
 
 ## Step 4: Build Your Agent
 
-Create or modify an agent in the `agents` directory. For example, `agents/my_agent.py`:
+Create or modify an agent in the `agents` directory. For example, `agents/basic_agent.py`:
 
 ```python
 from agentic.common import Agent, AgentRunner
 from agentic.tools import WeatherTool
 
-my_agent = Agent(
+basic_agent = Agent(
     name="Weather Agent",
     welcome="I can give you weather reports! Just tell me which city.",
     instructions="You are a helpful assistant specializing in weather information.",
@@ -61,13 +63,13 @@ my_agent = Agent(
 )
 
 if __name__ == "__main__":
-    AgentRunner(my_agent).repl_loop()
+    AgentRunner(basic_agent).repl_loop()
 ```
 
 Test your agent locally:
 
 ```bash
-python agents/my_agent.py
+python agents/basic_agent.py
 ```
 
 ## Step 5: Configure Secrets
@@ -103,7 +105,7 @@ This approach is recommended for production deployments as it provides better se
 1. Copy the example Terraform variables file:
 
 ```bash
-cp deployment/terraform/terraform.tfvars.example deployment/terraform/terraform.tfvars
+cp deployment/terraform/example.terraform.tfvars deployment/terraform/terraform.tfvars
 ```
 
 2. Edit `deployment/terraform/terraform.tfvars` to configure your deployment:
@@ -162,6 +164,31 @@ common_tags = {
 
 The `deployment_mode` variable determines whether you deploy the API server or the dashboard interface.
 
+3. Update the `outputs.tf` file to include cluster and service information:
+
+```hcl
+# Outputs
+output "ecr_repository_url" {
+  description = "The ECR repository URL where you should push your Docker image"
+  value       = aws_ecr_repository.app.repository_url
+}
+
+output "agent_endpoint" {
+  description = "The endpoint where the agent API or dashboard can be accessed"
+  value       = aws_lb.app_alb.dns_name
+}
+
+output "ecs_cluster_name" {
+  description = "The name of the ECS cluster where the service is running"
+  value       = aws_ecs_cluster.app_cluster.name
+}
+
+output "ecs_service_name" {
+  description = "The name of the ECS service"
+  value       = aws_ecs_service.app.name
+}
+```
+
 ## Step 7: Review Docker Configuration
 
 Your deployment directory already contains the necessary Docker files:
@@ -171,6 +198,7 @@ Your deployment directory already contains the necessary Docker files:
 3. **docker-entrypoint.sh**: Script that handles environment variables and starts the appropriate service
 
 The `docker-entrypoint.sh` script manages:
+
 - Loading environment variables from `.env` file
 - Setting up the agent path
 - Retrieving secrets from AWS Secrets Manager if configured
@@ -232,22 +260,60 @@ docker push ${ECR_REPO_URL}:latest
 
 Make sure the Docker image you build matches the `deployment_mode` you specified in your Terraform configuration.
 
-## Step 10: Test Your Deployment
+## Step 10: Force a New ECS Deployment
+
+After pushing your Docker image to ECR, you need to force a new deployment to the ECS service to ensure it uses the latest image. You can do this using either the AWS CLI or the AWS Console.
+
+### Option 1: Using AWS CLI (Recommended)
+
+You can force a new deployment using the AWS CLI with the following commands:
+
+```bash
+# Get the ECS cluster and service names from Terraform output
+export ECS_CLUSTER=$(cd deployment/terraform && terraform output -raw ecs_cluster_name)
+export ECS_SERVICE=$(cd deployment/terraform && terraform output -raw ecs_service_name)
+
+# Force a new deployment
+aws ecs update-service --cluster $ECS_CLUSTER --service $ECS_SERVICE --force-new-deployment
+
+# Monitor the deployment status
+aws ecs describe-services --cluster $ECS_CLUSTER --services $ECS_SERVICE --query "services[0].deployments"
+```
+
+This will trigger a new deployment of your service with the latest container image, without needing to make changes to your configuration.
+
+### Option 2: Using AWS Console
+
+![Force New Deployment](../assets/force-deployment.png)
+
+If you prefer using the AWS Console:
+
+1. Go to the AWS Console
+2. Navigate to ECS > Clusters
+3. Select your cluster (typically named `agentic-{environment}-cluster`)
+4. Select the service for your agent
+5. Click on the "Update service" dropdown
+6. Click "Force new deployment"
+7. Click "Confirm" to apply the changes
+
+The force new deployment option will redeploy your containers with the latest image from ECR, even if the task definition hasn't changed.
+
+## Step 11: Test Your Deployment
 
 Get the endpoint URL from Terraform output:
 
 ```bash
-export APP_ENDPOINT=$(cd deployment/terraform && terraform output -raw app_endpoint)
+export AGENT_ENDPOINT=$(cd deployment/terraform && terraform output -raw agent_endpoint)
 ```
 
 ### Testing API Server Deployment
 
 ```bash
 # Test the discovery endpoint
-curl "$APP_ENDPOINT/_discovery"
+curl "$AGENT_ENDPOINT/_discovery"
 
 # Test your agent
-curl -X POST "$APP_ENDPOINT/basic-agent/process" \
+curl -X POST "$AGENT_ENDPOINT/basic-agent/process" \
   -H "Content-Type: application/json" \
   -d '{"prompt": "Hello, how can you help me?"}'
 ```
@@ -257,12 +323,12 @@ curl -X POST "$APP_ENDPOINT/basic-agent/process" \
 Open a web browser and navigate to the endpoint URL:
 
 ```
-http://$APP_ENDPOINT
+http://$AGENT_ENDPOINT
 ```
 
 You should see the Agentic dashboard interface where you can interact with your agent.
 
-## Step 11: Monitor Your Deployment
+## Step 12: Monitor Your Deployment
 
 You can monitor your agent in the AWS Console:
 
@@ -310,6 +376,15 @@ Ensure your API keys are correctly set up:
   - Verify the .env file has been correctly copied into the Docker image
   - Check the container logs for any environment variable related errors
 
+### Deployment Not Updating
+
+If you've pushed a new Docker image but the service isn't using it:
+
+- Check that you pushed to the correct ECR repository
+- Verify that the image tag is correct (usually `latest`)
+- Make sure you forced a new deployment as described in Step 10
+- Check the ECS deployments to see if there are any errors during the update
+
 ## Cleaning Up
 
 To destroy all AWS resources created by Terraform:
@@ -353,4 +428,4 @@ deployment_mode = "api"
 deployment_mode = "dashboard"
 ```
 
-Then run `terraform apply` to update your deployment, and rebuild and push the appropriate Docker image.
+Then run `terraform apply` to update your deployment, rebuild and push the appropriate Docker image, and force a new deployment as described in Step 10.
