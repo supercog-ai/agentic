@@ -44,7 +44,7 @@ Visits the docs: https://supercog-ai.github.io/agentic/latest/
 
 ## Pre-built agents you can run today
 
-### [OSS Deep Researcher](https://github.com/supercog-ai/agentic/blob/main/examples/oss_deep_research.py)
+### [OSS Deep Researcher](https://github.com/supercog-ai/agentic/blob/main/examples/deep_research)
 
 Perform complex research on any topic. Adapted from the LangChain version (but you can actually
 understand the code).
