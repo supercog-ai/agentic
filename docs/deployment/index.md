@@ -24,7 +24,7 @@ Create a new directory for your project and navigate to it:
 ```bash
 mkdir -p ~/agentic
 cd ~/agentic
-python -m venv .venv
+uv venv --python 3.12
 source .venv/bin/activate
 ```
 
