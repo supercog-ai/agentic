@@ -12,6 +12,7 @@ dependencies = [
     "httpx==0.28.1",
     "jinja2==3.1.6",
     "litellm==1.68.0",
+    "openai==1.75.0",
     "numpy==2.2.5",
     "pandas==2.2.3",
     "pydantic==2.11.4",
@@ -92,7 +93,6 @@ mcp = [
 
 meeting-baas = [
     "agentic-framework[rag]",
-    "openai==1.75.0",
     "sqlalchemy==2.0.40",
 ]
 
@@ -101,7 +101,6 @@ playwright = [
 ]
 
 podcast = [
-    "openai==1.75.0",
     "beautifulsoup4==4.13.4",
 ]
 
