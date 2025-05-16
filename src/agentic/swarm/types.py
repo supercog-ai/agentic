@@ -1,12 +1,21 @@
+from openai.types.chat import ChatCompletionMessage
+from openai.types.chat.chat_completion_message_tool_call import (
+    ChatCompletionMessageToolCall,
+    Function,
+)
 from typing import List, Callable, Union, Optional
 from agentic.agentic_secrets import agentic_secrets
 from agentic.settings import settings
+
+# Third-party imports
 from pydantic import BaseModel
 
 AgentFunction = Callable[[], Union[str, "SwarmAgent", dict]] | dict
 
+
 def agent_secret_key(agent_name: str, key: str) -> str:
     return f"{agent_name}/{key}"
+
 
 def tool_name(tool) -> str:
     if hasattr(tool, "__name__"):
@@ -15,6 +24,7 @@ def tool_name(tool) -> str:
         return tool.__class__.__name__
     else:
         return str(tool)
+
 
 class DebugLevel:
     OFF: str = ""
@@ -52,6 +62,7 @@ class DebugLevel:
 
     def __str__(self) -> str:
         return str(self.level)
+
 
 class RunContext:
     def __init__(
@@ -199,6 +210,7 @@ class RunContext:
         token_key = f"{tool_name}_oauth_token"
         return self.get_secret(token_key)
 
+
 class SwarmAgent(BaseModel):
     name: str = "Agent"
     model: str = "gpt-4o"
@@ -211,9 +223,7 @@ class SwarmAgent(BaseModel):
     def get_instructions(self, context: RunContext) -> str:
         return self.instructions_str
 
-class Function(BaseModel):
-    arguments: str
-    name: str
+
 class Result(BaseModel):
     """
     Encapsulates the possible return values for an agent function.
@@ -226,6 +236,7 @@ class Result(BaseModel):
     value: str = ""
     agent: Optional[SwarmAgent] = None
     tool_function: Optional[Function] = None
+
 
 class Response(BaseModel):
     messages: List = []
