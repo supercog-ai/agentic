@@ -513,7 +513,6 @@ def index_search(
             client.close()
 
 # Index document commands
-# Flattened document commands - moved from index_document_app to index_app
 @index_document_app.command("add_doc")
 def document_add(
     index_name: str,
