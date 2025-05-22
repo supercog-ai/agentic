@@ -7,10 +7,10 @@ You can manage vectorstore indexes using the CLI:
 ```sh
 
 # Chunk a file, calculate chunk embeddings, and add them to the vectorstore
-agentic index document add <index name> <file path>
+agentic index document add_doc <index name> <file path>
 
 # Remove all the chunks of a file from the vector store
-agentic index document delete <index name> <file path|document ID>
+agentic index document delete_doc <index name> <file path|document ID>
 
 # list the indexes
 agentic index list
@@ -22,10 +22,10 @@ agentic index rename <from name> <to name>
 agentic index delete <index name>
 
 # List the documents in a vector store
-agentic index document list <index name>
+agentic index document list_docs <index name>
 
 # Show the metadata for a doc in the vector store
-agentic index document show <index name> <file path|document ID>
+agentic index document show_doc <index name> <file path|document ID>
 
 # Perform a search of the vector store. Searches by vector by default, or can do hybrid search
 agentic index search <index name> <query> [--hybrid]
@@ -36,9 +36,9 @@ Example usage:
 
 ```sh
 
-$ agentic index document add index1 tests/data/agentic_reasoning.pdf
+$ agentic index document add_doc index1 tests/data/agentic_reasoning.pdf
 
-$ agentic index document list index1
+$ agentic index document list_docs index1
                                                          Documents in 'index1' (3)                                                         
 - agentic_reasoning.pdf 
   ID: 27c0600f... | Chunks: 19 | Last indexed: 2025-02-22 05:54:51+00:00
