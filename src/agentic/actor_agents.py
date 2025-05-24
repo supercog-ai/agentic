@@ -1176,6 +1176,10 @@ class BaseAgentProxy:
         else:
             depthLocal.depth += 1
 
+        for key, value in request_context.items():
+            if isinstance(value, Callable):
+                request_context[key] = value()
+                
         if isinstance(request, str):
             request = self._check_for_prompt_match(request)
 

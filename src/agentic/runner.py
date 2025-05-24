@@ -133,7 +133,7 @@ class RayAgentRunner:
 
                 request_id = self.facade.start_request(
                     line, 
-                    request_context=default_context,
+                    request_context=default_context.copy(),
                     debug=self.debug, 
                     continue_result=continue_result
                 ).request_id
