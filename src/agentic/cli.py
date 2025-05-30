@@ -805,7 +805,7 @@ def models_gpt(
     quiet_log(usage)
 
 @models_app.command("gemini")
-def models_claude(prompt: str):
+def models_gemini(prompt: str):
     """Run completion with Gemini"""
     from .llm import llm_generate, LLMUsage, GEMINI_DEFAULT_MODEL
 
