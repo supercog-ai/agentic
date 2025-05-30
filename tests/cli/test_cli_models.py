@@ -102,3 +102,24 @@ def test_models_gpt_default_model(mock_llm_generate):
     # Verify usage object was passed
     usage_arg = mock_llm_generate.call_args[1]['usage']
     assert isinstance(usage_arg, LLMUsage) 
+
+@patch('agentic.llm.llm_generate')
+def test_models_gemini_default_model(mock_llm_generate):
+    """Test the models Gemini command with default model"""
+    test_prompt = "Test prompt"
+    mock_llm_generate.return_value = "Gemini response"
+    
+    result = runner.invoke(app, ["models", "gemini", test_prompt])
+    
+    assert result.exit_code == 0
+    assert "Gemini response" in result.stdout
+    
+    # Verify the mock was called with correct arguments and default model
+    mock_llm_generate.assert_called_once_with(
+        test_prompt,
+        model="gemini/gemini-2.5-flash-preview-05-20",
+        usage=ANY
+    )
+    # Verify usage object was passed
+    usage_arg = mock_llm_generate.call_args[1]['usage']
+    assert isinstance(usage_arg, LLMUsage) 

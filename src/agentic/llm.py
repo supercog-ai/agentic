@@ -16,6 +16,7 @@ DEFAULT_MODEL = settings.get("DEFAULT_CODE_LLM", "openai/gpt-4o-mini")
 
 CLAUDE_DEFAULT_MODEL = "anthropic/claude-sonnet-4-20250514"
 GPT_DEFAULT_MODEL = "openai/gpt-4o-mini"
+GEMINI_DEFAULT_MODEL = "gemini/gemini-2.5-flash-preview-05-20"
 
 
 @dataclass
@@ -43,7 +44,7 @@ def setup_model_key(model: str):
     elif re.match(r"^replicate/", model) or model.startswith("replicate/"):
         key_name = "REPLICATE_API_KEY"
     elif re.match(r"^gemini/", model) or model.startswith("google/"):
-        key_name = "GOOGLE_API_KEY"
+        key_name = "GEMINI_API_KEY"
     else:
         raise ValueError(f"Unknown model {model}")
 
