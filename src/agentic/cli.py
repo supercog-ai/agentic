@@ -730,6 +730,9 @@ Popular models:
     anthropic/claude-3-7-sonnet-20250219
     anthropic/claude-sonnet-4-20250514
     anthropic/claude-opus-4-20250514
+    gemini/gemini-2.0-flash
+    gemini/gemini-2.5-pro-preview-05-06
+    gemini/gemini-2.5-flash-preview-05-20
     lm_studio/qwen2.5-7b-instruct-1m
     lm_studio/deepseek-r1-distill-qwen-7B
      """
@@ -799,6 +802,15 @@ def models_gpt(
 
     usage = LLMUsage()
     typer.echo(llm_generate(prompt, model=model, usage=usage))
+    quiet_log(usage)
+
+@models_app.command("gemini")
+def models_claude(prompt: str):
+    """Run completion with Gemini"""
+    from .llm import llm_generate, LLMUsage, GEMINI_DEFAULT_MODEL
+
+    usage = LLMUsage()
+    typer.echo(llm_generate(prompt, model=GEMINI_DEFAULT_MODEL, usage=usage))
     quiet_log(usage)
 
 @app.command()

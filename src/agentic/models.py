@@ -7,6 +7,8 @@ GPT_4O_MINI = "gpt-4o-mini"  # Default model
 GPT_4O = "openai/gpt-4o"
 GPT_O1 = "openai/gpt-o1"
 GEMINI_FLASH = "gemini/gemini-2.0-flash"
+GEMINI_2_5_PRO_PREVIEW = "gemini/gemini-2.5-pro-preview-05-06"
+GEMINI_2_5_FLASH_PREVIEW = "gemini/gemini-2.5-flash-preview-05-20"
 
 # LM Studio model identifiers (using litellm's built-in support)
 LMSTUDIO_QWEN = "lm_studio/qwen2.5-7b-instruct-1m"
@@ -29,6 +31,12 @@ OPENAI_MODELS = {
     "gpt-o1": GPT_O1,
 }
 
+GEMINI_MODELS = {
+    "gemini-2.0-flash": GEMINI_FLASH,
+    "gemini-2.5-pro-preview": GEMINI_2_5_PRO_PREVIEW,
+    "gemini-2.5-flash-preview": GEMINI_2_5_FLASH_PREVIEW,
+}
+
 LMSTUDIO_MODELS = {
     "qwen2.5": LMSTUDIO_QWEN,
     "deepseek-r1": LMSTUDIO_DEEPSEEK,
@@ -38,6 +46,7 @@ LMSTUDIO_MODELS = {
 CHAT_MODELS = {
     **ANTHROPIC_MODELS,
     **OPENAI_MODELS,
+    **GEMINI_MODELS,
     **LMSTUDIO_MODELS,
 }
 
