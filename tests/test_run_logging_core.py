@@ -31,7 +31,7 @@ def run_manager(temp_db_path):
     return RunManager(db_path=temp_db_path)
 
 @pytest.fixture
-def run_context():
+def thread_context():
     """Create a RunContext for testing."""
     return RunContext(agent_name="test_agent", agent=Mock(), debug_level=None)
 
@@ -65,7 +65,7 @@ def test_log_event(db_manager):
     
     # Log an event
     log = db_manager.log_event(
-        run_id=run.id,
+        thread_id=run.id,
         agent_id="test_agent",
         user_id="test_user",
         role="assistant",
@@ -74,7 +74,7 @@ def test_log_event(db_manager):
     )
     
     assert log.id is not None
-    assert log.run_id == run.id
+    assert log.thread_id == run.id
     assert log.agent_id == "test_agent"
     assert log.user_id == "test_user"
     assert log.role == "assistant"
@@ -92,7 +92,7 @@ def test_update_run(db_manager):
     )
     
     updated_run = db_manager.update_run(
-        run_id=run.id,
+        thread_id=run.id,
         description="Updated description",
         usage_data={"model": "test-model", "tokens": 100},
         run_metadata={"key": "value"}
@@ -128,7 +128,7 @@ def test_get_run_logs(db_manager):
     # Create multiple logs
     for i in range(3):
         db_manager.log_event(
-            run_id=run.id,
+            thread_id=run.id,
             agent_id="test_agent",
             user_id="test_user",
             role="assistant",
@@ -139,7 +139,7 @@ def test_get_run_logs(db_manager):
     logs = db_manager.get_run_logs(run.id)
     assert len(logs) == 3
     assert all(isinstance(log, RunLog) for log in logs)
-    assert all(log.run_id == run.id for log in logs)
+    assert all(log.thread_id == run.id for log in logs)
 
 def test_get_runs_by_user(db_manager):
     """Test retrieving runs for a specific user."""
@@ -185,12 +185,12 @@ def test_get_runs_by_agent(db_manager):
     assert len(retrieved_runs) == 2
     assert all(run.agent_id == "agent1" for run in retrieved_runs)
 
-def test_run_manager_handle_events(db_manager, run_manager, run_context):
+def test_run_manager_handle_events(db_manager, run_manager, thread_context):
     """Test RunManager event handling."""
     # Test handling PromptStarted event
     prompt_event = PromptStarted(agent="test_agent", message="Test prompt")
-    run_manager.handle_event(prompt_event, run_context)
-    assert run_manager.current_run_id is not None
+    run_manager.handle_event(prompt_event, thread_context)
+    assert run_manager.current_thread_id is not None
     
     # Test handling FinishCompletion event
     completion_event = FinishCompletion.create(
@@ -202,25 +202,25 @@ def test_run_manager_handle_events(db_manager, run_manager, run_context):
         output_tokens=20,
         elapsed_time=1.0
     )
-    run_manager.handle_event(completion_event, run_context)
+    run_manager.handle_event(completion_event, thread_context)
     
     # Test handling tool events
     tool_call = ToolCall(agent="test_agent", name="test_tool", arguments={"arg": "value"})
-    run_manager.handle_event(tool_call, run_context)
+    run_manager.handle_event(tool_call, thread_context)
     
     tool_result = ToolResult(agent="test_agent", name="test_tool", result="success")
-    run_manager.handle_event(tool_result, run_context)
+    run_manager.handle_event(tool_result, thread_context)
     
     # Test handling TurnEnd event
-    turn_end = TurnEnd(agent="test_agent", messages=[], run_context=run_context)
-    run_manager.handle_event(turn_end, run_context)
+    turn_end = TurnEnd(agent="test_agent", messages=[], thread_context=thread_context)
+    run_manager.handle_event(turn_end, thread_context)
     
     # Verify logs were created
-    logs = db_manager.get_run_logs(run_manager.current_run_id)
+    logs = db_manager.get_run_logs(run_manager.current_thread_id)
     assert len(logs) > 0
     
     # Verify usage data was tracked
-    run = db_manager.get_run(run_manager.current_run_id)
+    run = db_manager.get_run(run_manager.current_thread_id)
     assert "test-model" in run.usage_data
     assert run.usage_data["test-model"]["input_tokens"] == 10
     assert run.usage_data["test-model"]["output_tokens"] == 20

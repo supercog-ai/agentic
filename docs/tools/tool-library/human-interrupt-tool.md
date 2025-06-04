@@ -14,7 +14,7 @@ The `HumanInterruptTool` provides a simple mechanism for agents to pause executi
 ### stop_for_input
 
 ```python
-def stop_for_input(request_message: str, run_context: RunContext)
+def stop_for_input(request_message: str, thread_context: RunContext)
 ```
 
 Stop and ask the user for input.
@@ -22,7 +22,7 @@ Stop and ask the user for input.
 **Parameters:**
 
 - `request_message (str)`: The message to display to the human
-- `run_context (RunContext)`: The execution context
+- `thread_context (RunContext)`: The execution context
 
 **Returns:**
 Either the human input (if already provided) or a `PauseForInputResult` that will pause execution and request input.

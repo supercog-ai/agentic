@@ -22,7 +22,7 @@ Requires an OpenAI API key with access to image generation features. You may hav
 ### generate_image
 
 ```python
-async def generate_image(prompt: str, run_context: RunContext) -> str
+async def generate_image(prompt: str, thread_context: RunContext) -> str
 ```
 
 Generates an image based on the given text prompt.
@@ -30,7 +30,7 @@ Generates an image based on the given text prompt.
 **Parameters:**
 
 - `prompt (str)`: Text description of the image to generate
-- `run_context (RunContext)`: The execution context
+- `thread_context (RunContext)`: The execution context
 
 **Returns:**
 A markdown-formatted string with the URL to the generated image, or an error message.

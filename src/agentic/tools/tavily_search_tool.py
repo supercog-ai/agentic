@@ -30,11 +30,11 @@ class TavilySearchTool(BaseAgenticTool):
         ]
 
     async def query_for_news(
-        self, run_context: RunContext, query: str, days_back: int = 1
+        self, thread_context: RunContext, query: str, days_back: int = 1
     ) -> pd.DataFrame | PauseForInputResult:
         """Returns the latest headlines on the given topic."""
 
-        api_key = run_context.get_secret("TAVILY_API_KEY", self.api_key)
+        api_key = thread_context.get_secret("TAVILY_API_KEY", self.api_key)
 
         params = {
             "api_key": api_key,
@@ -62,14 +62,14 @@ class TavilySearchTool(BaseAgenticTool):
         query: str, 
         include_images: bool = False, 
         include_content: bool = False,
-        run_context: RunContext = None
+        thread_context: RunContext = None
     ) -> List[dict]:
         """Returns a web search result pages and images using the Tavily search engine. Anything
          related to news should use the query_for_news function. Set 'include_content' to return the full page contents.
         Don't use the "site:" filter unless requested explicitly to do so.
         """
 
-        api_key = self.api_key or run_context.get_secret("TAVILY_API_KEY")
+        api_key = self.api_key or thread_context.get_secret("TAVILY_API_KEY")
 
         max_results: int = 8
         """Max search results to return, default is 5"""
@@ -110,10 +110,10 @@ class TavilySearchTool(BaseAgenticTool):
         return results['results'] + results.get('images', [])
 
     async def tavily_download_pages(
-        self, run_context: RunContext, urls: list[str], include_images: bool = False
+        self, thread_context: RunContext, urls: list[str], include_images: bool = False
     ) -> pd.DataFrame:
         """Download the content from one or more web page URLS."""
-        api_key = run_context.get_secret("TAVILY_API_KEY", self.api_key)
+        api_key = thread_context.get_secret("TAVILY_API_KEY", self.api_key)
 
         params = {
             "api_key": api_key,

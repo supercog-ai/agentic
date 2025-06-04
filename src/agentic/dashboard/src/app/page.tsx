@@ -14,7 +14,7 @@ import { useAgentsWithDetails } from '@/hooks/useAgentData';
 export default function Home() {
   const [selectedAgent, setSelectedAgent] = useState<string>('');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [currentRunId, setCurrentRunId] = useState<string | undefined>();
+  const [currentThreadId, setCurrentThreadId] = useState<string | undefined>();
 
   // Use our custom hook to fetch agent data
   const { agents, error, isLoading } = useAgentsWithDetails();
@@ -26,20 +26,20 @@ export default function Home() {
 
   const handleAgentSelect = (path: string) => {
     setSelectedAgent(path);
-    setCurrentRunId(undefined);
+    setCurrentThreadId(undefined);
   };
 
-  const handleRunSelect = (runId: string) => {
-    setCurrentRunId(runId);
+  const handleThreadSelect = (threadId: string) => {
+    setCurrentThreadId(threadId);
   };
   
-  // Function to refresh runs data
-  const refreshRuns = (runId?: string) => {
-    if (runId && runId !== currentRunId) {
-      setCurrentRunId(runId);
+  // Function to refresh threads data
+  const refreshThreads = (threadId?: string) => {
+    if (threadId && threadId !== currentThreadId) {
+      setCurrentThreadId(threadId);
     }
     
-    mutate(['agent-runs', selectedAgent]);
+    mutate(['agent-threads', selectedAgent]);
   };
 
   if (isLoading) {
@@ -102,10 +102,10 @@ export default function Home() {
                 setIsSidebarOpen(false);
               }}
               onNewChat={() => {
-                setCurrentRunId(undefined);
-                refreshRuns();
+                setCurrentThreadId(undefined);
+                refreshThreads();
               }}
-              onRunSelected={handleRunSelect}
+              onThreadSelected={handleThreadSelect}
               isMobile={true}
             />
           </SheetContent>
@@ -119,10 +119,10 @@ export default function Home() {
           selectedAgent={selectedAgent}
           onSelectAgent={handleAgentSelect}
           onNewChat={() => {
-            setCurrentRunId(undefined);
-            refreshRuns();
+            setCurrentThreadId(undefined);
+            refreshThreads();
           }}
-          onRunSelected={handleRunSelect}
+          onThreadSelected={handleThreadSelect}
         />
       </div>
 
@@ -133,8 +133,8 @@ export default function Home() {
             <AgentChat 
               agentPath={selectedAgent} 
               agentInfo={selectedAgentInfo}
-              currentRunId={currentRunId}
-              onRunComplete={refreshRuns}
+              currentThreadId={currentThreadId}
+              onThreadComplete={refreshThreads}
               showMobileMenuButton={false}
             />
           </div>

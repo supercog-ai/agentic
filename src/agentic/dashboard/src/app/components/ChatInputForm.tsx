@@ -10,23 +10,23 @@ interface ChatInputFormProps {
   inputKeys: Record<string, string>;
   resumeValues?: Record<string, string>;
   formDisabled?: boolean;
-  runId: string;
+  threadId: string;
   resumeWithInput: (
     _continueResult: Record<string, string>, 
-    _existingRunId: string,
+    _existingThreadId: string,
     _onMessageUpdate?: (_content: string) => void,
-    _onComplete?: (_runId: string) => void
-  ) => Promise<{ requestId: string; runId: string; content: string; } | null>,
-  onRunComplete?: (_runId: string) => void;
+    _onComplete?: (_threadId: string) => void
+  ) => Promise<{ requestId: string; threadId: string; content: string; } | null>,
+  onThreadComplete?: (_threadId: string) => void;
 }
 
 const ChatInputForm: React.FC<ChatInputFormProps> = ({ 
   inputKeys,
   resumeValues = {},
   formDisabled = false,
-  runId,
+  threadId,
   resumeWithInput,
-  onRunComplete
+  onThreadComplete
 }) => {
   // Create initial state based on input keys and resume values
   const createInitialFormState = () => {
@@ -80,11 +80,11 @@ const ChatInputForm: React.FC<ChatInputFormProps> = ({
       // Messages will be derived from events in the useChat hook
       const response = await resumeWithInput(
         formState,
-        runId,
+        threadId,
         // This callback is used for streaming updates
         () => {},
         // Callback when complete
-        onRunComplete
+        onThreadComplete
       );
       
       // If response failed, we could handle error here

@@ -98,14 +98,14 @@ to learn how to create an app password. You need to supply this password to use 
 
         return gmail_folders.get(folder, f'"{folder}"')
 
-    def list_folders(self, run_context: RunContext) -> List[str]:
+    def list_folders(self, thread_context: RunContext) -> List[str]:
         """
         List all available folders in the email account.
 
         :return: List of folder names
         """
-        self.email_address = run_context.get_secret("IMAP_USERNAME")
-        self.app_password = run_context.get_secret("IMAP_PASSWORD")
+        self.email_address = thread_context.get_secret("IMAP_USERNAME")
+        self.app_password = thread_context.get_secret("IMAP_PASSWORD")
         imap = None
         try:
             imap = imaplib.IMAP4_SSL("imap.gmail.com", 993)
@@ -129,7 +129,7 @@ to learn how to create an app password. You need to supply this password to use 
 
     def list_emails(
         self,
-        run_context: RunContext,
+        thread_context: RunContext,
         limit: int = 50,
         subject_words: str = None,
         days_back_from_today: int = 1,
@@ -146,24 +146,24 @@ to learn how to create an app password. You need to supply this password to use 
         Returns:
             List of dictionaries containing email information
         """
-        self.email_address = run_context.get_secret("IMAP_USERNAME")
-        self.app_password = run_context.get_secret("IMAP_PASSWORD")
+        self.email_address = thread_context.get_secret("IMAP_USERNAME")
+        self.app_password = thread_context.get_secret("IMAP_PASSWORD")
         imap_server = "imap.gmail.com"
         imap_port = 993
 
-        run_context.info(f"Starting to list emails with limit={limit}")
+        thread_context.info(f"Starting to list emails with limit={limit}")
 
         imap = None
         try:
-            run_context.info(f"Connecting to IMAP server: {imap_server}:{imap_port}")
+            thread_context.info(f"Connecting to IMAP server: {imap_server}:{imap_port}")
             imap = imaplib.IMAP4_SSL(imap_server, imap_port)
 
-            run_context.info(f"Logging in with email: {self.email_address}")
+            thread_context.info(f"Logging in with email: {self.email_address}")
             imap.login(self.email_address, self.app_password)
 
             # Select the specified folder
             actual_folder = self._get_gmail_folder_name(folder)
-            run_context.info(f"Selecting folder: {actual_folder}")
+            thread_context.info(f"Selecting folder: {actual_folder}")
             status, folder_info = imap.select(actual_folder)
             if status != "OK":
                 raise ValueError(
@@ -174,12 +174,12 @@ to learn how to create an app password. You need to supply this password to use 
             if subject_words:
                 # Properly format subject search with quotes
                 search_criteria = [f'SUBJECT "{subject_words}"']
-                run_context.info(
+                thread_context.info(
                     f"Searching for emails with subject containing: {subject_words}"
                 )
             else:
                 search_criteria = ["ALL"]
-                run_context.info("Searching for all emails")
+                thread_context.info("Searching for all emails")
 
             # Use 'days_back' to limit the search to emails within the last 'days_back' days
             if days_back_from_today > 0:
@@ -199,18 +199,18 @@ to learn how to create an app password. You need to supply this password to use 
                 search_criteria.append('NOT BODY "subscription"')
 
             # Perform the search
-            run_context.info(f"Executing search with criteria: {search_criteria}")
+            thread_context.info(f"Executing search with criteria: {search_criteria}")
             _, message_numbers = imap.search(None, *search_criteria)
             message_numbers = message_numbers[0].split()
 
-            run_context.info(f"Found {len(message_numbers)} matching messages")
+            thread_context.info(f"Found {len(message_numbers)} matching messages")
 
             # Get the most recent 'limit' emails
             message_numbers = message_numbers[-limit:]
 
             email_list = []
             for num in reversed(message_numbers):
-                run_context.info(f"Fetching message ID: {num.decode()}")
+                thread_context.info(f"Fetching message ID: {num.decode()}")
                 _, msg_data = imap.fetch(num, "(RFC822.HEADER)")
                 email_header = msg_data[0][1]
                 email_message = email.message_from_bytes(email_header)
@@ -229,27 +229,27 @@ to learn how to create an app password. You need to supply this password to use 
                     }
                 )
 
-            run_context.info(f"Successfully retrieved {len(email_list)} emails")
+            thread_context.info(f"Successfully retrieved {len(email_list)} emails")
             return email_list
 
         except imaplib.IMAP4.error as e:
-            run_context.info(f"IMAP error: {str(e)}")
+            thread_context.info(f"IMAP error: {str(e)}")
             return [{"error": f"IMAP error: {str(e)}"}]
         except Exception as e:
-            run_context.info(f"Error listing emails: {str(e)}")
+            thread_context.info(f"Error listing emails: {str(e)}")
             import traceback
 
-            run_context.info(traceback.format_exc())
+            thread_context.info(traceback.format_exc())
             return [{"error": f"Error: {str(e)}"}]
         finally:
             if imap:
                 try:
-                    run_context.info("Closing IMAP connection")
+                    thread_context.info("Closing IMAP connection")
                     imap.close()
-                    run_context.info("Logging out from IMAP server")
+                    thread_context.info("Logging out from IMAP server")
                     imap.logout()
                 except Exception as e:
-                    run_context.info(f"Error during IMAP cleanup: {str(e)[0:50]}")
+                    thread_context.info(f"Error during IMAP cleanup: {str(e)[0:50]}")
 
     def date_based_search(
         self, imap, limit: int, search_criteria: List[str]
@@ -277,7 +277,7 @@ to learn how to create an app password. You need to supply this password to use 
 
     def send_email(
         self,
-        run_context: RunContext,
+        thread_context: RunContext,
         to: str,
         subject: str,
         body: str,
@@ -286,10 +286,10 @@ to learn how to create an app password. You need to supply this password to use 
         """Drafts or sends an email message. By default messages are saved as drafts, but you can override with save_draft=False."""
 
         if save_draft:
-            return self.save_email_draft(run_context, to, subject, body)
+            return self.save_email_draft(thread_context, to, subject, body)
 
-        self.email_address = run_context.get_secret("IMAP_USERNAME")
-        self.app_password = run_context.get_secret("IMAP_PASSWORD")
+        self.email_address = thread_context.get_secret("IMAP_USERNAME")
+        self.app_password = thread_context.get_secret("IMAP_PASSWORD")
         smtp_server = "smtp.gmail.com"
         smtp_port = 587
         smtp_username = self.email_address
@@ -320,11 +320,11 @@ to learn how to create an app password. You need to supply this password to use 
             server.quit()
 
     def save_email_draft(
-        self, run_context: RunContext, to: str, subject: str, body: str
+        self, thread_context: RunContext, to: str, subject: str, body: str
     ) -> str:
         """Save a draft email message"""
-        self.email_address = run_context.get_secret("IMAP_USERNAME")
-        self.app_password = run_context.get_secret("IMAP_PASSWORD")
+        self.email_address = thread_context.get_secret("IMAP_USERNAME")
+        self.app_password = thread_context.get_secret("IMAP_PASSWORD")
 
         # Create a multipart message
         msg = MIMEMultipart()
@@ -351,7 +351,7 @@ to learn how to create an app password. You need to supply this password to use 
 
     def retrieve_emails(
         self,
-        run_context: RunContext,
+        thread_context: RunContext,
         limit: int = 5,
         search_criteria: str = "",
         since_date: Optional[str | datetime] = None,
@@ -375,7 +375,7 @@ to learn how to create an app password. You need to supply this password to use 
             List of dictionaries containing email data (subject, sender, date, body, attachments)
         """
         return self.retrieve_emails_base(
-            run_context=run_context,
+            thread_context=thread_context,
             limit=limit,
             search_criteria=search_criteria,
             since_date=since_date,
@@ -388,7 +388,7 @@ to learn how to create an app password. You need to supply this password to use 
 
     def retrieve_emails_once(
         self,
-        run_context: RunContext,
+        thread_context: RunContext,
         limit: int = 5,
         search_criteria: str = "",
         since_date: Optional[str | datetime] = None,
@@ -412,7 +412,7 @@ to learn how to create an app password. You need to supply this password to use 
             List of dictionaries containing email data (subject, sender, date, body, attachments)
         """
         result = self.retrieve_emails_base(
-            run_context=run_context,
+            thread_context=thread_context,
             limit=limit,
             search_criteria=search_criteria,
             since_date=since_date,
@@ -423,7 +423,7 @@ to learn how to create an app password. You need to supply this password to use 
             is_read_func=self.is_email_read,
         )
 
-        run_context.info(
+        thread_context.info(
             f"No new emails found in folder '{folder}' matching the criteria."
         )
 
@@ -431,7 +431,7 @@ to learn how to create an app password. You need to supply this password to use 
 
     def retrieve_emails_base(
         self,
-        run_context: RunContext,
+        thread_context: RunContext,
         limit: int,
         search_criteria: str,
         mark_as_read_func: Callable,
@@ -466,7 +466,7 @@ to learn how to create an app password. You need to supply this password to use 
             - The method uses the provided mark_as_read_func and is_read_func to track
             which emails have been processed, allowing for different tracking implementations
         """
-        run_context.debug(
+        thread_context.debug(
             f"Starting retrieve_emails with limit={limit}, "
             f"search_criteria='{search_criteria}', "
             f"since_date={since_date}, "
@@ -483,8 +483,8 @@ to learn how to create an app password. You need to supply this password to use 
             elif isinstance(message, str):
                 search_criteria = message
 
-        self.email_address = run_context.get_secret("IMAP_USERNAME")
-        self.app_password = run_context.get_secret("IMAP_PASSWORD")
+        self.email_address = thread_context.get_secret("IMAP_USERNAME")
+        self.app_password = thread_context.get_secret("IMAP_PASSWORD")
         imap_server = "imap.gmail.com"
         imap_port = 993
 
@@ -516,7 +516,7 @@ to learn how to create an app password. You need to supply this password to use 
 
                 date_criterion = since_date.strftime("%d-%b-%Y")
             except Exception as e:
-                run_context.info(f"Error parsing since_date: {str(e)}")
+                thread_context.info(f"Error parsing since_date: {str(e)}")
                 # Default to 30 days ago if date parsing fails
                 since_date = datetime.now() - timedelta(days=30)
                 date_criterion = since_date.strftime("%d-%b-%Y")
@@ -531,7 +531,7 @@ to learn how to create an app password. You need to supply this password to use 
             imap.login(self.email_address, self.app_password)
 
             actual_folder = self._get_gmail_folder_name(folder)
-            run_context.debug(f"Selecting folder: {actual_folder}")
+            thread_context.debug(f"Selecting folder: {actual_folder}")
             status, folder_info = imap.select(actual_folder)
             if status != "OK":
                 raise ValueError(
@@ -554,21 +554,21 @@ to learn how to create an app password. You need to supply this password to use 
             # Combine all criteria with AND logic
             final_search_criteria = "(" + ") (".join(search_terms) + ")"
 
-            run_context.debug(
+            thread_context.debug(
                 f"Searching for emails with criteria: {final_search_criteria}"
             )
             try:
                 _, message_numbers = imap.search(None, final_search_criteria)
             except imaplib.IMAP4.error as e:
-                run_context.error(f"IMAP SEARCH error: {str(e)}")
+                thread_context.error(f"IMAP SEARCH error: {str(e)}")
                 fallback_criteria = f'SINCE "{date_criterion}"'
                 _, message_numbers = imap.search(None, fallback_criteria)
-                run_context.debug(
+                thread_context.debug(
                     f"Falling back to retrieving all emails since {date_criterion}"
                 )
 
             message_numbers = message_numbers[0].split()
-            run_context.debug(f"Search returned: {len(message_numbers)} messages")
+            thread_context.debug(f"Search returned: {len(message_numbers)} messages")
 
             message_ids = message_numbers[-limit:]
 
@@ -578,7 +578,7 @@ to learn how to create an app password. You need to supply this password to use 
                 if processed_count >= limit:
                     break
 
-                run_context.debug(f"Fetching message ID: {num}")
+                thread_context.debug(f"Fetching message ID: {num}")
                 _, msg_data = imap.fetch(num, "(RFC822)")
                 email_body = msg_data[0][1]
                 email_message = email.message_from_bytes(email_body)
@@ -591,14 +591,14 @@ to learn how to create an app password. You need to supply this password to use 
 
                 processed_count += 1
 
-            run_context.debug(f"Successfully retrieved {len(email_list)} emails")
+            thread_context.debug(f"Successfully retrieved {len(email_list)} emails")
             return email_list
 
         except ValueError as ve:
-            run_context.error(f"Validation error: {str(ve)}")
+            thread_context.error(f"Validation error: {str(ve)}")
             raise
         except Exception as e:
-            run_context.error(f"Error retrieving emails: {str(e)}")
+            thread_context.error(f"Error retrieving emails: {str(e)}")
             return []
 
     @staticmethod
@@ -901,7 +901,7 @@ to learn how to create an app password. You need to supply this password to use 
         soup = BeautifulSoup(html_content, "html.parser")
         return soup.get_text()
 
-    def test_credential(self, cred, secrets: dict, run_context: RunContext) -> str:
+    def test_credential(self, cred, secrets: dict, thread_context: RunContext) -> str:
         """Test that the given credential secrets are valid. Return None if OK, otherwise
         return an error message.
         """
@@ -916,7 +916,7 @@ to learn how to create an app password. You need to supply this password to use 
             with imaplib.IMAP4_SSL(imap_server, imap_port) as imap:
                 imap.login(email_address, app_password)
                 imap.select("inbox", readonly=True)
-                run_context.info("IMAP gmail tested!")
+                thread_context.info("IMAP gmail tested!")
             return None  # Return None if the test is successful
         except imaplib.IMAP4.error as imap_error:
             return f"IMAP login failed: {str(imap_error)}"

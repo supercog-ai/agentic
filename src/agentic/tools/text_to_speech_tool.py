@@ -84,14 +84,14 @@ class TextToSpeechTool(BaseAgenticTool):
                     raise ValueError("File was created but is empty")
 
                 # Upload to S3
-                raw_url = self.run_context.upload_user_file_to_s3(
+                raw_url = self.thread_context.upload_user_file_to_s3(
                     file_name=filename, original_folder="audio", mime_type="audio/mpeg"
                 )
                 print(
                     f"generate_speech_file_from_text:Speech saved successfully:Raw_url -> {raw_url}"
                 )
                 # Get the correct URL
-                audio_url = self.run_context.get_file_url(filename, "audio")
+                audio_url = self.thread_context.get_file_url(filename, "audio")
                 print(f"generate_speech_file_from_text: correct URL -> {audio_url}")
 
                 # Clean up the local file after successful upload
@@ -175,14 +175,14 @@ class TextToSpeechTool(BaseAgenticTool):
             save_path = filename
             combined.export(save_path, format="mp3")
 
-            # raw_url = self.run_context.upload_user_file_to_s3(
+            # raw_url = self.thread_context.upload_user_file_to_s3(
             #     file_name=filename, original_folder="audio", mime_type="audio/mpeg"
             # )
             # print(
             #     f"generate_speech_file_from_text:Speech saved successfully:Raw_url -> {raw_url}"
             # )
             # # Get the correct URL
-            # audio_url = self.run_context.get_file_url(filename, "audio")
+            # audio_url = self.thread_context.get_file_url(filename, "audio")
             # print(f"generate_speech_file_from_text: correct URL -> {audio_url}")
 
             # # Clean up the local file after successful upload

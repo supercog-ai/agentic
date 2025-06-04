@@ -4,13 +4,13 @@ from sqlmodel import Session, SQLModel, create_engine, select, asc, desc
 from pathlib import Path
 from copy import deepcopy
 
-from agentic.db.models import Run, RunLog
+from agentic.db.models import Thread, ThreadLog
 from agentic.events import FinishCompletion
 from agentic.utils.directory_management import get_runtime_filepath
 
 # Database setup and management
 class DatabaseManager:
-    def __init__(self, db_path: str = "agent_runs.db"):
+    def __init__(self, db_path: str = "agent_threads.db"):
         self.db_path = get_runtime_filepath(db_path)
         self.engine = create_engine(f"sqlite:///{self.db_path}", echo=False)
         self.create_db_and_tables()
@@ -21,42 +21,42 @@ class DatabaseManager:
     def get_session(self) -> Session:
         return Session(self.engine)
 
-    def create_run(self,
+    def create_thread(self,
                    agent_id: str,
                    user_id: str,
                    initial_prompt: str,
-                   run_id: Optional[str] = None,
+                   thread_id: Optional[str] = None,
                    description: Optional[str] = None,
                    usage_data: Dict = None,
-                   run_metadata: Dict = None) -> Run:
-        run = Run(
-            id=run_id,
+                   thread_metadata: Dict = None) -> Thread:
+        thread = Thread(
+            id=thread_id,
             agent_id=agent_id,
             user_id=user_id,
             initial_prompt=initial_prompt,
             description=description,
             usage_data=usage_data or {},
-            run_metadata=run_metadata or {}
+            thread_metadata=thread_metadata or {}
         )
         
         with self.get_session() as session:
-            session.add(run)
+            session.add(thread)
             session.commit()
-            session.refresh(run)
-            return run
+            session.refresh(thread)
+            return thread
 
     def log_event(self,
-                  run_id: int,
+                  thread_id: int,
                   agent_id: str,
                   user_id: str,
                   role: str,
                   event_name: str,
-                  event_data: Dict) -> RunLog:
+                  event_data: Dict) -> ThreadLog:
         with self.get_session() as session:
             run_timestamp = datetime.now(UTC)
             # Create the log entry
-            log = RunLog(
-                run_id=run_id,
+            log = ThreadLog(
+                thread_id=thread_id,
                 agent_id=agent_id,
                 user_id=user_id,
                 role=role,
@@ -67,15 +67,15 @@ class DatabaseManager:
             session.add(log)
             
             # Update the parent run
-            run = session.get(Run, run_id)
-            if run:
-                run.updated_at = run_timestamp
+            thread = session.get(Thread, thread_id)
+            if thread:
+                thread.updated_at = run_timestamp
                 # Update usage data if event contains it
                 if event_name == "completion_end":
                     usage = event_data["usage"]
 
                     # Make a copy so changes are detected
-                    usage_data = deepcopy(run.usage_data)
+                    usage_data = deepcopy(thread.usage_data)
                     for model in usage:
                         if model not in usage_data:
                             usage_data[model] = usage[model]
@@ -84,57 +84,56 @@ class DatabaseManager:
                             usage_data[model][FinishCompletion.OUTPUT_TOKENS_KEY] += usage[model].get(FinishCompletion.OUTPUT_TOKENS_KEY, 0)
                             usage_data[model][FinishCompletion.COST_KEY] += usage[model].get(FinishCompletion.COST_KEY, 0)
                     
-                    run.usage_data = usage_data
-                session.add(run)
+                    thread.usage_data = usage_data
+                session.add(thread)
             
             session.commit()
             session.refresh(log)
             return log
 
-    def update_run(self,
-                   run_id: int,
+    def update_thread(self,
+                   thread_id: int,
                    description: Optional[str] = None,
                    usage_data: Optional[Dict] = None,
-                   run_metadata: Optional[Dict] = None) -> Optional[Run]:
+                   thread_metadata: Optional[Dict] = None) -> Optional[Thread]:
         with self.get_session() as session:
-            run = session.get(Run, run_id)
-            if run:
+            thread = session.get(Thread, thread_id)
+            if thread:
                 if description is not None:
-                    run.description = description
+                    thread.description = description
                 if usage_data is not None:
-                    updated_usage_data = deepcopy(run.usage_data)
+                    updated_usage_data = deepcopy(thread.usage_data)
                     updated_usage_data.update(usage_data)
-                    run.usage_data = updated_usage_data
-                if run_metadata is not None:
-                    updated_run_metadata = deepcopy(run.run_metadata)
-                    updated_run_metadata.update(run_metadata)
-                    run.run_metadata = updated_run_metadata
-                    run.run_metadata.update(run_metadata)
-                run.updated_at = datetime.now(UTC)
-                session.add(run)
+                    thread.usage_data = updated_usage_data
+                if thread_metadata is not None:
+                    updated_thread_metadata = deepcopy(thread.thread_metadata)
+                    updated_thread_metadata.update(thread_metadata)
+                    thread.thread_metadata = updated_thread_metadata
+                thread.updated_at = datetime.now(UTC)
+                session.add(thread)
                 session.commit()
-                session.refresh(run)
-                return run
+                session.refresh(thread)
+                return thread
             return None
 
-    def get_run(self, run_id: int) -> Optional[Run]:
+    def get_thread(self, thread_id: int) -> Optional[Thread]:
         with self.get_session() as session:
-            return session.get(Run, run_id)
+            return session.get(Thread, thread_id)
 
-    def get_run_logs(self, run_id: int) -> list[RunLog]:
+    def get_thread_logs(self, thread_id: int) -> list[ThreadLog]:
         with self.get_session() as session:
-            return session.exec(select(RunLog).where(RunLog.run_id == run_id).order_by(asc(RunLog.created_at))).all()
+            return session.exec(select(ThreadLog).where(ThreadLog.thread_id == thread_id).order_by(asc(ThreadLog.created_at))).all()
 
-    def get_runs_by_user(self, user_id: str) -> list[Run]:
+    def get_threads_by_user(self, user_id: str) -> list[Thread]:
         with self.get_session() as session:
-            return session.exec(select(Run).where(Run.user_id == user_id).order_by(desc(Run.updated_at))).all()
+            return session.exec(select(Thread).where(Thread.user_id == user_id).order_by(desc(Thread.updated_at))).all()
 
-    def get_runs_by_agent(self, agent_id: str, user_id: str|None) -> list[Run]:
+    def get_threads_by_agent(self, agent_id: str, user_id: str|None) -> list[Thread]:
         with self.get_session() as session:
-            query = select(Run).where(Run.agent_id == agent_id)
+            query = select(Thread).where(Thread.agent_id == agent_id)
         
             # Add user_id filter if it's not None
             if user_id is not None:
-                query = query.where(Run.user_id == user_id)
+                query = query.where(Thread.user_id == user_id)
             
-            return session.exec(query.order_by(desc(Run.updated_at))).all()
+            return session.exec(query.order_by(desc(Thread.updated_at))).all()

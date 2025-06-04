@@ -23,7 +23,7 @@ def github_tool():
 # Fixture for RunContext
 @pytest.fixture
 @pytest.mark.github_test
-def run_context():
+def thread_context():
     context = RunContext(None)
     context.get_secret = lambda key, default=None: (
         agentic_secrets.get_secret("TEST_GITHUB_TOKEN") if key == "GITHUB_API_KEY"
@@ -40,8 +40,8 @@ def test_github_tool_init(github_tool):
 
 # Test repository info helper
 @pytest.mark.github_test
-def test_get_repo_info(github_tool, run_context):
-    owner, name = github_tool._get_repo_info(run_context)
+def test_get_repo_info(github_tool, thread_context):
+    owner, name = github_tool._get_repo_info(thread_context)
     assert owner == TEST_REPO_OWNER
     assert name == TEST_REPO_NAME
 
@@ -50,18 +50,18 @@ def test_get_repo_info(github_tool, run_context):
 @pytest.mark.github_test
 @pytest.mark.skip(reason="User will be marked as spammy")
 @pytest.mark.github_test
-async def test_search_repositories(github_tool, run_context):
-    result = await github_tool.search_repositories(run_context, "test", language="python")
+async def test_search_repositories(github_tool, thread_context):
+    result = await github_tool.search_repositories(thread_context, "test", language="python")
     assert result['status'] == 'success'
     assert 'items' in result['results']
 
 @pytest.mark.asyncio
 @pytest.mark.github_test
 @pytest.mark.github_test
-async def test_create_get_and_close_issue(github_tool, run_context):
+async def test_create_get_and_close_issue(github_tool, thread_context):
     # Create an issue
     create_result = await github_tool.create_github_issue(
-        run_context,
+        thread_context,
         title="Test Issue from Integration Tests",
         body="This is a test issue created by automated tests",
         labels=["test"]
@@ -70,13 +70,13 @@ async def test_create_get_and_close_issue(github_tool, run_context):
     issue_number = create_result['results']['number']
 
     # Get the issue
-    issues = await github_tool.get_github_issues(run_context, state='open')
+    issues = await github_tool.get_github_issues(thread_context, state='open')
     assert isinstance(issues, pd.DataFrame)
     assert not issues.empty
     
     # Add a comment
     comment_result = await github_tool.add_comment_to_issue(
-        run_context,
+        thread_context,
         issue_number=issue_number,
         body="Test comment from integration tests"
     )
@@ -84,7 +84,7 @@ async def test_create_get_and_close_issue(github_tool, run_context):
 
     # Get comments
     comments = await github_tool.get_github_issue_comments(
-        run_context,
+        thread_context,
         issue_number=issue_number
     )
     assert comments['status'] == 'success'
@@ -92,49 +92,49 @@ async def test_create_get_and_close_issue(github_tool, run_context):
 
     # Close the issue
     close_result = await github_tool.close_github_issue(
-        run_context,
+        thread_context,
         issue_number=issue_number
     )
     assert close_result['status'] == 'success'
 
 @pytest.mark.asyncio
 @pytest.mark.github_test
-async def test_repository_contents(github_tool, run_context):
-    result = await github_tool.get_repository_contents(run_context)
+async def test_repository_contents(github_tool, thread_context):
+    result = await github_tool.get_repository_contents(thread_context)
     assert result['status'] == 'success'
     assert isinstance(result['results'], (list, dict))
 
 @pytest.mark.asyncio
 @pytest.mark.github_test
-async def test_list_user_repositories(github_tool, run_context):
-    result = await github_tool.list_user_repositories(run_context, TEST_ACCOUNT_USERNAME)
+async def test_list_user_repositories(github_tool, thread_context):
+    result = await github_tool.list_user_repositories(thread_context, TEST_ACCOUNT_USERNAME)
     assert isinstance(result, pd.DataFrame)
     assert not result.empty
     assert 'name' in result.columns
 
 @pytest.mark.asyncio
 @pytest.mark.github_test
-async def test_search_in_repo(github_tool, run_context):
+async def test_search_in_repo(github_tool, thread_context):
     result = await github_tool.search_in_repo(
-        run_context,
+        thread_context,
         query="test"
     )
     assert isinstance(result, list)
 
 @pytest.mark.asyncio
 @pytest.mark.github_test
-async def test_credential_validation(github_tool, run_context):
-    result = await github_tool.test_credential(run_context)
+async def test_credential_validation(github_tool, thread_context):
+    result = await github_tool.test_credential(thread_context)
     assert result is None  # Success case returns None
 
 @pytest.mark.asyncio
 @pytest.mark.github_test
 @pytest.mark.skip(reason="User will be marked as spammy")
-async def test_create_and_delete_repository(github_tool, run_context):
+async def test_create_and_delete_repository(github_tool, thread_context):
     # Create a new test repository
     repo_name = "temp-test-repo-" + os.urandom(4).hex()
     create_result = await github_tool.create_repository(
-        run_context,
+        thread_context,
         name=repo_name,
         description="Temporary test repository",
         private=True
@@ -147,7 +147,7 @@ async def test_create_and_delete_repository(github_tool, run_context):
     
     # Delete the test repository
     delete_result = await github_tool.delete_repository(
-        run_context,
+        thread_context,
         repo_owner=TEST_ACCOUNT_USERNAME,
         repo_name=repo_name
     )
@@ -155,12 +155,12 @@ async def test_create_and_delete_repository(github_tool, run_context):
 
 @pytest.mark.asyncio
 @pytest.mark.github_test
-async def test_create_and_get_pull_request(github_tool, run_context):
+async def test_create_and_get_pull_request(github_tool, thread_context):
     # Note: This test assumes your test repository has at least two branches
     # You might need to modify the head and base branch names
     
     create_result = await github_tool.create_pull_request(
-        run_context,
+        thread_context,
         title="Test PR from Integration Tests",
         body="This is a test pull request created by automated tests",
         head="dev",
@@ -168,17 +168,17 @@ async def test_create_and_get_pull_request(github_tool, run_context):
     )
     
     # Get pull requests
-    prs = await github_tool.get_pull_requests(run_context, state='open')
+    prs = await github_tool.get_pull_requests(thread_context, state='open')
     assert prs['status'] == 'success'
     assert isinstance(prs['results'], list)
 
 @pytest.mark.asyncio
 @pytest.mark.github_test
-async def test_get_pr_reviews(github_tool, run_context):
+async def test_get_pr_reviews(github_tool, thread_context):
     # This test assumes there is a PR with number 17 and 
     # TEST_REPO_OWNER = "supercog-ai" and TEST_REPO_NAME = "test-repo"
     reviews_result = await github_tool.get_pr_reviews(
-        run_context,
+        thread_context,
         pr_number=17
     )
     
@@ -189,11 +189,11 @@ async def test_get_pr_reviews(github_tool, run_context):
 
 @pytest.mark.asyncio
 @pytest.mark.github_test
-async def test_get_pr_comments(github_tool, run_context):
+async def test_get_pr_comments(github_tool, thread_context):
     # This test assumes there is a PR with number 17 and 
     # TEST_REPO_OWNER = "supercog-ai" and TEST_REPO_NAME = "test-repo"
     comments_result = await github_tool.get_pr_comments(
-        run_context,
+        thread_context,
         pr_number=17
     )
     

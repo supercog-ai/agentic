@@ -94,7 +94,7 @@ def linkedin_tool(monkeypatch):
     return tool
 
 @pytest.fixture
-def run_context():
+def thread_context():
     context = RunContext(None)
     return context
 

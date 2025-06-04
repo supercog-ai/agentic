@@ -82,13 +82,13 @@ for particular tool patterns.
 
 When your agent is started, a `RunContext` object is created and preserved through the lifetime
 of the run session. This object can hold arbitrary state that your agent can use
-during the run. Tool functions just need to define a parameter called `run_context` to receive
+during the run. Tool functions just need to define a parameter called `thread_context` to receive
 the object when they are invoked:
 
 ```
-    def hello_func(self, run_context: RunContext, message):
+    def hello_func(self, thread_context: RunContext, message):
         print(message)
-        print("I am running in agent: ", run_context.agent.name)
+        print("I am running in agent: ", thread_context.agent.name)
 ```
 
 RunContext also offers various utility methods for getting access to system services.
@@ -108,7 +108,7 @@ It is very common for tools to need some configuration or credentials in order t
 Agentic tries to provide some framework support to cover the most common cases:
 
     - For config, take parameters to the `__init__` function for your tool class
-    - Configure secrets in the environment, but use `run_context` to access them
+    - Configure secrets in the environment, but use `thread_context` to access them
     - Described required secrets by implementing the `required_secrets` method
 
 Here is an example from the TavilyTool (for web search):
@@ -122,11 +122,11 @@ class TavilySearchTool:
         return {"TAVILY_API_KEY": "Tavily API key"}
 
     async def query_for_news(
-        self, run_context: RunContext, query: str, days_back: int = 1
+        self, thread_context: RunContext, query: str, days_back: int = 1
     ) -> pd.DataFrame | PauseForInputResult:
         """Returns the latest headlines on the given topic."""
 
-        api_key = run_context.get_secret("TAVILY_API_KEY", self.api_key)
+        api_key = thread_context.get_secret("TAVILY_API_KEY", self.api_key)
         ...
 ```
 You can pass the API key to the init function, but more likely you want to configure that 
@@ -145,7 +145,7 @@ a setting with the CLI:
 
     agentic set <setting1> <value1>
 
-and access it in your tool via `run_context.get`.
+and access it in your tool via `thread_context.get`.
 
 
 ## Implementing Human-in-the-Loop
@@ -156,20 +156,20 @@ to pause to wait for that input. You can achieve this with the `PauseForInputRes
 ```
 from agentic.events import PauseForInputResult
 
-    def get_favorite_tv_show(self, run_context):
-        fave_tv = run_context.get_setting("tv_show")
+    def get_favorite_tv_show(self, thread_context):
+        fave_tv = thread_context.get_setting("tv_show")
         if fave_tv is None:
             return PauseForInputResult({"tv_show": "Please indicate your favorite TV Show"})
         else:
-            run_context.set_setting("tv_show", fave_tv) # remember persistently
+            thread_context.set_setting("tv_show", fave_tv) # remember persistently
         return f"Ok, getting your favorite espiodes from {fave_tv}"
 ```
 The first time your function is called it determines that the required
 value is missing, so it returns the `PauseForInputResult` with the missing key and a message
 describing what it needs. The message will be shown to the user, and their response will
-be automatically set in the `run_context` using the indicated key. Then your function will
+be automatically set in the `thread_context` using the indicated key. Then your function will
 be invoked **again**, but this time the setting should be available. You can choose to persist
-the value so that the human doesn't get interrupted again on the next run, via `run_context.set_setting`. 
+the value so that the human doesn't get interrupted again on the next run, via `thread_context.set_setting`. 
 
 If you want your agent to request "human input" directly, there is a convenience `HumanInterruptTool`
 available.
@@ -184,18 +184,18 @@ from your function is returned to the LLM.
 A classic use case is generating logging events from a function:
 
 ```
-    def long_running_function(self, run_context) -> str:
+    def long_running_function(self, thread_context) -> str:
         """ Runs a long operation and returns the result. """
         for x in range():
-            yield ToolResult(run_context.agent_name, "long_running_function", f"working on row {x})
+            yield ToolResult(thread_context.agent_name, "long_running_function", f"working on row {x})
             ... do some work
 
         return "The work is done! Thanks for waiting."
 ```
 
-Building the event is toilsome, so `run_context` has a convenience method:
+Building the event is toilsome, so `thread_context` has a convenience method:
 
-    yield run_context.log("Something interesting happened: ", param2, param2)
+    yield thread_context.log("Something interesting happened: ", param2, param2)
 
 This builds and returns the `ToolResult` event for you.
 
@@ -206,7 +206,7 @@ case you need to yield the return value:
     async def long_running_function(self) -> str:
         """ Runs a long operation and returns the result. """
         for x in range():
-            yield run_context.log(f"working on row {x})
+            yield thread_context.log(f"working on row {x})
             ... do some work
 
         yield "The work is done! Thanks for waiting."
@@ -216,13 +216,13 @@ The generator is the right approach for true long-running tools, because otherwi
 cannot emit any status info while the function is running. However, for short-running functions
 that still want to do logging, it is annoying to have to implement a generator.
 
-So for convenience, you can log into the `run_context` instead:
+So for convenience, you can log into the `thread_context` instead:
 
 ```
-    def my_func_with_logging(self, run_context: RunContext) -> str:
+    def my_func_with_logging(self, thread_context: RunContext) -> str:
         """ An interesting functions. """
         for x in range():
-            run_context.log(f"working on row {x})
+            thread_context.log(f"working on row {x})
             ... do some work
 
         return "The work is done! Thanks for waiting."

@@ -97,7 +97,7 @@ Starts a new agent request/conversation turn.
 {
   "prompt": "What's the weather in New York?",
   "debug": "tools",  // Optional: Enable debug logging
-  "run_id": "abc123" // Optional: Specify run ID for tracking
+  "thread_id": "abc123" // Optional: Specify run ID for tracking
 }
 ```
 
@@ -105,7 +105,7 @@ Starts a new agent request/conversation turn.
 ```json
 {
   "request_id": "550e8400-e29b-41d4-a716-446655440000",
-  "run_id": "abc123"
+  "thread_id": "abc123"
 }
 ```
 
@@ -185,7 +185,7 @@ Combines the process and getevents steps into a single endpoint that returns an 
 {
   "prompt": "What's the weather in New York?",
   "debug": "tools",
-  "run_id": "abc123"
+  "thread_id": "abc123"
 }
 ```
 
@@ -208,7 +208,7 @@ Resumes an existing request that was paused waiting for user input.
     "request_id": "550e8400-e29b-41d4-a716-446655440000"
   },
   "debug": "tools",
-  "run_id": "abc123"
+  "thread_id": "abc123"
 }
 ```
 
@@ -216,7 +216,7 @@ Resumes an existing request that was paused waiting for user input.
 ```json
 {
   "request_id": "550e8400-e29b-41d4-a716-446655440000",
-  "run_id": "abc123"
+  "thread_id": "abc123"
 }
 ```
 
@@ -246,7 +246,7 @@ Returns a list of all historical runs for this agent.
 #### Get Run Logs
 
 ```
-GET /<agent_name>/runs/{run_id}/logs
+GET /<agent_name>/runs/{thread_id}/logs
 ```
 
 Returns detailed logs for a specific run.
@@ -256,14 +256,14 @@ Returns detailed logs for a specific run.
 [
   {
     "id": "log1",
-    "run_id": "abc123",
+    "thread_id": "abc123",
     "timestamp": "2025-03-25T14:30:22.123456",
     "event_type": "prompt_started",
     "content": "What's the weather in New York?"
   },
   {
     "id": "log2",
-    "run_id": "abc123",
+    "thread_id": "abc123",
     "timestamp": "2025-03-25T14:30:23.456789",
     "event_type": "tool_call",
     "content": "{\"name\": \"get_current_weather\", \"arguments\": {\"location\": \"New York\"}}"
@@ -274,14 +274,14 @@ Returns detailed logs for a specific run.
 #### Webhook
 
 ```
-POST /<agent_name>/webhook/{run_id}/{callback_name}
+POST /<agent_name>/webhook/{thread_id}/{callback_name}
 ```
 
 Handles webhook callbacks for asynchronous tool operations.
 
 *Path Parameters:*
 
-- `run_id`: The ID of the agent run
+- `thread_id`: The ID of the agent run
 - `callback_name`: Name of the tool function to call
 
 *Request Body:*

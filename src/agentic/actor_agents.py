@@ -28,7 +28,7 @@ from agentic.swarm.types import (
     Function,
     Response,
     Result,
-    RunContext,
+    ThreadContext,
     tool_name
 )
 from agentic.swarm.util import (
@@ -65,19 +65,19 @@ from agentic.events import (
     OAuthFlow,
     OAuthFlowResult,
 )
-from agentic.db.models import Run, RunLog
+from agentic.db.models import Thread, ThreadLog
 from agentic.tools.utils.registry import tool_registry
 from agentic.db.db_manager import DatabaseManager
 from agentic.models import get_special_model_params, mock_provider
 
 
-__CTX_VARS_NAME__ = "run_context"
+__CTX_VARS_NAME__ = "thread_context"
 
 # define a CallbackType Enum with values: "handle_turn_start", "handle_event", "handle_turn_end"
 CallbackType = Literal["handle_turn_start", "handle_event", "handle_turn_end"]
 
-# make a Callable type that expects a Prompt and RunContext
-CallbackFunc = Callable[[Event, RunContext], None]
+# make a Callable type that expects a Prompt and ThreadContext
+CallbackFunc = Callable[[Event, ThreadContext], None]
 
 @dataclass
 class AgentPauseContext:
@@ -119,7 +119,7 @@ class ActorBaseAgent:
     memories: list[str] = []
     # The Actor who sent us our Prompt
     max_tokens: int = None
-    run_context: RunContext = None
+    thread_context: ThreadContext = None
     api_endpoint: str = None
     _prompter = None
     _callbacks: dict[CallbackType, CallbackFunc] = {}
@@ -145,16 +145,16 @@ class ActorBaseAgent:
     def _get_llm_completion(
         self,
         history: List,
-        run_context: RunContext,
+        thread_context: ThreadContext,
         model_override: str,
         stream: bool,
     ) -> ChatCompletionMessage:
         """Call the LLM completion endpoint"""
-        instructions = self.get_instructions(run_context)
+        instructions = self.get_instructions(thread_context)
         messages = [{"role": "system", "content": instructions}] + history
 
         tools = [function_to_json(f) for f in self.functions]
-        # hide run_context from model
+        # hide thread_context from model
         for tool in tools:
             params = tool["function"]["parameters"]
             params["properties"].pop(__CTX_VARS_NAME__, None)
@@ -243,13 +243,13 @@ class ActorBaseAgent:
             return litellm.completion(**completion_params)
         except Exception as e:
             traceback.print_exc()
-            raise RuntimeError("Error calling LLM: " + str(e))
+            raise ThreadtimeError("Error calling LLM: " + str(e))
 
     def _execute_tool_calls(
         self,
         tool_calls: List[ChatCompletionMessageToolCall],
         functions: List[AgentFunction],
-        run_context: RunContext,
+        thread_context: ThreadContext,
     ) -> tuple[Response, list[Event]]:
         """When the LLM completion includes tool calls, now invoke the tool functions.
         Returns the LLM processing response, and a list of events to publish
@@ -289,7 +289,7 @@ class ActorBaseAgent:
 
             func = function_map[name]
             if __CTX_VARS_NAME__ in func.__code__.co_varnames:
-                args[__CTX_VARS_NAME__] = run_context
+                args[__CTX_VARS_NAME__] = thread_context
 
             events.append(ToolCall(self.name, name, args))
 
@@ -299,7 +299,7 @@ class ActorBaseAgent:
                 if asyncio.iscoroutinefunction(function_map[name]):
                     try:
                         loop = asyncio.get_running_loop()
-                    except RuntimeError:
+                    except ThreadtimeError:
                         loop = asyncio.new_event_loop()
                         asyncio.set_event_loop(loop)
                     
@@ -321,7 +321,7 @@ class ActorBaseAgent:
                         raw_result = events.pop()
 
                 elif inspect.isasyncgenfunction(function_map[name]):
-                    # Run the async function in an event loop and yield events
+                    # Thread the async function in an event loop and yield events
                     async def run_async_gen():
                         async for event in function_map[name](**args):
                             events.append(event)
@@ -345,7 +345,7 @@ class ActorBaseAgent:
                 raw_result = f"Tool error: {name}: {last_three}"
 
                 events.append(ToolError(self.name, name, raw_result, self.depth))
-                # run_context.error(raw_result)
+                # thread_context.error(raw_result)
 
             # Let tools return additional events to publish
             if isinstance(raw_result, list):
@@ -369,9 +369,9 @@ class ActorBaseAgent:
             )
 
             # Functions can queue log events when they run, and we publish after
-            for log_event in run_context.get_logs():
+            for log_event in thread_context.get_logs():
                 events.append(log_event)
-            run_context.reset_logs()
+            thread_context.reset_logs()
 
             events.append(ToolResult(self.name, name, result.value))
 
@@ -396,23 +396,23 @@ class ActorBaseAgent:
             raise ValueError("Request ID is required")
         
         if isinstance(actor_message, Prompt):
-            self.run_context = (
-                RunContext(
+            self.thread_context = (
+                ThreadContext(
                     agent_name=self.name,
                     agent=self,
                     debug_level=actor_message.debug,
                     api_endpoint=self.api_endpoint,
                     context=actor_message.request_context,
                 )
-                if self.run_context is None
-                else self.run_context.update(actor_message.request_context)
+                if self.thread_context is None
+                else self.thread_context.update(actor_message.request_context)
             )
-            if not self.run_context.run_id and "run_id" in actor_message.request_context:
-                self.run_context.run_id = actor_message.request_context["run_id"]  
+            if not self.thread_context.thread_id and "thread_id" in actor_message.request_context:
+                self.thread_context.thread_id = actor_message.request_context["thread_id"]  
 
             # Middleware to modify the input prompt (or change agent context)
             if self._callbacks.get('handle_turn_start'):
-                self._callbacks['handle_turn_start'](actor_message, self.run_context)
+                self._callbacks['handle_turn_start'](actor_message, self.thread_context)
                 
             self.debug = actor_message.debug
             self.depth = actor_message.depth
@@ -421,18 +421,18 @@ class ActorBaseAgent:
 
         elif isinstance(actor_message, ResumeWithInput):
             if not self.paused_context:
-                self.run_context.debug(
+                self.thread_context.debug(
                     "Ignoring ResumeWithInput event, parent not paused: ",
                     actor_message,
                 )
                 return
                 
             init_len = self.paused_context.orig_history_length
-            self.run_context.update(actor_message.request_keys.copy())
+            self.thread_context.update(actor_message.request_keys.copy())
             
             tool_function = self.paused_context.tool_function
             if tool_function is None:
-                raise RuntimeError("Tool function not found on AgentResume event")
+                raise ThreadtimeError("Tool function not found on AgentResume event")
                 
             partial_response, events = self._execute_tool_calls(
                 [ChatCompletionMessageToolCall(
@@ -440,7 +440,7 @@ class ActorBaseAgent:
                     function=tool_function,
                     type="function")],
                 self.functions,
-                self.run_context
+                self.thread_context
             )
             yield from events
             self.history.extend(partial_response.messages)
@@ -461,7 +461,7 @@ class ActorBaseAgent:
             partial_response, events = self._execute_tool_calls(
                 response.tool_calls,
                 self.functions,
-                self.run_context
+                self.thread_context
             )
             yield from events
 
@@ -508,7 +508,7 @@ class ActorBaseAgent:
             self.name,
             # result_model gets applied when TurnEnd is processed. We dont want to alter the the text response in history
             deepcopy(self.history[init_len:]),
-            self.run_context,
+            self.thread_context,
             self.depth
         )
         self.paused_context = None
@@ -530,11 +530,11 @@ class ActorBaseAgent:
         try:
             completion = self._get_llm_completion(
                 history=self.history,
-                run_context=self.run_context,
+                thread_context=self.thread_context,
                 model_override=None,
                 stream=True,
             )
-        except RuntimeError as e:
+        except ThreadtimeError as e:
             yield FinishCompletion.create(
                 self.name,
                 Message(content=str(e), role="assistant"),
@@ -613,7 +613,7 @@ class ActorBaseAgent:
                     message,
                     depth=depth,
                     debug=self.debug,
-                    request_context=self.run_context.get_context(),
+                    request_context=self.thread_context.get_context(),
                     request_id=str(uuid.uuid4())
                 )
             )
@@ -674,7 +674,7 @@ class ActorBaseAgent:
                 if value:
                     os.environ[key] = value
 
-    def get_instructions(self, context: RunContext):
+    def get_instructions(self, context: ThreadContext):
         # Support context var substitution in prompts
         try:
             prompt = Template(
@@ -762,25 +762,25 @@ class ActorBaseAgent:
     def handle_request(self, method: str, data: dict):
         return f"Actor {self.name} processed {method} request with data: {data}"
 
-    def webhook(self, run_id: str, callback_name: str, args: dict) -> Any:
+    def webhook(self, thread_id: str, callback_name: str, args: dict) -> Any:
         """Handle webhook callbacks by executing the specified tool function
         
         Args:
-            run_id: ID of the agent run this webhook is for
+            thread_id: ID of the agent run this webhook is for
             callback_name: Name of the tool function to call
             args: Arguments to pass to the tool function
         """
         # Get the run context from the database
         db_manager = DatabaseManager()
-        run = db_manager.get_run(run_id)
+        run = db_manager.get_run(thread_id)
         if not run:
-            raise ValueError(f"No run found with ID {run_id}")
+            raise ValueError(f"No run found with ID {thread_id}")
         # Recreate run context
-        self.run_context = RunContext(
+        self.thread_context = ThreadContext(
             agent=self,
             agent_name=self.name, 
             debug_level=self.debug,
-            run_id=run_id,
+            thread_id=thread_id,
             api_endpoint=self.api_endpoint
         )
         # Find the tool function
@@ -804,12 +804,12 @@ class ActorBaseAgent:
             response, events = self._execute_tool_calls(
                 [tool_call],
                 self.functions,
-                self.run_context
+                self.thread_context
             )
             return response
 
         except Exception as e:
-            raise RuntimeError(f"Error executing webhook {callback_name}: {str(e)}")
+            raise ThreadtimeError(f"Error executing webhook {callback_name}: {str(e)}")
 
     # Add new methods to set mock configuration
     def set_mock_params(self, pattern: str, response: str, tools: dict):
@@ -844,12 +844,12 @@ def handoff(agent, **kwargs):
 class ProcessRequest(BaseModel):
     prompt: str
     debug: Optional[str] = None
-    run_id: Optional[str] = None
+    thread_id: Optional[str] = None
 
 class ResumeWithInputRequest(BaseModel):
     continue_result: dict[str, str]
     debug: Optional[str] = None
-    run_id: Optional[str] = None
+    thread_id: Optional[str] = None
 
 
 depthLocal = threading.local()
@@ -857,7 +857,7 @@ depthLocal.depth = -1
 
 # The common agent proxy interface
 # The core of the interface is 'start_request' and 'get_events'. Use these in
-# pairs to request operation runs from the agent.
+# pairs to request operation threads from the agent.
 # It is deprecated to call 'next_turn' directly now.
 #
 # Subclasses can override next_turn to do their own orchestration logic.
@@ -880,9 +880,9 @@ class BaseAgentProxy:
         model: str | None = None,
         template_path: str | Path | None = None,
         max_tokens: int = None,
-        db_path: Optional[str | Path] = "./agent_runs.db",
+        db_path: Optional[str | Path] = "./agent_threads.db",
         memories: list[str] = [],
-        handle_turn_start: Callable[[Prompt, RunContext], None] = None,
+        handle_turn_start: Callable[[Prompt, ThreadContext], None] = None,
         result_model: Type[BaseModel]|None = None,
         debug: DebugLevel = DebugLevel(os.environ.get("AGENTIC_DEBUG") or ""),
         mock_settings: dict = None,
@@ -933,7 +933,7 @@ class BaseAgentProxy:
 
         # Initialize run tracking
         self.db_path = db_path
-        self.run_id = None  # This will be set per request
+        self.thread_id = None  # This will be set per request
 
         # Ensure API key is set
         self.ensure_api_key_for_model(self.model)
@@ -1029,7 +1029,7 @@ class BaseAgentProxy:
         """Get the conversation history"""
         return self._get_agent_history()
 
-    def init_run_tracking(self, agent, run_id: Optional[str] = None):
+    def init_run_tracking(self, agent, thread_id: Optional[str] = None):
         """Initialize run tracking"""
         pass
 
@@ -1041,22 +1041,22 @@ class BaseAgentProxy:
             db_manager = DatabaseManager()
         return db_manager
 
-    def get_runs(self, user_id: str|None) -> list[Run]:
-        """Get all runs for this agent"""
+    def get_threads(self, user_id: str|None) -> list[Thread]:
+        """Get all threads for this agent"""
         db_manager = self.get_db_manager()
         
         try:
-            return db_manager.get_runs_by_agent(self.name, user_id=user_id)
+            return db_manager.get_threads_by_agent(self.name, user_id=user_id)
         except Exception as e:
-            print(f"Error getting runs: {e}")
+            print(f"Error getting threads: {e}")
             return []
         
-    def get_run_logs(self, run_id: str) -> list[RunLog]:
+    def get_run_logs(self, thread_id: str) -> list[ThreadLog]:
         """Get logs for a specific run"""
         db_manager = self.get_db_manager()
         
         try:
-            return db_manager.get_run_logs(run_id)
+            return db_manager.get_run_logs(thread_id)
         except Exception as e:
             print(f"Error getting run logs: {e}")
             return []
@@ -1166,7 +1166,7 @@ class BaseAgentProxy:
             del self.agent_instances[request_id]
 
     def start_request(self, request: str, request_context: dict = {}, 
-                     continue_result: dict = {}, run_id: Optional[str] = None,
+                     continue_result: dict = {}, thread_id: Optional[str] = None,
                      debug: DebugLevel = DebugLevel(DebugLevel.OFF)) -> StartRequestResponse:
         """Start a new agent request"""
         self.debug.raise_level(debug)
@@ -1183,15 +1183,15 @@ class BaseAgentProxy:
         if isinstance(request, str):
             request = self._check_for_prompt_match(request)
 
-        if not run_id and "run_id" in request_context:
-            run_id = request_context["run_id"]
+        if not thread_id and "thread_id" in request_context:
+            thread_id = request_context["thread_id"]
 
         # Create request ID if not provided in continue_result
         request_id = continue_result.get("request_id") or str(uuid.uuid4())
 
         agent_instance = self._get_agent_for_request(request_id)
-        if (self.run_id != run_id or not self.run_id) and self.db_path:
-            self.init_run_tracking(agent_instance, run_id)
+        if (self.thread_id != thread_id or not self.thread_id) and self.db_path:
+            self.init_run_tracking(agent_instance, thread_id)
 
         # Initialize new request
         request_obj = Prompt(
@@ -1216,7 +1216,7 @@ class BaseAgentProxy:
 
         t = threading.Thread(target=producer, args=(queue, request_obj, continue_result))
         t.start()
-        return StartRequestResponse(request_id=request_id, run_id=self.run_id)
+        return StartRequestResponse(request_id=request_id, thread_id=self.thread_id)
 
     def get_events(self, request_id: str, timeout: Optional[float] = None) -> Generator[Event, Any, Any]:
         """Get events for a request"""
@@ -1304,18 +1304,18 @@ class BaseAgentProxy:
 
         self._handle_mock_settings(self.mock_settings)
 
-        if not self.run_id and "run_id" in request_context:
-            self.run_id = request_context["run_id"]
+        if not self.thread_id and "thread_id" in request_context:
+            self.thread_id = request_context["thread_id"]
 
         # Get agent instance for the run
         agent_instance = self._get_agent_for_request(request_id)
 
         # Initialize run tracking if needed
-        if (not self.run_id) and self.db_path:
-            self.init_run_tracking(agent_instance, self.run_id)
+        if (not self.thread_id) and self.db_path:
+            self.init_run_tracking(agent_instance, self.thread_id)
 
-        # Add run_id into context explicitly so child agents inherit it
-        request_context = {**request_context, "run_id": self.run_id}
+        # Add thread_id into context explicitly so child agents inherit it
+        request_context = {**request_context, "thread_id": self.thread_id}
 
         # Call the user’s or default next_turn
         event_gen = self.next_turn(
@@ -1343,7 +1343,7 @@ class BaseAgentProxy:
             # Only now: do logging after yielding
             callback = self._agent.get_callback("handle_event") if hasattr(self, "_agent") else None
             if callback:
-                context = RunContext(agent=self._agent, agent_name=self.name, run_id=self.run_id, context=request_context)
+                context = ThreadContext(agent=self._agent, agent_name=self.name, thread_id=self.thread_id, context=request_context)
                 callback(event, context)
         
     def _get_prompt_generator(self, agent_instance, prompt):
@@ -1474,10 +1474,10 @@ class RayAgentProxy(BaseAgentProxy):
 
         return agent
 
-    def init_run_tracking(self, agent, run_id: Optional[str] = None):
+    def init_run_tracking(self, agent, thread_id: Optional[str] = None):
         """Initialize run tracking"""
         from .run_manager import init_run_tracking
-        self.run_id, callback = init_run_tracking(self, db_path=self.db_path, resume_run_id=run_id)
+        self.thread_id, callback = init_run_tracking(self, db_path=self.db_path, resume_thread_id=thread_id)
         agent.set_callback.remote('handle_event', callback)
 
     def _handle_mock_settings(self, mock_settings):
@@ -1592,10 +1592,10 @@ class LocalAgentProxy(BaseAgentProxy):
 
         return agent
 
-    def init_run_tracking(self, agent, run_id: Optional[str] = None):
+    def init_run_tracking(self, agent, thread_id: Optional[str] = None):
         """Initialize run tracking"""
         from .run_manager import init_run_tracking
-        self.run_id, callback = init_run_tracking(self, db_path=self.db_path, resume_run_id=run_id)
+        self.thread_id, callback = init_run_tracking(self, db_path=self.db_path, resume_thread_id=thread_id)
         agent.set_callback('handle_event', callback)
 
     def _handle_mock_settings(self, mock_settings):

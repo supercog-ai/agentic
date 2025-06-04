@@ -19,8 +19,8 @@ class HumanInterruptTool(BaseAgenticTool):
     def get_tools(self) -> list[Callable]:
         return [self.stop_for_input]
 
-    def stop_for_input(self, request_message: str, run_context: RunContext):
+    def stop_for_input(self, request_message: str, thread_context: RunContext):
         """ Stop and ask the user for input """
-        if run_context.get("input"):
-            return run_context.get("input")
+        if thread_context.get("input"):
+            return thread_context.get("input")
         return PauseForInputResult({"input": request_message})

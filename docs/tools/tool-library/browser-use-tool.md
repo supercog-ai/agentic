@@ -30,14 +30,14 @@ def __init__(chrome_instance_path: Optional[str] = None, model: str = GPT_4O_MIN
 ### run_browser_agent
 
 ```python
-async def run_browser_agent(run_context: RunContext, instructions: str, model: Optional[str] = None) -> list[str|FinishCompletion]
+async def run_browser_agent(thread_context: RunContext, instructions: str, model: Optional[str] = None) -> list[str|FinishCompletion]
 ```
 
 Execute a set of instructions via browser automation. Instructions can be in natural language.
 
 **Parameters:**
 
-- `run_context (RunContext)`: The execution context
+- `thread_context (RunContext)`: The execution context
 - `instructions (str)`: Natural language instructions for what to do with the browser
 - `model (Optional[str])`: Override the default LLM model
 

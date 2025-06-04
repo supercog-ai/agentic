@@ -275,7 +275,7 @@ class MarchMadnessAgent(Agent):
         """Main workflow orchestration for tournament prediction"""
 
         agent_instance = self._get_agent_for_request(request_id)
-        if not self.run_id and self.db_path:
+        if not self.thread_id and self.db_path:
             self.init_run_tracking(agent_instance)
         
         tournament_year = request_context.get("year", datetime.now().year)
@@ -367,7 +367,7 @@ class MarchMadnessAgent(Agent):
         yield TurnEnd(
             self.name,
             [{"role": "assistant", "content": final_bracket}],
-            run_context=None,
+            thread_context=None,
         )
 
     def generate_first_round_matchups(self):

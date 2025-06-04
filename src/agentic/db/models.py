@@ -4,8 +4,8 @@ from sqlmodel import Field, SQLModel, JSON, Column
 from uuid import uuid4
 
 # Define database models
-class Run(SQLModel, table=True):
-    __tablename__ = "runs"
+class Thread(SQLModel, table=True):
+    __tablename__ = "threads"
     
     id: str = Field(primary_key=True, default_factory=lambda: str(uuid4()))
     agent_id: str = Field(index=True)
@@ -15,13 +15,13 @@ class Run(SQLModel, table=True):
     initial_prompt: str
     description: Optional[str] = None
     usage_data: Dict = Field(default={}, sa_column=Column(JSON))
-    run_metadata: Dict = Field(default={}, sa_column=Column(JSON))
+    thread_metadata: Dict = Field(default={}, sa_column=Column(JSON))
 
-class RunLog(SQLModel, table=True):
-    __tablename__ = "run_logs"
+class ThreadLog(SQLModel, table=True):
+    __tablename__ = "thread_logs"
 
     id: str = Field(primary_key=True, default_factory=lambda: str(uuid4()))
-    run_id: int = Field(index=True, foreign_key="runs.id")
+    thread_id: int = Field(index=True, foreign_key="threads.id")
     agent_id: str = Field(index=True)
     user_id: str = Field(index=True)
     role: str

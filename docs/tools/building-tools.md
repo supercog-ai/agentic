@@ -76,12 +76,12 @@ class YourTool(BaseAgenticTool):
             # Add more functions here
         ]
     
-    def your_function(self, run_context: RunContext, param: str) -> str:
+    def your_function(self, thread_context: RunContext, param: str) -> str:
         """
         A function that the agent can call.
         
         Args:
-            run_context: Execution context for accessing secrets and settings
+            thread_context: Execution context for accessing secrets and settings
             param: Description of parameter
             
         Returns:
@@ -155,12 +155,12 @@ def test_credential(self, cred: str, secrets: Dict[str, str]) -> Optional[str]:
 You can create asynchronous functions for operations that involve I/O or network requests:
 
 ```python
-async def fetch_data(self, run_context: RunContext, query: str) -> Dict[str, any]:
+async def fetch_data(self, thread_context: RunContext, query: str) -> Dict[str, any]:
     """
     Asynchronously fetch data based on the query.
     
     Args:
-        run_context: Execution context
+        thread_context: Execution context
         query: Search query
         
     Returns:
@@ -177,10 +177,10 @@ async def fetch_data(self, run_context: RunContext, query: str) -> Dict[str, any
 Tools often need API keys or other credentials. You can get these from the RunContext:
 
 ```python
-def authenticated_function(self, run_context: RunContext, param: str) -> str:
+def authenticated_function(self, thread_context: RunContext, param: str) -> str:
     """Method that requires authentication."""
     # Get API key from secrets or instance variable
-    api_key = run_context.get_secret("API_KEY_NAME", self.api_key)
+    api_key = thread_context.get_secret("API_KEY_NAME", self.api_key)
     
     # If no API key is available, request it from the user
     if not api_key:
@@ -198,7 +198,7 @@ def authenticated_function(self, run_context: RunContext, param: str) -> str:
 For long-running operations, you can report progress using generators:
 
 ```python
-def long_operation(self, run_context: RunContext) -> str:
+def long_operation(self, thread_context: RunContext) -> str:
     """Perform a long-running operation with progress updates."""
     total_steps = 10
     
@@ -206,7 +206,7 @@ def long_operation(self, run_context: RunContext) -> str:
         # Perform some work...
         
         # Report progress
-        yield run_context.log(f"Step {step+1}/{total_steps} completed")
+        yield thread_context.log(f"Step {step+1}/{total_steps} completed")
     
     return "Operation completed successfully"
 ```
@@ -256,7 +256,7 @@ class SimpleWeatherTool(BaseAgenticTool):
     
     def get_current_weather(
         self, 
-        run_context: RunContext, 
+        thread_context: RunContext, 
         city: str, 
         units: str = "metric"
     ) -> Dict[str, any]:
@@ -264,7 +264,7 @@ class SimpleWeatherTool(BaseAgenticTool):
         Get the current weather for a city.
         
         Args:
-            run_context: Execution context
+            thread_context: Execution context
             city: The name of the city
             units: Units of measurement ('metric' or 'imperial')
             
@@ -272,7 +272,7 @@ class SimpleWeatherTool(BaseAgenticTool):
             Weather data for the city
         """
         # Get API key from secrets or instance variable
-        api_key = run_context.get_secret("WEATHER_API_KEY", self.api_key)
+        api_key = thread_context.get_secret("WEATHER_API_KEY", self.api_key)
         
         # If no API key is available, request it from the user
         if not api_key:
@@ -289,7 +289,7 @@ class SimpleWeatherTool(BaseAgenticTool):
             "appid": api_key
         }
         
-        run_context.info(f"Fetching weather data for {city}")
+        thread_context.info(f"Fetching weather data for {city}")
         
         try:
             response = requests.get(url, params=params)
@@ -304,7 +304,7 @@ class SimpleWeatherTool(BaseAgenticTool):
                 "wind_speed": data["wind"]["speed"]
             }
         except Exception as e:
-            run_context.error(f"Error fetching weather data: {str(e)}")
+            thread_context.error(f"Error fetching weather data: {str(e)}")
             return {"error": f"Failed to fetch weather data: {str(e)}"}
 ```
 

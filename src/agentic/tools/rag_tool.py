@@ -64,7 +64,7 @@ class RAGTool(BaseAgenticTool):
 
     def save_content_to_knowledge_index(
         self,
-        run_context: RunContext,
+        thread_context: RunContext,
         content: str = None,
         index_name: str = None,
     ) -> str:

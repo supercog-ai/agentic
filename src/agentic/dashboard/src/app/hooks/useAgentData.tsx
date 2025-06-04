@@ -44,23 +44,23 @@ export function useAgentsWithDetails() {
   };
 }
 
-// Fetch runs for an agent
+// Fetch threads for an agent
 export function useAgentData(agentPath: string | null, refreshInterval = 0) {
   return useSWR(
-    agentPath ? ['agent-runs', agentPath] : null,
+    agentPath ? ['agent-threads', agentPath] : null,
     async ([_, path]) => {
-      return await agenticApi.getRuns(path);
+      return await agenticApi.getThreads(path);
     },
     { refreshInterval }
   );
 }
 
-// Fetch logs for a specific run
-export function useRunLogs(agentPath: string | null, runId: string | null) {
+// Fetch logs for a specific thread
+export function useThreadLogs(agentPath: string | null, threadId: string | null) {
   return useSWR(
-    agentPath && runId ? ['run-logs', agentPath, runId] : null,
+    agentPath && threadId ? ['thread-logs', agentPath, threadId] : null,
     async ([_, path, id]) => {
-      return await agenticApi.getRunLogs(path, id);
+      return await agenticApi.getThreadLogs(path, id);
     }
   );
 }

@@ -64,21 +64,21 @@ class DebugLevel:
         return str(self.level)
 
 
-class RunContext:
+class ThreadContext:
     def __init__(
         self,
         agent,
         context: dict = {},
         agent_name: str = "",
         debug_level: DebugLevel = DebugLevel(DebugLevel.OFF),
-        run_id: str = None,
+        thread_id: str = None,
         api_endpoint: str = None,
     ):
         self._context = context
         self.agent_name = agent_name
         self.agent = agent
         self.debug_level = debug_level
-        self.run_id = run_id
+        self.thread_id = thread_id
         self.api_endpoint = api_endpoint
         self._log_queue: list = []
 
@@ -91,7 +91,7 @@ class RunContext:
     def __setitem__(self, key, value):
         self._context[key] = value
 
-    def update(self, context: dict) -> "RunContext":
+    def update(self, context: dict) -> "ThreadContext":
         self._context.update(context)
         return self
 
@@ -156,8 +156,8 @@ class RunContext:
         return f"RunContext({self._context})"
     
     def get_webhook_endpoint(self, callback_name: str, args: dict = None) -> str:
-        if not self.run_id:
-            raise ValueError("No active run_id. Webhook endpoints require an active agent run.")
+        if not self.thread_id:
+            raise ValueError("No active thread_id. Webhook endpoints require an active agent thread.")
         
         if not self.api_endpoint:
             # Fallback to default if not set
@@ -169,7 +169,7 @@ class RunContext:
             base_url = self.api_endpoint
 
         # Build webhook URL
-        webhook_url = f"{base_url}/webhook/{self.run_id}/{callback_name}"
+        webhook_url = f"{base_url}/webhook/{self.thread_id}/{callback_name}"
         
         if args:
             query_params = "&".join(f"{k}={v}" for k, v in args.items())
@@ -220,7 +220,7 @@ class SwarmAgent(BaseModel):
     trim_context: bool = True
     max_tokens: bool = None
 
-    def get_instructions(self, context: RunContext) -> str:
+    def get_instructions(self, context: ThreadContext) -> str:
         return self.instructions_str
 
 
@@ -241,7 +241,7 @@ class Result(BaseModel):
 class Response(BaseModel):
     messages: List = []
     agent: Optional[SwarmAgent] = None
-    # These are meant to be updates to Run Context variables. But I think it's easier for
-    # tools to just update RunContext directly.
-    # Swarm used this dict to pass around state, but we are using RunContext instead.
+    # These are meant to be updates to Thread Context variables. But I think it's easier for
+    # tools to just update ThreadContext directly.
+    # Swarm used this dict to pass around state, but we are using ThreadContext instead.
     last_tool_result: Optional[Result] = None

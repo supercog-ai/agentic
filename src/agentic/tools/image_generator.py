@@ -39,12 +39,12 @@ class ImageGeneratorTool(BaseAgenticTool):
             self.generate_image,
         ]
 
-    async def generate_image(self, prompt: str, run_context: RunContext) -> str:
+    async def generate_image(self, prompt: str, thread_context: RunContext) -> str:
         """
         Generates an image based on the given text prompt using OpenAI's API,
         stores it in an S3 bucket, and returns a publicly accessible URL for the image.
         """
-        api_key = run_context.get_secret("OPENAI_API_KEY", self.api_key)
+        api_key = thread_context.get_secret("OPENAI_API_KEY", self.api_key)
 
         if not api_key:
             return PauseForInputResult(

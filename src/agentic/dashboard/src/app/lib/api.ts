@@ -67,8 +67,8 @@ const authFetch = async (url: string, options: RequestInit = {}): Promise<Respon
 
 export const agenticApi = {
   
-    // Send a prompt to an agent, optionally continuing from a run
-  sendPrompt: async (agentPath: string, prompt: string, runId?: string): Promise<Api.SendPromptResponse> => {
+    // Send a prompt to an agent, optionally continuing from a thread
+  sendPrompt: async (agentPath: string, prompt: string, threadId?: string): Promise<Api.SendPromptResponse> => {
     const response = await authFetch(`/api${agentPath}/process`, {
       method: 'POST',
       headers: {
@@ -77,7 +77,7 @@ export const agenticApi = {
       body: JSON.stringify({
         prompt,
         //debug: "off",
-        run_id: runId
+        thread_id: threadId
       }),
     });
 
@@ -88,7 +88,7 @@ export const agenticApi = {
     return response.json();
   },
 
-  resumeWithInput: async (agentPath: string, continueResult: Record<string, string>, runId?: string): Promise<Api.SendPromptResponse> => {
+  resumeWithInput: async (agentPath: string, continueResult: Record<string, string>, threadId?: string): Promise<Api.SendPromptResponse> => {
     const response = await authFetch(`/api${agentPath}/resume`, {
       method: 'POST',
       headers: {
@@ -97,7 +97,7 @@ export const agenticApi = {
       body: JSON.stringify({
         continue_result: continueResult,
         //debug: "off",
-        run_id: runId
+        thread_id: threadId
       }),
     });
 
@@ -170,9 +170,9 @@ export const agenticApi = {
     return response.json();
   },
 
-  // Get run history for an agent
-  getRuns: async (agentPath: string): Promise<Api.Run[]> => {
-    const response = await authFetch(`/api${agentPath}/runs`, {
+  // Get thread history for an agent
+  getThreads: async (agentPath: string): Promise<Api.Thread[]> => {
+    const response = await authFetch(`/api${agentPath}/threads`, {
       headers: {
         'Accept': 'application/json',
       }
@@ -185,9 +185,9 @@ export const agenticApi = {
     return response.json();
   },
 
-  // Get logs for a specific run
-  getRunLogs: async (agentPath: string, runId: string): Promise<Api.RunLog[]> => {
-    const response = await authFetch(`/api${agentPath}/runs/${runId}/logs`, {
+  // Get logs for a specific thread
+  getThreadLogs: async (agentPath: string, threadId: string): Promise<Api.ThreadLog[]> => {
+    const response = await authFetch(`/api${agentPath}/threads/${threadId}/logs`, {
       headers: {
         'Accept': 'application/json',
       }

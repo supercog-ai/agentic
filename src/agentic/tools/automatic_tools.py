@@ -97,7 +97,7 @@ Return no results if no tool fits the purpose.
         else:
             return result.tool_choices
 
-    async def enable_agent_tool(self, tool_name: str, run_context: RunContext) -> str:
+    async def enable_agent_tool(self, tool_name: str, thread_context: RunContext) -> str:
         """Enables the AI agent to use the tool with the indicated name."""
 
         # Remove use of 'tool' word in the tool name. Use regexp
@@ -107,12 +107,12 @@ Return no results if no tool fits the purpose.
 
         for tool_cls in self.tool_classes:
             if tool_cls.__name__.lower() in [tool_name1, tool_name2]:
-                run_context.agent.add_tool(tool_cls())
+                thread_context.agent.add_tool(tool_cls())
                 return f"The tool {tool_cls.__name__} has been enabled."
 
         for tool_func in self.tool_functions:
             if tool_func.__name__.lower() in [tool_name1, tool_name2]:
-                run_context.agent.add_tool(tool_func)
+                thread_context.agent.add_tool(tool_func)
                 return f"The tool {tool_func.__name__} has been enabled."
 
         # In case the agent requested a tool that doesn't exist, see if we can suggest one

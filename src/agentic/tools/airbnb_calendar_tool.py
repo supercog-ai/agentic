@@ -163,7 +163,7 @@ class AirbnbCalendarTool(BaseAgenticTool):
     
     async def list_events(
         self, 
-        run_context: RunContext,
+        thread_context: RunContext,
         start_date: Optional[str] = None, 
         end_date: Optional[str] = None
     ) -> str:
@@ -171,7 +171,7 @@ class AirbnbCalendarTool(BaseAgenticTool):
         List all events/bookings in the calendar within the specified date range.
         
         Args:
-            run_context: The execution context
+            thread_context: The execution context
             start_date: Start date in ISO format (YYYY-MM-DD)
             end_date: End date in ISO format (YYYY-MM-DD)
             
@@ -179,7 +179,7 @@ class AirbnbCalendarTool(BaseAgenticTool):
             str: JSON string containing the events
         """
         try:
-            calendar_url = run_context.get_secret("AIRBNB_CALENDAR_URL")
+            calendar_url = thread_context.get_secret("AIRBNB_CALENDAR_URL")
             if not calendar_url:
                 return json.dumps({
                     "status": "error",
@@ -222,7 +222,7 @@ class AirbnbCalendarTool(BaseAgenticTool):
     
     async def check_availability(
         self, 
-        run_context: RunContext,
+        thread_context: RunContext,
         start_date: Optional[str] = None,
         end_date: Optional[str] = None
     ) -> str:
@@ -230,7 +230,7 @@ class AirbnbCalendarTool(BaseAgenticTool):
         Check if the property is available for a specific date range.
         
         Args:
-            run_context: The execution context
+            thread_context: The execution context
             start_date: Start date in ISO format (YYYY-MM-DD)
             end_date: End date in ISO format (YYYY-MM-DD)
             
@@ -238,7 +238,7 @@ class AirbnbCalendarTool(BaseAgenticTool):
             str: JSON string indicating availability and any conflicts
         """
         try:
-            calendar_url = run_context.get_secret("AIRBNB_CALENDAR_URL")
+            calendar_url = thread_context.get_secret("AIRBNB_CALENDAR_URL")
             if not calendar_url:
 
                 return json.dumps({
@@ -273,7 +273,7 @@ class AirbnbCalendarTool(BaseAgenticTool):
     
     async def get_booking_stats(
         self, 
-        run_context: RunContext,
+        thread_context: RunContext,
         start_date: Optional[str] = None,
         end_date: Optional[str] = None
     ) -> str:
@@ -281,7 +281,7 @@ class AirbnbCalendarTool(BaseAgenticTool):
         Get booking statistics for a specified date range.
         
         Args:
-            run_context: The execution context
+            thread_context: The execution context
             start_date: Start date in ISO format (YYYY-MM-DD)
             end_date: End date in ISO format (YYYY-MM-DD)
             
@@ -290,7 +290,7 @@ class AirbnbCalendarTool(BaseAgenticTool):
         """
 
         try:
-            calendar_url = run_context.get_secret("AIRBNB_CALENDAR_URL")
+            calendar_url = thread_context.get_secret("AIRBNB_CALENDAR_URL")
             if not calendar_url:
 
                 return json.dumps({
@@ -360,7 +360,7 @@ class AirbnbCalendarTool(BaseAgenticTool):
     
     async def get_blocked_dates(
         self, 
-        run_context: RunContext,
+        thread_context: RunContext,
         start_date: Optional[str] = None,
         end_date: Optional[str] = None
     ) -> str:
@@ -368,7 +368,7 @@ class AirbnbCalendarTool(BaseAgenticTool):
         Get a list of blocked/unavailable dates.
         
         Args:
-            run_context: The execution context
+            thread_context: The execution context
             start_date: Start date in ISO format (YYYY-MM-DD)
             end_date: End date in ISO format (YYYY-MM-DD)
             
@@ -376,7 +376,7 @@ class AirbnbCalendarTool(BaseAgenticTool):
             str: JSON string containing list of blocked dates
         """
         try:
-            calendar_url = run_context.get_secret("AIRBNB_CALENDAR_URL")
+            calendar_url = thread_context.get_secret("AIRBNB_CALENDAR_URL")
             if not calendar_url:
                 return json.dumps({
                     "status": "error",

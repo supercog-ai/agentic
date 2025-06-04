@@ -65,17 +65,17 @@ class UnitTestingTool(BaseAgenticTool):
         await asyncio.sleep(0.2)
         return self.story_log
 
-    def sync_function_with_logging(self, run_context: RunContext):
+    def sync_function_with_logging(self, thread_context: RunContext):
         """ A function that logs to the run context. """
-        run_context.log("Something interesting happened: ", "thing1", "thing2")
+        thread_context.log("Something interesting happened: ", "thing1", "thing2")
         return "can you see the logs?"
 
-    def sync_function_direct_logging(self, run_context: RunContext):
+    def sync_function_direct_logging(self, thread_context: RunContext):
         """ A function that logs directly via yield. """
-        yield run_context.log("Something interesting happened: ", "thing1", "thing2")
+        yield thread_context.log("Something interesting happened: ", "thing1", "thing2")
         return "I yielded a log message"
     
-    async def async_function_with_logging(self, run_context: RunContext):
+    async def async_function_with_logging(self, thread_context: RunContext):
         """ An async function that logs to the run context. """
-        yield run_context.log("ASYNC interesting happened: ", "thing1", "thing2")
+        yield thread_context.log("ASYNC interesting happened: ", "thing1", "thing2")
         yield "can you see the logs?"

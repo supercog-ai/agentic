@@ -118,12 +118,12 @@ class RestApiTool(BaseAgenticTool):
         self,
         request_map:  dict[str, AsyncRequestBuilder] = {},
         return_dataframe: bool = False,
-        run_context: Optional[RunContext] = None
+        thread_context: Optional[RunContext] = None
     ):
         super().__init__()
         self.request_map = request_map
         self.return_dataframe = return_dataframe
-        self.run_context = run_context
+        self.thread_context = thread_context
 
     def get_tools(self) -> list[Callable]:
         return [
@@ -161,7 +161,7 @@ class RestApiTool(BaseAgenticTool):
         password: str | None = None,
         token: str | None = None,
         token_name: str = "Bearer",
-        run_context: RunContext|None=None,
+        thread_context: RunContext|None=None,
     ) -> AsyncGenerator[Any, Any]:
         """Constructs an auth_config object to use with later requests.
         auth_type is one of: basic, bearer, token, or parameter
@@ -172,7 +172,7 @@ class RestApiTool(BaseAgenticTool):
         Any value can refer to ENV VARS using ${KEY} syntax.
         Returns the variable name of the auth config for use in request calls.
         """
-        if not run_context:
+        if not thread_context:
             return
         
         async def logger_func(msg: str):
@@ -183,21 +183,21 @@ class RestApiTool(BaseAgenticTool):
         auth_type = auth_type.lower()
 
         if auth_type == "basic":
-            username = run_context.get_secret(username or "")
-            password = run_context.get_secret(password or "")
+            username = thread_context.get_secret(username or "")
+            password = thread_context.get_secret(password or "")
             request = request.with_basic_auth(username, password)
-            yield run_context.log(f"Basic Auth: {username} / {password}")
+            yield thread_context.log(f"Basic Auth: {username} / {password}")
         elif auth_type in ["bearer", "token"]:
-            token = run_context.get_secret(token or "")
+            token = thread_context.get_secret(token or "")
             request = request.with_bearer_token(token, token_name)
-            yield run_context.log(f"[token] {token_name}: {token}")
+            yield thread_context.log(f"[token] {token_name}: {token}")
         elif auth_type == "parameter":
-            token = run_context.get_secret(token or "")
+            token = thread_context.get_secret(token or "")
             if token:
                 request = request.with_auth_param(token_name, token)
             else:
                 raise ValueError(f"Token value is empty.")
-            yield run_context.log(f"[param] {token_name}: {token}")
+            yield thread_context.log(f"[param] {token_name}: {token}")
         elif auth_type == "none":
             pass
         else:
@@ -221,7 +221,7 @@ class RestApiTool(BaseAgenticTool):
         url: str,
         params: dict = {},
         auth_config_var: Optional[str] = "",
-        run_context: RunContext|None=None,
+        thread_context: RunContext|None=None,
     ):
         """Invoke the GET REST endpoint on the indicate URL. If the endpoints requires
         authentication then call 'prepare_auth_config' first and pass the config name to this function.
@@ -234,7 +234,7 @@ class RestApiTool(BaseAgenticTool):
                     f"Auth config '{auth_config_var}' not found. Must call prepare_auth_config first."
                 )
         else:
-            request = AsyncRequestBuilder("", logger_func=run_context.info)
+            request = AsyncRequestBuilder("", logger_func=thread_context.info)
 
         response = await request.get(url, params=params)
 
@@ -251,7 +251,7 @@ class RestApiTool(BaseAgenticTool):
             params = json.loads(params)
 
         if not auth_config_var:
-            request = AsyncRequestBuilder("", logger_func=run_context.info)
+            request = AsyncRequestBuilder("", logger_func=thread_context.info)
         else:
             request = self.request_map.get(auth_config_var)
             if request is None:
@@ -292,7 +292,7 @@ class RestApiTool(BaseAgenticTool):
                 if request is None:
                     raise ValueError(f"Request '{auth_config_var}' not found.")
             else:
-                request = AsyncRequestBuilder("", logger_func=run_context.info)
+                request = AsyncRequestBuilder("", logger_func=thread_context.info)
 
             # Convert params to URL-encoded string if it's not already
             if isinstance(params, dict):
@@ -341,7 +341,7 @@ class RestApiTool(BaseAgenticTool):
             if request is None:
                 raise ValueError(f"Request '{auth_config_var}' not found.")
         else:
-            request = AsyncRequestBuilder("", logger_func=run_context.info)
+            request = AsyncRequestBuilder("", logger_func=thread_context.info)
 
         response = await request.delete(url)
         return await self.process_response(response)

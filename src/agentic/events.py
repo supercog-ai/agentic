@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from typing import Any, Optional
 from typing_extensions import override
 from pydantic import BaseModel, ConfigDict
-from .swarm.types import Result, DebugLevel, RunContext
+from .swarm.types import Result, DebugLevel, ThreadContext
 
 from litellm.types.utils import ModelResponse, Message
 
@@ -245,10 +245,10 @@ class FinishCompletion(Event):
 
 class TurnEnd(Event):
     def __init__(
-        self, agent: str, messages: list, run_context: RunContext, depth: int = 0
+        self, agent: str, messages: list, thread_context: ThreadContext, depth: int = 0
     ):
         super().__init__(
-            agent=agent, type="turn_end", payload={"messages": messages, "run_context": run_context}, depth=depth
+            agent=agent, type="turn_end", payload={"messages": messages, "thread_context": thread_context}, depth=depth
         )
 
     @property
@@ -267,8 +267,8 @@ class TurnEnd(Event):
         self.messages[-1]['content'] = result
 
     @property
-    def run_context(self):
-        return self.payload["run_context"]
+    def thread_context(self):
+        return self.payload["thread_context"]
 
     def print(self, debug_level: str):
         if debug_level == "agents":
@@ -399,7 +399,7 @@ class AgentDescriptor(BaseModel):
 
 class StartRequestResponse(BaseModel):
     request_id: str
-    run_id: Optional[str] = None
+    thread_id: Optional[str] = None
 from sse_starlette.event import ServerSentEvent
 
 class SSEDecoder:

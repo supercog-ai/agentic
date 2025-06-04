@@ -12,7 +12,7 @@ from agentic.actor_agents import ProcessRequest, ResumeWithInputRequest
 from agentic.common import Agent
 from agentic.events import AgentDescriptor, DebugLevel
 from agentic.utils.json import make_json_serializable
-from agentic.swarm.types import RunContext
+from agentic.swarm.types import ThreadContext
 from agentic.db.db_manager import DatabaseManager
 
 from agentic.events import (
@@ -133,19 +133,19 @@ class AgentAPIServer:
             tool_name: str,
             request: Request
         ) -> dict:
-            """Static OAuth callback endpoint that extracts run_id from state parameter"""
+            """Static OAuth callback endpoint that extracts thread_id from state parameter"""
             params = dict(request.query_params)
-            run_id = params.get("state")
+            thread_id = params.get("state")
             
-            if not run_id:
-                raise HTTPException(status_code=400, detail="No state/run_id provided in OAuth callback")
+            if not thread_id:
+                raise HTTPException(status_code=400, detail="No state/thread_id provided in OAuth callback")
                 
             # Forward to main OAuth handler
-            return await handle_oauth_callback(run_id, tool_name, agent_name, request)
+            return await handle_oauth_callback(thread_id, tool_name, agent_name, request)
 
-        @self.app.get("/{agent_name}/oauth/{run_id}/{tool_name}") 
+        @self.app.get("/{agent_name}/oauth/{thread_id}/{tool_name}") 
         async def handle_oauth_callback(
-            run_id: str,
+            thread_id: str,
             tool_name: str,
             agent_name: str,
             request: Request
@@ -161,33 +161,33 @@ class AgentAPIServer:
             if not auth_code:
                 raise HTTPException(status_code=400, detail="No authorization code provided in OAuth callback")
 
-            # Get the run context from the database
+            # Get the thread context from the database
             db_manager = DatabaseManager()
-            run = db_manager.get_run(run_id)
-            if not run:
-                raise HTTPException(status_code=404, detail=f"No run found with ID {run_id}")
+            thread = db_manager.get_thread(thread_id)
+            if not thread:
+                raise HTTPException(status_code=404, detail=f"No thread found with ID {thread_id}")
 
-            # Find the agent instance for this run
-            agent = next((a for a in self.agent_instances if a.name == run.agent_id), None)
+            # Find the agent instance for this thread
+            agent = next((a for a in self.agent_instances if a.name == thread.agent_id), None)
 
             if not agent:
-                raise HTTPException(status_code=404, detail=f"No agent found for run {run_id}")
+                raise HTTPException(status_code=404, detail=f"No agent found for thread {thread_id}")
 
-            # Create RunContext for storing auth code
-            run_context = RunContext(
+            # Create ThreadContext for storing auth code
+            thread_context = RunContext(
                 agent=agent._agent,
                 agent_name=agent.name,
                 debug_level=self.debug,
-                run_id=run_id,
+                thread_id=thread_id,
             )
 
             # Store auth code
-            run_context.set_oauth_auth_code(tool_name, auth_code)
+            thread_context.set_oauth_auth_code(tool_name, auth_code)
             
             # Store any additional OAuth params (except code and state)
             for key, value in params.items():
                 if key not in ["code", "state"]:
-                    run_context[f"{tool_name}_oauth_{key}"] = value
+                    thread_context[f"{tool_name}_oauth_{key}"] = value
 
             return {
                 "status": "success", 
@@ -212,7 +212,7 @@ class AgentAPIServer:
             req_event = agent.start_request(
                 request=request.prompt,
                 request_context=ctx,
-                run_id=request.run_id,
+                thread_id=request.thread_id,
                 debug=DebugLevel(request.debug) if request.debug else self.debug
             )
 
@@ -228,7 +228,7 @@ class AgentAPIServer:
             return agent.start_request(
                 request=json.dumps(request.continue_result),
                 continue_result=request.continue_result,
-                run_id=request.run_id,
+                thread_id=request.thread_id,
                 debug=DebugLevel(request.debug) if request.debug else self.debug
             )
 
@@ -296,30 +296,30 @@ class AgentAPIServer:
                     yield str(event)
             return EventSourceResponse(render_events())
         
-        # Get runs endpoint
-        @agent_router.get("/{agent_name}/runs")
+        # Get threads endpoint
+        @agent_router.get("/{agent_name}/threads")
         async def get_runs(
             agent: Annotated[Agent, Depends(get_agent)],
             current_user: Optional[Any] = Depends(self.get_current_user)
         ):
-            """Get all runs for this agent"""
-            runs = agent.get_runs(user_id=current_user)
-            return [run.model_dump() for run in runs]
+            """Get all threads for this agent"""
+            threads = agent.get_threads(user_id=current_user)
+            return [thread.model_dump() for thread in threads]
         
-        # Get run logs endpoint
-        @agent_router.get("/{agent_name}/runs/{run_id}/logs")
-        async def get_run_logs(
-            run_id: str, 
+        # Get thread logs endpoint
+        @agent_router.get("/{agent_name}/threads/{thread_id}/logs")
+        async def get_thread_logs(
+            thread_id: str, 
             agent: Annotated[Agent, Depends(get_agent)],
         ):
-            """Get logs for a specific run"""
-            run_logs = agent.get_run_logs(run_id)
-            return [run_log.model_dump() for run_log in run_logs]
+            """Get logs for a specific thread"""
+            thread_logs = agent.get_thread_logs(thread_id)
+            return [thread_log.model_dump() for thread_log in thread_logs]
         
         # Webhook endpoint
-        @agent_router.post("/{agent_name}/webhook/{run_id}/{callback_name}")
+        @agent_router.post("/{agent_name}/webhook/{thread_id}/{callback_name}")
         async def handle_webhook(
-            run_id: str, 
+            thread_id: str, 
             callback_name: str,
             request: Request,
             agent: Annotated[Agent, Depends(get_agent)],
@@ -341,7 +341,7 @@ class AgentAPIServer:
                     from agentic.ray_mock import ray
                     result = ray.get(
                         agent._agent.webhook.remote(
-                            run_id=run_id,
+                            thread_id=thread_id,
                             callback_name=callback_name, 
                             args=params
                         )
@@ -349,7 +349,7 @@ class AgentAPIServer:
                 else:
                     # Local implementation
                     result = agent._agent.webhook(
-                        run_id=run_id,
+                        thread_id=thread_id,
                         callback_name=callback_name,
                         args=params
                     )

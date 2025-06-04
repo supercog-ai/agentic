@@ -57,7 +57,7 @@ Signals the completion of an agent's processing for a run.
 TurnEnd(
     agent="my_agent",
     messages=[{"role": "assistant", "content": "Final response"}],
-    run_context=run_context_obj,
+    thread_context=thread_context_obj,
     depth=0
 )
 ```

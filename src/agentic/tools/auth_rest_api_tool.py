@@ -36,11 +36,11 @@ class AuthorizedRestApiTool(RestApiTool):
             self.debug_request,
         ]
 
-    async def get_auth_variable(self, run_context: RunContext):
+    async def get_auth_variable(self, thread_context: RunContext):
         print("Auto REST API, ", self.token_type, self.token_var, self.token_name)
 
-        self.run_context = run_context
-        token = run_context.get_secret(self.token_var)
+        self.thread_context = thread_context
+        token = thread_context.get_secret(self.token_var)
         if token is None:
             raise RuntimeError(f"Token variable {self.token_var} not found in secrets")
 
@@ -52,14 +52,14 @@ class AuthorizedRestApiTool(RestApiTool):
         password: str | None = None
         if self.token_type == "bearer":
             auth_type = "bearer"
-            token = run_context.get_secret(self.token_var)
+            token = thread_context.get_secret(self.token_var)
             token_name = self.token_name or "Bearer"
         elif self.token_type == "basic":
             auth_type = "basic"
-            username, password = run_context.get_secret(self.token_var).split(":")
+            username, password = thread_context.get_secret(self.token_var).split(":")
         elif self.token_type == "parameter":
             auth_type = "parameter"
-            token = run_context.get_secret(self.token_var)
+            token = thread_context.get_secret(self.token_var)
             token_name = self.token_name or "api_key"
 
         auth_var = await super().prepare_auth_config(
@@ -74,7 +74,7 @@ class AuthorizedRestApiTool(RestApiTool):
             super().add_request_header(
                 auth_var,
                 self.token_name,
-                run_context.get_secret(self.token_var),
+                thread_context.get_secret(self.token_var),
             )
 
         return auth_var
@@ -83,13 +83,13 @@ class AuthorizedRestApiTool(RestApiTool):
         self,
         url: str,
         params: dict = {},
-        run_context: RunContext = None,
+        thread_context: RunContext = None,
     ):
         """Invoke the GET REST endpoint on the indicated URL, using authentication already configured.
         returns: the JSON response, or the response text and status code.
         """
         return await super().get_resource(
-            url, params, auth_config_var=await self.get_auth_variable(run_context)
+            url, params, auth_config_var=await self.get_auth_variable(thread_context)
         )
 
     async def post_resource(
@@ -97,7 +97,7 @@ class AuthorizedRestApiTool(RestApiTool):
         url: str,
         content_type: str = "application/json",
         data: str = "{}",
-        run_context: RunContext = None,
+        thread_context: RunContext = None,
     ):
         """Invoke the POST REST endpoint, using authentication already configured.
         Supply a data dictionary of params (as json data). The data will be submitted
@@ -108,41 +108,41 @@ class AuthorizedRestApiTool(RestApiTool):
             url,
             content_type,
             data,
-            auth_config_var=await self.get_auth_variable(run_context),
+            auth_config_var=await self.get_auth_variable(thread_context),
         )
 
     async def put_resource(
         self,
         url: str,
         data: str = "{}",
-        run_context: RunContext = None,
+        thread_context: RunContext = None,
     ):
         """Invoke the PUT REST endpoint.
         Supply a data dictionary of params (as json data).
         """
         return await super().put_resource(
-            url, data, auth_config_var=await self.get_auth_variable(run_context)
+            url, data, auth_config_var=await self.get_auth_variable(thread_context)
         )
 
     async def patch_resource(
         self,
         url: str,
         data: str = "{}",
-        run_context: RunContext = None,
+        thread_context: RunContext = None,
     ):
         """Invoke the PATCH REST endpoint.
         Supply a data dictionary of params (as json data).
         """
         return await super().patch_resource(
-            url, data, auth_config_var=await self.get_auth_variable(run_context)
+            url, data, auth_config_var=await self.get_auth_variable(thread_context)
         )
 
     async def delete_resource(
         self,
         url: str,
-        run_context: RunContext = None,
+        thread_context: RunContext = None,
     ):
         """Invoke the DELETE REST endpoint."""
         return await super().delete_resource(
-            url, auth_config_var=await self.get_auth_variable(run_context)
+            url, auth_config_var=await self.get_auth_variable(thread_context)
         )

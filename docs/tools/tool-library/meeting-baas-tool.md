@@ -19,7 +19,7 @@ Requires a MeetingBaaS API key, which can be stored in Agentic's secrets system 
 ### join_meeting
 
 ```python
-def join_meeting(meeting_url: str, run_context: RunContext, bot_name: str = "Meeting Assistant") -> dict
+def join_meeting(meeting_url: str, thread_context: RunContext, bot_name: str = "Meeting Assistant") -> dict
 ```
 
 Join a video meeting and start recording.
@@ -27,7 +27,7 @@ Join a video meeting and start recording.
 **Parameters:**
 
 - `meeting_url (str)`: URL of the meeting to join
-- `run_context (RunContext)`: The execution context
+- `thread_context (RunContext)`: The execution context
 - `bot_name (str)`: Name to display for the bot in the meeting (default: "Meeting Assistant")
 
 **Returns:**

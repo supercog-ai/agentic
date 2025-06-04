@@ -93,14 +93,14 @@ class BrowserUseTool(BaseAgenticTool):
 
     async def run_browser_agent(
             self, 
-            run_context: RunContext,
+            thread_context: RunContext,
             instructions: str,
             model: Optional[str] = None
     ) -> list[str|FinishCompletion]:
         """Execute a set of instructions via browser automation. Instructions can be in natural language. 
 
             Args:
-                run_context (RunContext): Run context of the current run
+                thread_context (RunContext): Run context of the current run
                 instructions (str): Instructions to give to the browser automation.
                 model (Optioanl[str]): The model name to use for the agent. Unless specified by the user do not add a model jcust pass None
             
@@ -134,7 +134,7 @@ class BrowserUseTool(BaseAgenticTool):
         return [
             content_text,
             FinishCompletion.create(
-                agent=run_context.agent.name,
+                agent=thread_context.agent.name,
                 llm_message=f"Tokens used - Input: {token_counter.total_input_tokens}, Output: {token_counter.total_output_tokens}",
                 model=used_model,
                 cost=0,

@@ -68,7 +68,7 @@ class ExampleTool(BaseAgenticTool):
 
     def fetch_data(
         self, 
-        run_context: RunContext, 
+        thread_context: RunContext, 
         query: str, 
         limit: int = 10
     ) -> pd.DataFrame:
@@ -76,7 +76,7 @@ class ExampleTool(BaseAgenticTool):
         Fetch data from the Example API based on the provided query.
         
         Args:
-            run_context: The execution context
+            thread_context: The execution context
             query: Search query string
             limit: Maximum number of results to return (default: 10)
             
@@ -90,7 +90,7 @@ class ExampleTool(BaseAgenticTool):
         # 4. Return the data as a DataFrame
         
         # Example implementation:
-        run_context.info(f"Fetching data with query: {query}, limit: {limit}")
+        thread_context.info(f"Fetching data with query: {query}, limit: {limit}")
         
         # This is just dummy data for the example
         data = {
@@ -141,7 +141,7 @@ class ExampleTool(BaseAgenticTool):
 
     def secured_operation(
         self, 
-        run_context: RunContext, 
+        thread_context: RunContext, 
         action: str, 
         parameters: Dict[str, any] = {}
     ) -> Union[str, PauseForInputResult]:
@@ -151,7 +151,7 @@ class ExampleTool(BaseAgenticTool):
         This example demonstrates how to handle authentication and secrets.
         
         Args:
-            run_context: The execution context
+            thread_context: The execution context
             action: The action to perform
             parameters: Additional parameters for the action
             
@@ -159,7 +159,7 @@ class ExampleTool(BaseAgenticTool):
             Result of the operation or a request for authentication
         """
         # Get API key from secrets or instance variable
-        api_key = run_context.get_secret("EXAMPLE_API_KEY", self.api_key)
+        api_key = thread_context.get_secret("EXAMPLE_API_KEY", self.api_key)
         
         # If no API key is available, request it from the user
         if not api_key:
@@ -168,8 +168,8 @@ class ExampleTool(BaseAgenticTool):
             )
         
         # Log the operation (but not the API key!)
-        run_context.info(f"Performing secured operation: {action}")
-        run_context.debug(f"Parameters: {parameters}")
+        thread_context.info(f"Performing secured operation: {action}")
+        thread_context.debug(f"Parameters: {parameters}")
         
         # In a real implementation, you would:
         # 1. Authenticate with the API using the api_key

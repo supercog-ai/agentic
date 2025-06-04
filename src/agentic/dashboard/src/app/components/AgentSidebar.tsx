@@ -18,7 +18,7 @@ interface AgentSidebarProps {
   selectedAgent: string;
   onSelectAgent: (_path: string) => void;
   onNewChat: () => void;
-  onRunSelected: (_runId: string) => void;
+  onThreadSelected: (_threadId: string) => void;
   isMobile?: boolean;
 }
 
@@ -27,7 +27,7 @@ const AgentSidebar: React.FC<AgentSidebarProps> = ({
   selectedAgent, 
   onSelectAgent, 
   onNewChat,
-  onRunSelected,
+  onThreadSelected,
   isMobile = false,
 }) => {
   return (
@@ -71,7 +71,7 @@ const AgentSidebar: React.FC<AgentSidebarProps> = ({
         <RunsTable 
           agentPath={selectedAgent}
           className="flex-1 border-t pt-4"
-          onRunSelected={onRunSelected}
+          onThreadSelected={onThreadSelected}
         />
       )}
     </div>

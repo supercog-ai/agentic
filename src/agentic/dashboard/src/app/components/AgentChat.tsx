@@ -15,16 +15,16 @@ import { useChat } from '@/hooks/useChat';
 interface AgentChatProps {
   agentPath: string;
   agentInfo: Api.AgentInfo;
-  currentRunId?: string;
-  onRunComplete?: (_runId: string) => void;
+  currentThreadId?: string;
+  onThreadComplete?: (_threadId: string) => void;
   showMobileMenuButton?: boolean; // New prop to control header visibility
 }
 
 const AgentChat: React.FC<AgentChatProps> = ({ 
   agentPath, 
   agentInfo, 
-  currentRunId, 
-  onRunComplete,
+  currentThreadId, 
+  onThreadComplete,
   showMobileMenuButton = true // Default to true for backward compatibility
 }) => {
   const defaultPurpose: Ui.Message[] = agentInfo.purpose ? [
@@ -46,7 +46,7 @@ const AgentChat: React.FC<AgentChatProps> = ({
     messages,
     isSending,
     cancelStream
-  } = useChat(agentPath, agentInfo.name, currentRunId);
+  } = useChat(agentPath, agentInfo.name, currentThreadId);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -96,7 +96,7 @@ const AgentChat: React.FC<AgentChatProps> = ({
       
       const response = await sendBackgroundPrompt(
         userInput,
-        currentRunId,
+        currentThreadId,
         // Update message content as it streams in
         (requestId, content) => {
           setBackgroundTasks(prev => prev.map(task => {
@@ -137,11 +137,11 @@ const AgentChat: React.FC<AgentChatProps> = ({
       // Messages will be derived from events in the useChat hook
       const response = await sendPrompt(
         userInput,
-        currentRunId,
+        currentThreadId,
         // This callback is used for streaming updates
         () => {},
         // Callback when complete
-        onRunComplete
+        onThreadComplete
       );
       // If response failed, we could handle error here
       if (!response) {
@@ -242,9 +242,9 @@ const AgentChat: React.FC<AgentChatProps> = ({
                         inputKeys={msg.inputKeys}
                         resumeValues={msg.resumeValues}
                         formDisabled={msg.formDisabled}
-                        runId={currentRunId || ''}
+                        threadId={currentThreadId || ''}
                         resumeWithInput={resumeWithInput}
-                        onRunComplete={onRunComplete}
+                        onThreadComplete={onThreadComplete}
                       />
                     ) : (
                       !msg.content && idx === displayMessages.length - 1 ? ( // If no inputKeys and last message is blank, show loading

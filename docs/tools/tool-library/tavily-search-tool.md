@@ -20,7 +20,7 @@ Requires a Tavily API key, which can be:
 ### perform_web_search
 
 ```python
-async def perform_web_search(query: str, include_images: bool, include_content: bool, run_context: RunContext) -> List[dict]
+async def perform_web_search(query: str, include_images: bool, include_content: bool, thread_context: RunContext) -> List[dict]
 ```
 
 Performs a web search using Tavily's search engine and returns results with metadata.
@@ -30,7 +30,7 @@ Performs a web search using Tavily's search engine and returns results with meta
 - `query (str)`: The search query
 - `include_images (bool)`: Whether to include images in the results
 - `include_content (bool)`: Whether to return the full page contents
-- `run_context (RunContext)`: The agent's running context
+- `thread_context (RunContext)`: The agent's running context
 
 **Returns:**
 A list of dictionaries containing search results with metadata such as titles, URLs, and snippets.
@@ -38,14 +38,14 @@ A list of dictionaries containing search results with metadata such as titles, U
 ### query_for_news
 
 ```python
-async def query_for_news(run_context: RunContext, query: str, days_back: int = 1) -> pd.DataFrame | PauseForInputResult
+async def query_for_news(thread_context: RunContext, query: str, days_back: int = 1) -> pd.DataFrame | PauseForInputResult
 ```
 
 Returns the latest headlines on a given topic using Tavily's news search.
 
 **Parameters:**
 
-- `run_context (RunContext)`: The agent's running context
+- `thread_context (RunContext)`: The agent's running context
 - `query (str)`: The news topic to search for
 - `days_back (int)`: Number of days back to search (default: 1)
 
@@ -55,14 +55,14 @@ A pandas DataFrame containing news articles related to the query.
 ### tavily_download_pages
 
 ```python
-async def tavily_download_pages(run_context: RunContext, urls: list[str], include_images: bool = False) -> pd.DataFrame
+async def tavily_download_pages(thread_context: RunContext, urls: list[str], include_images: bool = False) -> pd.DataFrame
 ```
 
 Downloads content from one or more web page URLs using Tavily's content extraction API.
 
 **Parameters:**
 
-- `run_context (RunContext)`: The agent's running context
+- `thread_context (RunContext)`: The agent's running context
 - `urls (list[str])`: List of URLs to download
 - `include_images (bool)`: Whether to include images in the results
 

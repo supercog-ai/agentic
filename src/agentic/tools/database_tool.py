@@ -234,10 +234,10 @@ class DatabaseTool(BaseAgenticTool):
             raise DatabaseConnectionError(f"Failed to create database engine: {str(e)}")
 
     def _check_missing_connection(
-        self, run_context: RunContext
+        self, thread_context: RunContext
     ) -> PauseForInputResult | None:
         if not self.engine:
-            connection_string = self.connection_string or run_context.get_setting(
+            connection_string = self.connection_string or thread_context.get_setting(
                 "database_url"
             )
             if not connection_string:
@@ -256,17 +256,17 @@ class DatabaseTool(BaseAgenticTool):
                     {"database_url": "Corrected database connection string"}
                 )
 
-            run_context.set_setting("database_url", connection_string)
-            run_context.info(f"Connecting to database: {connection_string}")
+            thread_context.set_setting("database_url", connection_string)
+            thread_context.info(f"Connecting to database: {connection_string}")
             self.engine = self.create_engine(connection_string)
         return None
 
     def run_database_query(
-        self, sql_query: str, run_context: RunContext
+        self, sql_query: str, thread_context: RunContext
     ) -> pd.DataFrame | dict | PauseForInputResult:
         """Runs a SQL query against a database."""
 
-        wait_event = self._check_missing_connection(run_context)
+        wait_event = self._check_missing_connection(thread_context)
         if wait_event:
             return wait_event
 
@@ -303,9 +303,9 @@ class DatabaseTool(BaseAgenticTool):
         except Exception as e:
             return {"status": f"Unexpected error: {str(e)}"}
 
-    def get_database_type(self, run_context: RunContext) -> str:
+    def get_database_type(self, thread_context: RunContext) -> str:
         """Returns the type and SQL dialect of the connected database"""
-        wait_event = self._check_missing_connection(run_context)
+        wait_event = self._check_missing_connection(thread_context)
         if wait_event:
             return wait_event
 

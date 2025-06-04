@@ -52,10 +52,10 @@ declare namespace Api {
   
   interface SendPromptResponse {
     request_id: string;
-    run_id: string;
+    thread_id: string;
   }
   
-  interface Run {
+  interface Thread {
     id: string;
     agent_id: string;
     user_id: string;
@@ -72,9 +72,9 @@ declare namespace Api {
     };
   }
   
-  interface RunLog {
+  interface ThreadLog {
     id: string;
-    run_id: string;
+    thread_id: string;
     agent_id: string;
     user_id: string;
     role: string;

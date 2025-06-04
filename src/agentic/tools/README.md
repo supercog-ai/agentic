@@ -117,7 +117,7 @@ Each function that will be available to agents should:
 
 1. Have a descriptive name
 2. Include a clear docstring describing its purpose, parameters, and return value
-3. For functions that need authentication, include a `run_context` parameter
+3. For functions that need authentication, include a `thread_context` parameter
 4. Have proper type hints for parameters and return values
 
 Functions can be synchronous or asynchronous:
@@ -143,10 +143,10 @@ Tools can handle authentication in several ways:
        self.api_key = api_key
    ```
 
-2. Using the `run_context` to get secrets:
+2. Using the `thread_context` to get secrets:
    ```python
-   def my_function(self, run_context: RunContext, param: str) -> str:
-       api_key = run_context.get_secret("API_KEY_NAME", self.api_key)
+   def my_function(self, thread_context: RunContext, param: str) -> str:
+       api_key = thread_context.get_secret("API_KEY_NAME", self.api_key)
        # use api_key to authenticate
    ```
 

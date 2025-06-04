@@ -4,7 +4,7 @@ from .actor_agents import (
     AgentProxyClass,
     handoff,
 )
-from .swarm.types import RunContext
+from .swarm.types import ThreadContext
 from .workflow import Pipeline
 from jinja2 import Template
 import os
@@ -18,8 +18,8 @@ from pydantic import BaseModel, Field
 Agent = AgentProxyClass
 AgentRunner = RayAgentRunner
 
-def make_prompt(template: str, run_context: RunContext, **kwargs) -> str:
-    context = run_context._context.copy() | kwargs
+def make_prompt(template: str, thread_context: ThreadContext, **kwargs) -> str:
+    context = thread_context._context.copy() | kwargs
     return Template(template).render(context)
 
 

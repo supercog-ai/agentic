@@ -8,7 +8,7 @@ def test_handle_turn_start():
         instructions="""
 Print your request backwards
 """,
-        handle_turn_start=lambda prompt, run_context: prompt.set_message("fletch"),
+        handle_turn_start=lambda prompt, thread_context: prompt.set_message("fletch"),
     )
 
     agent_runnner = AgentRunner(agent)

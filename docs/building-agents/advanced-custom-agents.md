@@ -75,17 +75,17 @@ This ensures that:
 - The turn is ended properly.
 
 ---
-## Subagent `run_id` Propagation for Subagents
-To ensure events from subagents (like planners or tools) are grouped with the top-level agent in the event-logs, you must pass run_id in request_context and ensure it is picked up by the subagent. 
+## Subagent `thread_id` Propagation for Subagents
+To ensure events from subagents (like planners or tools) are grouped with the top-level agent in the event-logs, you must pass thread_id in request_context and ensure it is picked up by the subagent. 
 
 ### What to do
-pass `run_id` in every subagent request:
+pass `thread_id` in every subagent request:
 ```python
 result = yield from self.section_planner.final_result(
     "Plan sections",
     request_context={
         "topic": self.topic,
-        "run_id": run_context.run_id  # Required for shared logging
+        "thread_id": thread_context.thread_id  # Required for shared logging
     }
 )
 ```
@@ -113,7 +113,7 @@ def next_turn(self, request: str | Prompt, request_context: dict = {}, **kwargs)
     # Example: Plan → Research → Write
     plan = yield from self.planner_agent.final_result(
         "Make a plan", 
-        request_context={"topic": topic, "run_id": request_context.get("run_id")}
+        request_context={"topic": topic, "thread_id": request_context.get("thread_id")}
     )
 
     yield ChatOutput(self.name, {"content": f"Plan: {plan}"})
@@ -136,8 +136,8 @@ def next_turn(self, request: str | Prompt, request_context: dict = {}, **kwargs)
 
 | Concept        | Expectation                             |
 |----------------|------------------------------------------|
-| `run_id`       | Must be consistent per top-level request. |
-| Logging        | Only logs events for current agent, unless propagating via shared `run_id` |
+| `thread_id`       | Must be consistent per top-level request. |
+| Logging        | Only logs events for current agent, unless propagating via shared `thread_id` |
 | History        | Cleanly reset between runs if your agent doesn't need memory. |
 
 ---

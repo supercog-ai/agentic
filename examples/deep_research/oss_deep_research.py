@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field
 from datetime import datetime
 
 from agentic.agentic_secrets import agentic_secrets
-from agentic.common import Agent, AgentRunner, RunContext
+from agentic.common import Agent, AgentRunner, ThreadContext
 from agentic.events import Event, ChatOutput, WaitForInput, Prompt, PromptStarted, TurnEnd, ResumeWithInput
 from agentic.models import GPT_4O_MINI, CLAUDE, GPT_4O
 from agentic.tools import PlaywrightTool, TavilySearchTool
@@ -150,7 +150,7 @@ class DeepResearchAgent(Agent):
                 request_context={
                     "topic": self.topic, 
                     "num_queries": self.num_queries,
-                    "run_id": request_context.get("run_id")
+                    "thread_id": request_context.get("thread_id")
                 }
             )
 
@@ -159,7 +159,7 @@ class DeepResearchAgent(Agent):
                 yield ChatOutput(self.query_planner.name, {"content": msg})
 
             # Get initial web content
-            content = self.query_web_content(queries, run_context=RunContext(self.name))
+            content = self.query_web_content(queries, thread_context=ThreadContext(self.name))
 
             # Plan the report sections
             self.sections = yield from self.section_planner.final_result(
@@ -169,7 +169,7 @@ class DeepResearchAgent(Agent):
                     "web_context": content, 
                     "topic": self.topic,
                     "feedback": feedback,
-                    "run_id": request_context.get("run_id")
+                    "thread_id": request_context.get("thread_id")
                 }
             )
 
@@ -211,7 +211,7 @@ provide feedback to regenerate the report plan:\n
                     "section_topic": section.description, 
                     "report_context": draft_report,
                     "section_content": section.content,
-                    "run_id": request_context.get("run_id")
+                    "thread_id": request_context.get("thread_id")
                 },
             )
             finals.append(report_section)
@@ -220,7 +220,7 @@ provide feedback to regenerate the report plan:\n
             "Generate a list of important sources referenced from the full report content.",
             {
                 "report_context": draft_report,
-                "run_id": request_context.get("run_id")
+                "thread_id": request_context.get("thread_id")
             }
         )
 
@@ -236,7 +236,7 @@ provide feedback to regenerate the report plan:\n
         yield TurnEnd(
             self.name,
             [{"role": "assistant", "content": report}],
-            run_context=None,
+            thread_context=None,
         )
 
     def process_section(self, section: "Section", index: int, report_context: str = None) -> Generator:
@@ -247,14 +247,14 @@ provide feedback to regenerate the report plan:\n
             request_context={
                 "section_topic": section.description, 
                 "num_queries": self.num_queries,
-                "run_id": report_context.run_id if isinstance(report_context, RunContext) else None
+                "thread_id": report_context.thread_id if isinstance(report_context, ThreadContext) else None
             },
         )
         msg = f"Research queries for section {index+1} - {section.name}:\n" + "\n".join([q.search_query for q in queries.queries]) + "\n\n"
         yield ChatOutput(self.section_query_planner.name, {"content": msg})
 
         # Get web content
-        web_context = self.query_web_content(queries, run_context=RunContext(self.name))
+        web_context = self.query_web_content(queries, thread_context=ThreadContext(self.name))
 
         yield ChatOutput(self.section_query_planner.name, {"content": f"Writing section {index+1}...\n\n"})
 
@@ -266,11 +266,11 @@ provide feedback to regenerate the report plan:\n
                 "section_topic": section.description,
                 "section_content": section.content,
                 "web_context": web_context,
-                "run_id": report_context.run_id if isinstance(report_context, RunContext) else None
+                "thread_id": report_context.thread_id if isinstance(report_context, ThreadContext) else None
             }
         )
 
-    def query_web_content(self, queries: "Queries", run_context) -> str:
+    def query_web_content(self, queries: "Queries", thread_context) -> str:
         content_max = 20000
 
         async def _query_web_content(queries: Queries, missing_results: list[str]) -> str:
@@ -303,7 +303,7 @@ provide feedback to regenerate the report plan:\n
             len(content) < content_max
         ):
             max_playwright_pages = 3
-            content_tuples = self.playwright_tool.download_pages(run_context, missing_pages[:max_playwright_pages])
+            content_tuples = self.playwright_tool.download_pages(thread_context, missing_pages[:max_playwright_pages])
             for _, title, page_content in content_tuples:
                 if page_content:
                     content += f"\n\n===\n{title}\n===\n{page_content}\n\n"

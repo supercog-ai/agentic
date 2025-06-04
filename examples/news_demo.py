@@ -16,9 +16,9 @@ def query_news(topic: str):
     return gnt.query_news(topic)
 
 
-def get_human_input(run_context: RunContext):
-    if run_context.get("topic"):
-        return run_context.get("topic")
+def get_human_input(thread_context: RunContext):
+    if thread_context.get("topic"):
+        return thread_context.get("topic")
     return PauseForInputResult({"topic": "What is the news topic?"})
 
 

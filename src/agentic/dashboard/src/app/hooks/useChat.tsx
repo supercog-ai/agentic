@@ -1,14 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { mutate } from 'swr';
 
-import { useRunLogs } from '@/hooks/useAgentData';
+import { useThreadLogs } from '@/hooks/useAgentData';
 import { AgentEventType, agenticApi } from '@/lib/api';
 import { convertFromUTC, isUserTurn } from '@/lib/utils';
 
 /**
  * Custom hook for handling agent prompt submission and event streaming
  */
-export function useChat(agentPath: string, agentName: string, currentRunId: string | undefined) {
+export function useChat(agentPath: string, agentName: string, currentThreadId: string | undefined) {
   const [isSending, setIsSending] = useState(false);
   const [events, setEvents] = useState<Ui.Event[]>([]);
   const streamContentRef = useRef<string>('');
@@ -16,29 +16,29 @@ export function useChat(agentPath: string, agentName: string, currentRunId: stri
   // Track the last event type to detect non-continuous chat outputs
   const lastEventTypeRef = useRef<string | null>(null);
 
-  // Track the previous runId to detect changes
-  const prevRunIdRef = useRef<string | undefined | null>(currentRunId);
+  // Track the previous threadId to detect changes
+  const prevThreadIdRef = useRef<string | undefined | null>(currentThreadId);
   
-  // Fetch run logs when runId changes
-  const { data: runLogs, isLoading: isLoadingRunLogs } = useRunLogs(agentPath, currentRunId ?? null);
+  // Fetch thread logs when threadId changes
+  const { data: threadLogs, isLoading: isLoadingThreadLogs } = useThreadLogs(agentPath, currentThreadId ?? null);
   
-  // Reset events when currentRunId changes to undefined/null
+  // Reset events when currentThreadId changes to undefined/null
   useEffect(() => {
-    // If currentRunId changed from a value to undefined/null, reset events
-    if (prevRunIdRef.current && !currentRunId) {
+    // If currentThreadId changed from a value to undefined/null, reset events
+    if (prevThreadIdRef.current && !currentThreadId) {
       setEvents([]);
     }
     // Update the ref for next comparison
-    prevRunIdRef.current = currentRunId;
-  }, [currentRunId]);
+    prevThreadIdRef.current = currentThreadId;
+  }, [currentThreadId]);
   
-  // Convert run logs to Ui.Event format when they change
+  // Convert thread logs to Ui.Event format when they change
   useEffect(() => {
-    if (runLogs && runLogs.length > 0) {
+    if (threadLogs && threadLogs.length > 0) {
       const processedEvents: Ui.Event[] = [];
       
       // First convert all logs to Ui.Event format
-      const eventsFromLogs: Ui.Event[] = runLogs.map(log => ({
+      const eventsFromLogs: Ui.Event[] = threadLogs.map(log => ({
         type: log.event_name,
         payload: log.event.content || log.event,
         agentName: log.agent_id,
@@ -87,11 +87,11 @@ export function useChat(agentPath: string, agentName: string, currentRunId: stri
       }
       
       setEvents(processedEvents);
-    } else if (runLogs && runLogs.length === 0) {
+    } else if (threadLogs && threadLogs.length === 0) {
       // Reset events when we get empty logs
       setEvents([]);
     }
-  }, [runLogs]);
+  }, [threadLogs]);
   
   // Function to clean up any active stream
   const cleanupStream = useCallback(() => {
@@ -104,7 +104,7 @@ export function useChat(agentPath: string, agentName: string, currentRunId: stri
   // Process the event stream from the agent
   const processEventStream = useCallback(async (
     requestId: string,
-    runId: string,
+    threadId: string,
     onStreamContent: (_content: string) => void,
     isBackground: boolean,
     onComplete?: () => void
@@ -196,9 +196,9 @@ export function useChat(agentPath: string, agentName: string, currentRunId: stri
   // Send a prompt to the agent (foreground mode)
   const sendPrompt = useCallback(async (
     promptText: string, 
-    existingRunId?: string,
+    existingThreadId?: string,
     onMessageUpdate?: (_content: string) => void,
-    onComplete?: (_runId: string) => void
+    onComplete?: (_threadId: string) => void
   ) => {
     if (!promptText.trim()) return null;
     
@@ -208,29 +208,29 @@ export function useChat(agentPath: string, agentName: string, currentRunId: stri
       lastEventTypeRef.current = null; // Reset the last event type
       
       // Send the prompt to the agent
-      const response = await agenticApi.sendPrompt(agentPath, promptText, existingRunId);
+      const response = await agenticApi.sendPrompt(agentPath, promptText, existingThreadId);
       const requestId = response.request_id;
-      const runId = response.run_id;
+      const threadId = response.thread_id;
 
       // Set up event streaming
       await processEventStream(
         requestId, 
-        runId, 
+        threadId, 
         () => {
           onMessageUpdate?.(streamContentRef.current);
         },
         false
       );
 
-      // Refresh runs data when complete
+      // Refresh threads data when complete
       if (onComplete) {
-        onComplete(runId);
-        mutate(['agent-runs', agentPath]);
+        onComplete(threadId);
+        mutate(['agent-threads', agentPath]);
       }
 
       return {
         requestId,
-        runId,
+        threadId,
         content: streamContentRef.current
       };
     } catch (error) {
@@ -244,7 +244,7 @@ export function useChat(agentPath: string, agentName: string, currentRunId: stri
   // Send a prompt in background mode
   const sendBackgroundPrompt = useCallback(async (
     promptText: string,
-    existingRunId?: string,
+    existingThreadId?: string,
     onMessageUpdate?: (_requestId: string, _content: string) => void,
     onComplete?: (_requestId: string) => void
   ) => {
@@ -255,16 +255,16 @@ export function useChat(agentPath: string, agentName: string, currentRunId: stri
       lastEventTypeRef.current = null;
       
       // Send the prompt to the agent
-      const response = await agenticApi.sendPrompt(agentPath, promptText, existingRunId);
+      const response = await agenticApi.sendPrompt(agentPath, promptText, existingThreadId);
       const requestId = response.request_id;
-      const runId = response.run_id;
+      const threadId = response.thread_id;
       
       let contentAccumulator = '';
       
       // Process the stream in the background
       processEventStream(
         requestId,
-        runId,
+        threadId,
         (newContent) => {
           contentAccumulator += newContent;
           onMessageUpdate?.(requestId, contentAccumulator);
@@ -272,13 +272,13 @@ export function useChat(agentPath: string, agentName: string, currentRunId: stri
         true,
         () => {
           onComplete?.(requestId);
-          mutate(['agent-runs', agentPath]);
+          mutate(['agent-threads', agentPath]);
         }
       );
 
       return {
         requestId,
-        runId
+        threadId
       };
     } catch (error) {
       console.error('Error sending background prompt:', error);
@@ -288,9 +288,9 @@ export function useChat(agentPath: string, agentName: string, currentRunId: stri
 
   const resumeWithInput = useCallback(async (
     continueResult: Record<string, string>, 
-    existingRunId: string,
+    existingThreadId: string,
     onMessageUpdate?: (_content: string) => void,
-    onComplete?: (_runId: string) => void
+    onComplete?: (_threadId: string) => void
   ) => {
     if (Object.keys(continueResult).length === 0) return null;
     
@@ -300,29 +300,29 @@ export function useChat(agentPath: string, agentName: string, currentRunId: stri
       lastEventTypeRef.current = null; // Reset the last event type
       
       // Send the prompt to the agent
-      const response = await agenticApi.resumeWithInput(agentPath, continueResult, existingRunId);
+      const response = await agenticApi.resumeWithInput(agentPath, continueResult, existingThreadId);
       const requestId = response.request_id;
-      const runId = response.run_id;
+      const threadId = response.thread_id;
 
       // Set up event streaming
       await processEventStream(
         requestId, 
-        runId, 
+        threadId, 
         () => {
           onMessageUpdate?.(streamContentRef.current);
         },
         false
       );
 
-      // Refresh runs data when complete
+      // Refresh threads data when complete
       if (onComplete) {
-        onComplete(runId);
-        mutate(['agent-runs', agentPath]);
+        onComplete(threadId);
+        mutate(['agent-threads', agentPath]);
       }
 
       return {
         requestId,
-        runId,
+        threadId,
         content: streamContentRef.current
       };
     } catch (error) {
@@ -421,6 +421,6 @@ export function useChat(agentPath: string, agentName: string, currentRunId: stri
     events,
     messages,
     isSending,
-    isLoadingRunLogs
+    isLoadingThreadLogs
   };
 }

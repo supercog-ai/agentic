@@ -25,7 +25,7 @@ def __init__(connection_string: str = None)
 ### run_database_query
 
 ```python
-def run_database_query(sql_query: str, run_context: RunContext) -> pd.DataFrame | dict | PauseForInputResult
+def run_database_query(sql_query: str, thread_context: RunContext) -> pd.DataFrame | dict | PauseForInputResult
 ```
 
 Runs a SQL query against a connected database.
@@ -33,7 +33,7 @@ Runs a SQL query against a connected database.
 **Parameters:**
 
 - `sql_query (str)`: The SQL query to execute
-- `run_context (RunContext)`: The execution context with access to secrets
+- `thread_context (RunContext)`: The execution context with access to secrets
 
 **Returns:**
 Query results as a pandas DataFrame (for SELECT queries), or a status message (for other query types).
@@ -41,14 +41,14 @@ Query results as a pandas DataFrame (for SELECT queries), or a status message (f
 ### get_database_type
 
 ```python
-def get_database_type(run_context: RunContext) -> str
+def get_database_type(thread_context: RunContext) -> str
 ```
 
 Returns the type and SQL dialect of the connected database.
 
 **Parameters:**
 
-- `run_context (RunContext)`: The execution context
+- `thread_context (RunContext)`: The execution context
 
 **Returns:**
 A string indicating the database type (e.g., "PostgreSQL", "MySQL", etc.).

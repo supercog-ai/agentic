@@ -34,14 +34,14 @@ def __init__(api_key: str = None, default_repo: str = None)
 ### search_repositories
 
 ```python
-async def search_repositories(run_context: RunContext, query: str, language: Optional[str] = None, sort: str = 'stars', order: str = 'desc') -> dict
+async def search_repositories(thread_context: RunContext, query: str, language: Optional[str] = None, sort: str = 'stars', order: str = 'desc') -> dict
 ```
 
 Search for GitHub repositories.
 
 **Parameters:**
 
-- `run_context (RunContext)`: The execution context
+- `thread_context (RunContext)`: The execution context
 - `query (str)`: Search keywords
 - `language (Optional[str])`: Filter repositories by programming language
 - `sort (str)`: Criteria to sort results ('stars', 'forks', 'updated')
@@ -53,14 +53,14 @@ A dictionary containing search results.
 ### create_github_issue
 
 ```python
-async def create_github_issue(run_context: RunContext, title: str, body: str, labels: List[str] = None, repo_owner: Optional[str] = None, repo_name: Optional[str] = None) -> Dict[str, Any]
+async def create_github_issue(thread_context: RunContext, title: str, body: str, labels: List[str] = None, repo_owner: Optional[str] = None, repo_name: Optional[str] = None) -> Dict[str, Any]
 ```
 
 Create a new issue in a GitHub repository.
 
 **Parameters:**
 
-- `run_context (RunContext)`: The execution context
+- `thread_context (RunContext)`: The execution context
 - `title (str)`: Title of the issue
 - `body (str)`: Body text of the issue
 - `labels (List[str])`: Labels to apply to the issue
@@ -73,14 +73,14 @@ The created issue data or an error message.
 ### get_github_issues
 
 ```python
-async def get_github_issues(run_context: RunContext, state: str = 'open', labels: Optional[str] = None, assignee: Optional[str] = None, creator: Optional[str] = None, mentioned: Optional[str] = None, since: Optional[str] = None, repo_owner: Optional[str] = None, repo_name: Optional[str] = None) -> pd.DataFrame
+async def get_github_issues(thread_context: RunContext, state: str = 'open', labels: Optional[str] = None, assignee: Optional[str] = None, creator: Optional[str] = None, mentioned: Optional[str] = None, since: Optional[str] = None, repo_owner: Optional[str] = None, repo_name: Optional[str] = None) -> pd.DataFrame
 ```
 
 List issues in a repository.
 
 **Parameters:**
 
-- `run_context (RunContext)`: The execution context
+- `thread_context (RunContext)`: The execution context
 - `state (str)`: State of issues to return ('open', 'closed', 'all')
 - `labels (Optional[str])`: Comma-separated list of label names
 - `assignee (Optional[str])`: Username of assigned user
@@ -96,14 +96,14 @@ A pandas DataFrame containing issue data.
 ### create_pull_request
 
 ```python
-async def create_pull_request(run_context: RunContext, title: str, body: str, head: str, base: str, repo_owner: Optional[str] = None, repo_name: Optional[str] = None) -> Dict[str, Any]
+async def create_pull_request(thread_context: RunContext, title: str, body: str, head: str, base: str, repo_owner: Optional[str] = None, repo_name: Optional[str] = None) -> Dict[str, Any]
 ```
 
 Create a new pull request.
 
 **Parameters:**
 
-- `run_context (RunContext)`: The execution context
+- `thread_context (RunContext)`: The execution context
 - `title (str)`: Title of the pull request
 - `body (str)`: Body of the pull request
 - `head (str)`: The branch with changes
@@ -117,14 +117,14 @@ Created pull request data.
 ### get_repository_contents
 
 ```python
-async def get_repository_contents(run_context: RunContext, path: str = '', repo_owner: Optional[str] = None, repo_name: Optional[str] = None) -> List[Dict[str, Any]]
+async def get_repository_contents(thread_context: RunContext, path: str = '', repo_owner: Optional[str] = None, repo_name: Optional[str] = None) -> List[Dict[str, Any]]
 ```
 
 Get contents of a repository.
 
 **Parameters:**
 
-- `run_context (RunContext)`: The execution context
+- `thread_context (RunContext)`: The execution context
 - `path (str)`: Path to the content
 - `repo_owner (Optional[str])`: Repository owner
 - `repo_name (Optional[str])`: Repository name
@@ -135,14 +135,14 @@ List of repository contents.
 ### search_in_repo
 
 ```python
-async def search_in_repo(run_context: RunContext, query: str, repo_owner: Optional[str] = None, repo_name: Optional[str] = None) -> List[Dict[str, str]]
+async def search_in_repo(thread_context: RunContext, query: str, repo_owner: Optional[str] = None, repo_name: Optional[str] = None) -> List[Dict[str, str]]
 ```
 
 Search for code within a specific repository.
 
 **Parameters:**
 
-- `run_context (RunContext)`: The execution context
+- `thread_context (RunContext)`: The execution context
 - `query (str)`: Search terms or code snippet to find
 - `repo_owner (Optional[str])`: Repository owner
 - `repo_name (Optional[str])`: Repository name
@@ -153,14 +153,14 @@ List of dictionaries with file paths, URLs, and code snippets.
 ### download_repo_file
 
 ```python
-async def download_repo_file(run_context: RunContext, file_path: str, repo_owner: Optional[str] = None, repo_name: Optional[str] = None, branch: Optional[str] = None, local_file_name: Optional[str] = None) -> str
+async def download_repo_file(thread_context: RunContext, file_path: str, repo_owner: Optional[str] = None, repo_name: Optional[str] = None, branch: Optional[str] = None, local_file_name: Optional[str] = None) -> str
 ```
 
 Download a file from a repository to local storage.
 
 **Parameters:**
 
-- `run_context (RunContext)`: The execution context
+- `thread_context (RunContext)`: The execution context
 - `file_path (str)`: Path to the file in the repository
 - `repo_owner (Optional[str])`: Repository owner
 - `repo_name (Optional[str])`: Repository name
@@ -175,14 +175,14 @@ Local filename of the downloaded file or an error message.
 ### clone_repository
 
 ```python
-def clone_repository(run_context: RunContext, repo_url: str, directory_path: str) -> str
+def clone_repository(thread_context: RunContext, repo_url: str, directory_path: str) -> str
 ```
 
 Clone a git repository from the given URL.
 
 **Parameters:**
 
-- `run_context (RunContext)`: The execution context
+- `thread_context (RunContext)`: The execution context
 - `repo_url (str)`: URL of the repository to clone
 - `directory_path (str)`: Path where the repository should be cloned
 
@@ -192,14 +192,14 @@ Status message.
 ### create_commit
 
 ```python
-def create_commit(run_context: RunContext, repo_path: str, message: str, files: Optional[List[str]] = None) -> str
+def create_commit(thread_context: RunContext, repo_path: str, message: str, files: Optional[List[str]] = None) -> str
 ```
 
 Create a commit in the local repository.
 
 **Parameters:**
 
-- `run_context (RunContext)`: The execution context
+- `thread_context (RunContext)`: The execution context
 - `repo_path (str)`: Path to the local repository
 - `message (str)`: Commit message
 - `files (Optional[List[str]])`: List of file paths to commit

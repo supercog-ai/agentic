@@ -335,7 +335,7 @@ Audio file: {audio_filename}
             yield TurnEnd(
                 self.name,
                 [{"role": "assistant", "content": f"Podcast episode {episode_id} published successfully"}],
-                run_context=None,
+                thread_context=None,
             )
             
         except Exception as e:
