@@ -2,7 +2,7 @@ import pytest
 import os
 from agentic.tools import GithubTool
 from agentic.tools.utils.registry import tool_registry
-from agentic.common import RunContext
+from agentic.common import ThreadContext
 from agentic.agentic_secrets import agentic_secrets
 import pandas as pd
 
@@ -20,11 +20,11 @@ def github_tool():
     tool_registry.ensure_dependencies(tool, always_install=True)
     return tool
 
-# Fixture for RunContext
+# Fixture for ThreadContext
 @pytest.fixture
 @pytest.mark.github_test
 def thread_context():
-    context = RunContext(None)
+    context = ThreadContext(None)
     context.get_secret = lambda key, default=None: (
         agentic_secrets.get_secret("TEST_GITHUB_TOKEN") if key == "GITHUB_API_KEY"
         else TEST_DEFAULT_REPO if key == "GITHUB_DEFAULT_REPO"

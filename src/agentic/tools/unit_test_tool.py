@@ -4,7 +4,7 @@ from typing import Callable
 
 from agentic.tools.base import BaseAgenticTool
 from agentic.tools.utils.registry import tool_registry
-from agentic.common import RunContext
+from agentic.common import ThreadContext
 
 STATE_FILE = "test_state.txt"
 
@@ -65,17 +65,17 @@ class UnitTestingTool(BaseAgenticTool):
         await asyncio.sleep(0.2)
         return self.story_log
 
-    def sync_function_with_logging(self, thread_context: RunContext):
+    def sync_function_with_logging(self, thread_context: ThreadContext):
         """ A function that logs to the run context. """
         thread_context.log("Something interesting happened: ", "thing1", "thing2")
         return "can you see the logs?"
 
-    def sync_function_direct_logging(self, thread_context: RunContext):
+    def sync_function_direct_logging(self, thread_context: ThreadContext):
         """ A function that logs directly via yield. """
         yield thread_context.log("Something interesting happened: ", "thing1", "thing2")
         return "I yielded a log message"
     
-    async def async_function_with_logging(self, thread_context: RunContext):
+    async def async_function_with_logging(self, thread_context: ThreadContext):
         """ An async function that logs to the run context. """
         yield thread_context.log("ASYNC interesting happened: ", "thing1", "thing2")
         yield "can you see the logs?"

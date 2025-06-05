@@ -7,7 +7,7 @@ from urllib.parse import urlparse, urlunparse, parse_qs, urlencode
 from sqlalchemy import create_engine, text, Engine
 from sqlalchemy.exc import SQLAlchemyError
 
-from agentic.common import RunContext, PauseForInputResult
+from agentic.common import ThreadContext, PauseForInputResult
 from agentic.tools.base import BaseAgenticTool
 from agentic.tools.utils.registry import tool_registry, Dependency
 
@@ -234,7 +234,7 @@ class DatabaseTool(BaseAgenticTool):
             raise DatabaseConnectionError(f"Failed to create database engine: {str(e)}")
 
     def _check_missing_connection(
-        self, thread_context: RunContext
+        self, thread_context: ThreadContext
     ) -> PauseForInputResult | None:
         if not self.engine:
             connection_string = self.connection_string or thread_context.get_setting(
@@ -262,7 +262,7 @@ class DatabaseTool(BaseAgenticTool):
         return None
 
     def run_database_query(
-        self, sql_query: str, thread_context: RunContext
+        self, sql_query: str, thread_context: ThreadContext
     ) -> pd.DataFrame | dict | PauseForInputResult:
         """Runs a SQL query against a database."""
 
@@ -303,7 +303,7 @@ class DatabaseTool(BaseAgenticTool):
         except Exception as e:
             return {"status": f"Unexpected error: {str(e)}"}
 
-    def get_database_type(self, thread_context: RunContext) -> str:
+    def get_database_type(self, thread_context: ThreadContext) -> str:
         """Returns the type and SQL dialect of the connected database"""
         wait_event = self._check_missing_connection(thread_context)
         if wait_event:

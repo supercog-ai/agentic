@@ -2,7 +2,7 @@ from typing import List, Callable
 import pandas as pd
 import httpx
 
-from agentic.common import RunContext, PauseForInputResult
+from agentic.common import ThreadContext, PauseForInputResult
 from agentic.tools.base import BaseAgenticTool
 from agentic.tools.utils.registry import tool_registry, Dependency
 
@@ -30,7 +30,7 @@ class TavilySearchTool(BaseAgenticTool):
         ]
 
     async def query_for_news(
-        self, thread_context: RunContext, query: str, days_back: int = 1
+        self, thread_context: ThreadContext, query: str, days_back: int = 1
     ) -> pd.DataFrame | PauseForInputResult:
         """Returns the latest headlines on the given topic."""
 
@@ -62,7 +62,7 @@ class TavilySearchTool(BaseAgenticTool):
         query: str, 
         include_images: bool = False, 
         include_content: bool = False,
-        thread_context: RunContext = None
+        thread_context: ThreadContext = None
     ) -> List[dict]:
         """Returns a web search result pages and images using the Tavily search engine. Anything
          related to news should use the query_for_news function. Set 'include_content' to return the full page contents.
@@ -110,7 +110,7 @@ class TavilySearchTool(BaseAgenticTool):
         return results['results'] + results.get('images', [])
 
     async def tavily_download_pages(
-        self, thread_context: RunContext, urls: list[str], include_images: bool = False
+        self, thread_context: ThreadContext, urls: list[str], include_images: bool = False
     ) -> pd.DataFrame:
         """Download the content from one or more web page URLS."""
         api_key = thread_context.get_secret("TAVILY_API_KEY", self.api_key)

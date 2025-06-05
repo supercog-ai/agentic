@@ -1,6 +1,6 @@
 from typing import Callable
 
-from agentic.common import RunContext
+from agentic.common import ThreadContext
 from agentic.tools.utils.registry import tool_registry
 from agentic.tools.rest_api_tool import RestApiTool
 
@@ -36,7 +36,7 @@ class AuthorizedRestApiTool(RestApiTool):
             self.debug_request,
         ]
 
-    async def get_auth_variable(self, thread_context: RunContext):
+    async def get_auth_variable(self, thread_context: ThreadContext):
         print("Auto REST API, ", self.token_type, self.token_var, self.token_name)
 
         self.thread_context = thread_context
@@ -83,7 +83,7 @@ class AuthorizedRestApiTool(RestApiTool):
         self,
         url: str,
         params: dict = {},
-        thread_context: RunContext = None,
+        thread_context: ThreadContext = None,
     ):
         """Invoke the GET REST endpoint on the indicated URL, using authentication already configured.
         returns: the JSON response, or the response text and status code.
@@ -97,7 +97,7 @@ class AuthorizedRestApiTool(RestApiTool):
         url: str,
         content_type: str = "application/json",
         data: str = "{}",
-        thread_context: RunContext = None,
+        thread_context: ThreadContext = None,
     ):
         """Invoke the POST REST endpoint, using authentication already configured.
         Supply a data dictionary of params (as json data). The data will be submitted
@@ -115,7 +115,7 @@ class AuthorizedRestApiTool(RestApiTool):
         self,
         url: str,
         data: str = "{}",
-        thread_context: RunContext = None,
+        thread_context: ThreadContext = None,
     ):
         """Invoke the PUT REST endpoint.
         Supply a data dictionary of params (as json data).
@@ -128,7 +128,7 @@ class AuthorizedRestApiTool(RestApiTool):
         self,
         url: str,
         data: str = "{}",
-        thread_context: RunContext = None,
+        thread_context: ThreadContext = None,
     ):
         """Invoke the PATCH REST endpoint.
         Supply a data dictionary of params (as json data).
@@ -140,7 +140,7 @@ class AuthorizedRestApiTool(RestApiTool):
     async def delete_resource(
         self,
         url: str,
-        thread_context: RunContext = None,
+        thread_context: ThreadContext = None,
     ):
         """Invoke the DELETE REST endpoint."""
         return await super().delete_resource(

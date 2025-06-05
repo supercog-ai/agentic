@@ -2,7 +2,7 @@ import pytest
 from unittest.mock import Mock
 
 from agentic.tools import AutomaticTools, DatabaseTool, GoogleNewsTool, WeatherTool
-from agentic.common import RunContext, Agent
+from agentic.common import ThreadContext, Agent
 
 def a_dummy_tool_function(name: str):
     """ This turns the parameter into a dummy. """
@@ -14,7 +14,7 @@ def toolset():
 
 @pytest.fixture
 def mock_thread_context():
-    context = Mock(spec=RunContext)
+    context = Mock(spec=ThreadContext)
     context.agent = Mock(spec=Agent)
     context.agent.add_tool = Mock()
     return context

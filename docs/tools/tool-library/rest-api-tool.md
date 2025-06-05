@@ -18,7 +18,7 @@ This tool can be used in lieu of a specific tool for an external service. When d
 ### prepare_auth_config
 
 ```python
-async def prepare_auth_config(auth_type: str, username: str = None, password: str = None, token: str = None, token_name: str = "Bearer", thread_context: RunContext = None) -> AsyncGenerator[Any, Any]
+async def prepare_auth_config(auth_type: str, username: str = None, password: str = None, token: str = None, token_name: str = "Bearer", thread_context: ThreadContext = None) -> AsyncGenerator[Any, Any]
 ```
 
 Constructs an auth_config object to use with later requests.
@@ -30,7 +30,7 @@ Constructs an auth_config object to use with later requests.
 - `password (str)`: Password for basic auth
 - `token (str)`: Token for bearer or parameter auth
 - `token_name (str)`: Name to use with the token (default: "Bearer")
-- `thread_context (RunContext)`: The execution context
+- `thread_context (ThreadContext)`: The execution context
 
 **Returns:**
 The variable name of the auth config for use in request calls.
@@ -55,7 +55,7 @@ Add a header to the auth config which was created already.
 ### get_resource
 
 ```python
-async def get_resource(url: str, params: dict = {}, auth_config_var: Optional[str] = "", thread_context: RunContext = None)
+async def get_resource(url: str, params: dict = {}, auth_config_var: Optional[str] = "", thread_context: ThreadContext = None)
 ```
 
 Invoke the GET REST endpoint on the indicated URL.
@@ -65,7 +65,7 @@ Invoke the GET REST endpoint on the indicated URL.
 - `url (str)`: The URL to request
 - `params (dict)`: Query parameters
 - `auth_config_var (Optional[str])`: Auth config identifier
-- `thread_context (RunContext)`: The execution context
+- `thread_context (ThreadContext)`: The execution context
 
 **Returns:**
 The parsed response based on content type.
@@ -226,6 +226,6 @@ The tool automatically processes responses based on their Content-Type:
 - For authenticated requests, `prepare_auth_config` must be called first
 - The tool supports both synchronous and asynchronous operations
 - Error responses include both status code and response text
-- Secret values can be retrieved from the RunContext
+- Secret values can be retrieved from the ThreadContext
 - The tool can be extended with custom response processors
 - Variable substitution using `${ENV_VAR}` syntax is supported in auth parameters

@@ -62,7 +62,7 @@ in a local SQLite database file (inside `~/.agentic`).
     agentic secrets get <secret name>
 
 All secrets are automatically injected into the environment when your agent runs,
-but it is recommended to get values from the `RunContext` using `get_config` and `get_secret`.
+but it is recommended to get values from the `ThreadContext` using `get_config` and `get_secret`.
 One nice feature is that secrets can be stored in a `namespace` named after your agent, so
 that you can manage multiple values across different agents.
 

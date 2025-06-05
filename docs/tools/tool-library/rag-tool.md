@@ -26,14 +26,14 @@ def __init__(default_index: str = "knowledge_base", index_paths: list[str] = [])
 ### save_content_to_knowledge_index
 
 ```python
-def save_content_to_knowledge_index(thread_context: RunContext, content: str = None, index_name: str = None) -> str
+def save_content_to_knowledge_index(thread_context: ThreadContext, content: str = None, index_name: str = None) -> str
 ```
 
 Save content to a knowledge index. Accepts both text and file paths/URLs.
 
 **Parameters:**
 
-- `thread_context (RunContext)`: The execution context
+- `thread_context (ThreadContext)`: The execution context
 - `content (str)`: Text content or path to file/URL to index
 - `index_name (str)`: Name of the index to save to (defaults to default_index)
 

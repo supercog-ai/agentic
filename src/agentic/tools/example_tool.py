@@ -3,7 +3,7 @@ import pandas as pd
 
 from agentic.tools.base import BaseAgenticTool
 from agentic.tools.utils.registry import tool_registry, ConfigRequirement
-from agentic.common import RunContext, PauseForInputResult
+from agentic.common import ThreadContext, PauseForInputResult
 
 @tool_registry.register(
     name="ExampleTool",
@@ -68,7 +68,7 @@ class ExampleTool(BaseAgenticTool):
 
     def fetch_data(
         self, 
-        thread_context: RunContext, 
+        thread_context: ThreadContext, 
         query: str, 
         limit: int = 10
     ) -> pd.DataFrame:
@@ -141,7 +141,7 @@ class ExampleTool(BaseAgenticTool):
 
     def secured_operation(
         self, 
-        thread_context: RunContext, 
+        thread_context: ThreadContext, 
         action: str, 
         parameters: Dict[str, any] = {}
     ) -> Union[str, PauseForInputResult]:

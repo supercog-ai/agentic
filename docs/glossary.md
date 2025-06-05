@@ -107,7 +107,7 @@ An event sent to an agent to continue processing after a pause for human input.
 ### Run
 A single operation request within a [thread](#thread), representing one full interaction cycle from user prompt to agent response.
 
-### RunContext
+### ThreadContext
 An object that holds state during agent execution and provides access to system services, configuration, and secrets.
 
 ## S

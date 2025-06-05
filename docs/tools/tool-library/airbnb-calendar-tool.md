@@ -18,14 +18,14 @@ Requires an Airbnb calendar URL (iCal format) which can be stored in Agentic's s
 ### list_events
 
 ```python
-async def list_events(thread_context: RunContext, start_date: Optional[str] = None, end_date: Optional[str] = None) -> str
+async def list_events(thread_context: ThreadContext, start_date: Optional[str] = None, end_date: Optional[str] = None) -> str
 ```
 
 List all events/bookings in the calendar within the specified date range.
 
 **Parameters:**
 
-- `thread_context (RunContext)`: The execution context
+- `thread_context (ThreadContext)`: The execution context
 - `start_date (Optional[str])`: Start date in ISO format (YYYY-MM-DD)
 - `end_date (Optional[str])`: End date in ISO format (YYYY-MM-DD)
 
@@ -35,14 +35,14 @@ A JSON string containing the events in the calendar.
 ### check_availability
 
 ```python
-async def check_availability(thread_context: RunContext, start_date: Optional[str] = None, end_date: Optional[str] = None) -> str
+async def check_availability(thread_context: ThreadContext, start_date: Optional[str] = None, end_date: Optional[str] = None) -> str
 ```
 
 Check if the property is available for a specific date range.
 
 **Parameters:**
 
-- `thread_context (RunContext)`: The execution context
+- `thread_context (ThreadContext)`: The execution context
 - `start_date (Optional[str])`: Start date in ISO format (YYYY-MM-DD)
 - `end_date (Optional[str])`: End date in ISO format (YYYY-MM-DD)
 
@@ -52,14 +52,14 @@ A JSON string indicating availability and any conflicts.
 ### get_booking_stats
 
 ```python
-async def get_booking_stats(thread_context: RunContext, start_date: Optional[str] = None, end_date: Optional[str] = None) -> str
+async def get_booking_stats(thread_context: ThreadContext, start_date: Optional[str] = None, end_date: Optional[str] = None) -> str
 ```
 
 Get booking statistics for a specified date range.
 
 **Parameters:**
 
-- `thread_context (RunContext)`: The execution context
+- `thread_context (ThreadContext)`: The execution context
 - `start_date (Optional[str])`: Start date in ISO format (YYYY-MM-DD)
 - `end_date (Optional[str])`: End date in ISO format (YYYY-MM-DD)
 
@@ -69,14 +69,14 @@ A JSON string containing booking statistics including total days, booked days, b
 ### get_blocked_dates
 
 ```python
-async def get_blocked_dates(thread_context: RunContext, start_date: Optional[str] = None, end_date: Optional[str] = None) -> str
+async def get_blocked_dates(thread_context: ThreadContext, start_date: Optional[str] = None, end_date: Optional[str] = None) -> str
 ```
 
 Get a list of blocked/unavailable dates.
 
 **Parameters:**
 
-- `thread_context (RunContext)`: The execution context
+- `thread_context (ThreadContext)`: The execution context
 - `start_date (Optional[str])`: Start date in ISO format (YYYY-MM-DD)
 - `end_date (Optional[str])`: End date in ISO format (YYYY-MM-DD)
 

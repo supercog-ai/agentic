@@ -1,7 +1,7 @@
 from typing import List, Callable
 import glob
 
-from agentic.common import RunContext
+from agentic.common import ThreadContext
 from agentic.tools.utils.registry import tool_registry, Dependency
 from agentic.tools.base import BaseAgenticTool
 from agentic.utils.rag_helper import (
@@ -64,7 +64,7 @@ class RAGTool(BaseAgenticTool):
 
     def save_content_to_knowledge_index(
         self,
-        thread_context: RunContext,
+        thread_context: ThreadContext,
         content: str = None,
         index_name: str = None,
     ) -> str:

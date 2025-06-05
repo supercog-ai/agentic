@@ -13,7 +13,7 @@ from datetime import datetime, timedelta
 import smtplib
 
 from bs4 import BeautifulSoup
-from agentic.common import RunContext
+from agentic.common import ThreadContext
 from agentic.tools.utils.registry import tool_registry, Dependency
 from agentic.tools.base import BaseAgenticTool
 
@@ -98,7 +98,7 @@ to learn how to create an app password. You need to supply this password to use 
 
         return gmail_folders.get(folder, f'"{folder}"')
 
-    def list_folders(self, thread_context: RunContext) -> List[str]:
+    def list_folders(self, thread_context: ThreadContext) -> List[str]:
         """
         List all available folders in the email account.
 
@@ -129,7 +129,7 @@ to learn how to create an app password. You need to supply this password to use 
 
     def list_emails(
         self,
-        thread_context: RunContext,
+        thread_context: ThreadContext,
         limit: int = 50,
         subject_words: str = None,
         days_back_from_today: int = 1,
@@ -277,7 +277,7 @@ to learn how to create an app password. You need to supply this password to use 
 
     def send_email(
         self,
-        thread_context: RunContext,
+        thread_context: ThreadContext,
         to: str,
         subject: str,
         body: str,
@@ -320,7 +320,7 @@ to learn how to create an app password. You need to supply this password to use 
             server.quit()
 
     def save_email_draft(
-        self, thread_context: RunContext, to: str, subject: str, body: str
+        self, thread_context: ThreadContext, to: str, subject: str, body: str
     ) -> str:
         """Save a draft email message"""
         self.email_address = thread_context.get_secret("IMAP_USERNAME")
@@ -351,7 +351,7 @@ to learn how to create an app password. You need to supply this password to use 
 
     def retrieve_emails(
         self,
-        thread_context: RunContext,
+        thread_context: ThreadContext,
         limit: int = 5,
         search_criteria: str = "",
         since_date: Optional[str | datetime] = None,
@@ -388,7 +388,7 @@ to learn how to create an app password. You need to supply this password to use 
 
     def retrieve_emails_once(
         self,
-        thread_context: RunContext,
+        thread_context: ThreadContext,
         limit: int = 5,
         search_criteria: str = "",
         since_date: Optional[str | datetime] = None,
@@ -431,7 +431,7 @@ to learn how to create an app password. You need to supply this password to use 
 
     def retrieve_emails_base(
         self,
-        thread_context: RunContext,
+        thread_context: ThreadContext,
         limit: int,
         search_criteria: str,
         mark_as_read_func: Callable,
@@ -901,7 +901,7 @@ to learn how to create an app password. You need to supply this password to use 
         soup = BeautifulSoup(html_content, "html.parser")
         return soup.get_text()
 
-    def test_credential(self, cred, secrets: dict, thread_context: RunContext) -> str:
+    def test_credential(self, cred, secrets: dict, thread_context: ThreadContext) -> str:
         """Test that the given credential secrets are valid. Return None if OK, otherwise
         return an error message.
         """

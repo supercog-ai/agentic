@@ -145,7 +145,7 @@ Tools can handle authentication in several ways:
 
 2. Using the `thread_context` to get secrets:
    ```python
-   def my_function(self, thread_context: RunContext, param: str) -> str:
+   def my_function(self, thread_context: ThreadContext, param: str) -> str:
        api_key = thread_context.get_secret("API_KEY_NAME", self.api_key)
        # use api_key to authenticate
    ```

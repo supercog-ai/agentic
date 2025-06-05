@@ -24,31 +24,31 @@
 # You want your agent to know what time it is:
 #
 # class TimeContextManager(ContextManager):
-#     def handle_turn_start(self, agent: Agent, prompt: Prompt, thread_context: RunContext) -> str:
+#     def handle_turn_start(self, agent: Agent, prompt: Prompt, thread_context: ThreadContext) -> str:
 #         agent.inject_context(f"The current time is {datetime.now()}")
 #
 # You want to implement Retrieval-augmented generation
 #
 # class RAGContextManager(ContextManager):
-#     def handle_turn_start(self, agent: Agent, prompt: Prompt, thread_context: RunContext) -> str:
+#     def handle_turn_start(self, agent: Agent, prompt: Prompt, thread_context: ThreadContext) -> str:
 #         chunks = retrieve_chunks(prompt)
 #         for chunk in chunks:
 #             agent.inject_context(chunk)
 #
 
-from .common import Agent, RunContext
+from .common import Agent, ThreadContext
 from .events import Prompt, TurnEnd, Event
 
 class ContextManager:
-    def handle_turn_start(self, agent: Agent, prompt: Prompt, thread_context: RunContext) -> Event:
+    def handle_turn_start(self, agent: Agent, prompt: Prompt, thread_context: ThreadContext) -> Event:
         pass
 
-    def handle_turn_end(self, agent: Agent, turn_end: TurnEnd, thread_context: RunContext) -> Event:
+    def handle_turn_end(self, agent: Agent, turn_end: TurnEnd, thread_context: ThreadContext) -> Event:
         pass
 
-    def handle_tool_start(self, agent: Agent, params: dict, thread_context: RunContext) -> str:
+    def handle_tool_start(self, agent: Agent, params: dict, thread_context: ThreadContext) -> str:
         pass
 
-    def handle_tool_result(self, agent: Agent, tool_result: str, thread_context: RunContext) -> str:
+    def handle_tool_result(self, agent: Agent, tool_result: str, thread_context: ThreadContext) -> str:
         pass
 

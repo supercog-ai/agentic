@@ -1,4 +1,4 @@
-from agentic.common import Agent, AgentRunner, RunContext, PauseForInputResult
+from agentic.common import Agent, AgentRunner, ThreadContext, PauseForInputResult
 from agentic.tools import AirbnbCalendarTool
 from typing import Optional
 from typing import Any, Callable, Optional
@@ -11,21 +11,21 @@ def invoke_async(async_func: Callable, *args, **kwargs) -> Any:
 airbnb_tool = AirbnbCalendarTool()
 
 # Create wrapper functions for each AirbnbCalendarTool method
-def list_events(thread_context: RunContext, start_date, end_date):
+def list_events(thread_context: ThreadContext, start_date, end_date):
     """Lists all events/bookings in the Airbnb calendar within a specified date range."""
     return  invoke_async(airbnb_tool.list_events, thread_context, start_date,  end_date)
 
-def check_availability(thread_context: RunContext,start_date: str, end_date: str):
+def check_availability(thread_context: ThreadContext,start_date: str, end_date: str):
     """Checks if the property is available for a specific date range."""
     return invoke_async(airbnb_tool.check_availability,thread_context,start_date, end_date)
 
-def get_booking_stats( thread_context: RunContext,start_date: Optional[str] = None, end_date: Optional[str] = None):
+def get_booking_stats( thread_context: ThreadContext,start_date: Optional[str] = None, end_date: Optional[str] = None):
     """Gets booking statistics for a specified date range."""
     print("<<<<<<<<<<<<< Starting booking stats >>>>>>>>>>>>")
     print(f"run context = {thread_context}")
     return invoke_async(airbnb_tool.get_booking_stats,thread_context, start_date, end_date)
 
-def get_blocked_dates(thread_context: RunContext,start_date: Optional[str] = None, end_date: Optional[str] = None):
+def get_blocked_dates(thread_context: ThreadContext,start_date: Optional[str] = None, end_date: Optional[str] = None):
     """Gets a list of blocked/unavailable dates."""
     return  invoke_async(airbnb_tool.get_blocked_dates,thread_context, start_date, end_date)
 

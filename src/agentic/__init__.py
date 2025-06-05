@@ -11,7 +11,7 @@
 #     RayFacadeAgent,
 #     handoff,
 # )
-# from .swarm.types import RunContext
+# from .swarm.types import ThreadContext
 
 # Agent = RayFacadeAgent
 # AgentRunner = RayAgentRunner

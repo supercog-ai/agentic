@@ -53,7 +53,7 @@ Here's the basic structure for a tool:
 from typing import Callable, Dict, Optional
 from agentic.tools.base import BaseAgenticTool
 from agentic.tools.utils.registry import tool_registry, Dependency, ConfigRequirement
-from agentic.common import RunContext
+from agentic.common import ThreadContext
 
 @tool_registry.register(
     name="YourToolName",
@@ -76,7 +76,7 @@ class YourTool(BaseAgenticTool):
             # Add more functions here
         ]
     
-    def your_function(self, thread_context: RunContext, param: str) -> str:
+    def your_function(self, thread_context: ThreadContext, param: str) -> str:
         """
         A function that the agent can call.
         
@@ -155,7 +155,7 @@ def test_credential(self, cred: str, secrets: Dict[str, str]) -> Optional[str]:
 You can create asynchronous functions for operations that involve I/O or network requests:
 
 ```python
-async def fetch_data(self, thread_context: RunContext, query: str) -> Dict[str, any]:
+async def fetch_data(self, thread_context: ThreadContext, query: str) -> Dict[str, any]:
     """
     Asynchronously fetch data based on the query.
     
@@ -174,10 +174,10 @@ async def fetch_data(self, thread_context: RunContext, query: str) -> Dict[str, 
 
 ### Handling Authentication
 
-Tools often need API keys or other credentials. You can get these from the RunContext:
+Tools often need API keys or other credentials. You can get these from the ThreadContext:
 
 ```python
-def authenticated_function(self, thread_context: RunContext, param: str) -> str:
+def authenticated_function(self, thread_context: ThreadContext, param: str) -> str:
     """Method that requires authentication."""
     # Get API key from secrets or instance variable
     api_key = thread_context.get_secret("API_KEY_NAME", self.api_key)
@@ -198,7 +198,7 @@ def authenticated_function(self, thread_context: RunContext, param: str) -> str:
 For long-running operations, you can report progress using generators:
 
 ```python
-def long_operation(self, thread_context: RunContext) -> str:
+def long_operation(self, thread_context: ThreadContext) -> str:
     """Perform a long-running operation with progress updates."""
     total_steps = 10
     
@@ -225,7 +225,7 @@ import requests
 
 from agentic.tools.base import BaseAgenticTool
 from agentic.tools.utils.registry import tool_registry, Dependency
-from agentic.common import RunContext
+from agentic.common import ThreadContext
 
 @tool_registry.register(
     name="SimpleWeatherTool",
@@ -256,7 +256,7 @@ class SimpleWeatherTool(BaseAgenticTool):
     
     def get_current_weather(
         self, 
-        thread_context: RunContext, 
+        thread_context: ThreadContext, 
         city: str, 
         units: str = "metric"
     ) -> Dict[str, any]:

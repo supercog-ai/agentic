@@ -2,7 +2,7 @@ from typing import Optional
 import os
 
 from agentic.models import GPT_4O_MINI
-from agentic.common import RunContext
+from agentic.common import ThreadContext
 from agentic.events import FinishCompletion
 from agentic.tools.base import BaseAgenticTool
 from agentic.tools.utils.registry import tool_registry, Dependency
@@ -93,14 +93,14 @@ class BrowserUseTool(BaseAgenticTool):
 
     async def run_browser_agent(
             self, 
-            thread_context: RunContext,
+            thread_context: ThreadContext,
             instructions: str,
             model: Optional[str] = None
     ) -> list[str|FinishCompletion]:
         """Execute a set of instructions via browser automation. Instructions can be in natural language. 
 
             Args:
-                thread_context (RunContext): Run context of the current run
+                thread_context (ThreadContext): Run context of the current run
                 instructions (str): Instructions to give to the browser automation.
                 model (Optioanl[str]): The model name to use for the agent. Unless specified by the user do not add a model jcust pass None
             

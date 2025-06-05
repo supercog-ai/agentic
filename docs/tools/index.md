@@ -78,20 +78,20 @@ functions with a namespace, like `github_read_file`.
 Although you can always use "plain functions" for tools, Agentic has some special support
 for particular tool patterns.
 
-**RunContext**
+**ThreadContext**
 
-When your agent is started, a `RunContext` object is created and preserved through the lifetime
+When your agent is started, a `ThreadContext` object is created and preserved through the lifetime
 of the run session. This object can hold arbitrary state that your agent can use
 during the run. Tool functions just need to define a parameter called `thread_context` to receive
 the object when they are invoked:
 
 ```
-    def hello_func(self, thread_context: RunContext, message):
+    def hello_func(self, thread_context: ThreadContext, message):
         print(message)
         print("I am running in agent: ", thread_context.agent.name)
 ```
 
-RunContext also offers various utility methods for getting access to system services.
+ThreadContext also offers various utility methods for getting access to system services.
 
 ## Tool return types
 
@@ -122,7 +122,7 @@ class TavilySearchTool:
         return {"TAVILY_API_KEY": "Tavily API key"}
 
     async def query_for_news(
-        self, thread_context: RunContext, query: str, days_back: int = 1
+        self, thread_context: ThreadContext, query: str, days_back: int = 1
     ) -> pd.DataFrame | PauseForInputResult:
         """Returns the latest headlines on the given topic."""
 
@@ -135,7 +135,7 @@ that your tool needs some credentials, and the framework will check that they ar
 prompt the user to supply them.
 
 Once your tool function is called (like 'query_for_news') then you can retrieve the
-secrets from the RunContext. Look at Agentic's [secrets](../building-agents/index.md#secrets) system for a description
+secrets from the ThreadContext. Look at Agentic's [secrets](../building-agents/index.md#secrets) system for a description
 of how secrets are managed.
 
 ### Using environment configuration
@@ -219,7 +219,7 @@ that still want to do logging, it is annoying to have to implement a generator.
 So for convenience, you can log into the `thread_context` instead:
 
 ```
-    def my_func_with_logging(self, thread_context: RunContext) -> str:
+    def my_func_with_logging(self, thread_context: ThreadContext) -> str:
         """ An interesting functions. """
         for x in range():
             thread_context.log(f"working on row {x})

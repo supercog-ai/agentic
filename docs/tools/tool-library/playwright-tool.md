@@ -25,14 +25,14 @@ def __init__(headless: bool = False)
 ### navigate_to_url
 
 ```python
-def navigate_to_url(thread_context: RunContext, url: str) -> str
+def navigate_to_url(thread_context: ThreadContext, url: str) -> str
 ```
 
 Navigate to a URL and return the page title.
 
 **Parameters:**
 
-- `thread_context (RunContext)`: The execution context
+- `thread_context (ThreadContext)`: The execution context
 - `url (str)`: URL to navigate to
 
 **Returns:**
@@ -41,14 +41,14 @@ The page title, or None if navigation failed.
 ### extract_text
 
 ```python
-def extract_text(thread_context: RunContext, selector: str, convert_to_markdown: bool = True) -> str
+def extract_text(thread_context: ThreadContext, selector: str, convert_to_markdown: bool = True) -> str
 ```
 
 Extract text content from elements matching a CSS selector.
 
 **Parameters:**
 
-- `thread_context (RunContext)`: The execution context
+- `thread_context (ThreadContext)`: The execution context
 - `selector (str)`: CSS selector to find elements
 - `convert_to_markdown (bool)`: Whether to convert HTML to Markdown (default: True)
 
@@ -58,14 +58,14 @@ Extracted text or Markdown content.
 ### take_screenshot
 
 ```python
-def take_screenshot(thread_context: RunContext, selector: str = None, filename: str = None) -> str
+def take_screenshot(thread_context: ThreadContext, selector: str = None, filename: str = None) -> str
 ```
 
 Take a screenshot of the page or a specific element.
 
 **Parameters:**
 
-- `thread_context (RunContext)`: The execution context
+- `thread_context (ThreadContext)`: The execution context
 - `selector (str)`: Optional CSS selector to screenshot specific element
 - `filename (str)`: Optional filename to save screenshot (defaults to timestamp)
 
@@ -75,14 +75,14 @@ Path to saved screenshot file or error message.
 ### click_element
 
 ```python
-def click_element(thread_context: RunContext, selector: str) -> str
+def click_element(thread_context: ThreadContext, selector: str) -> str
 ```
 
 Click an element matching the CSS selector.
 
 **Parameters:**
 
-- `thread_context (RunContext)`: The execution context
+- `thread_context (ThreadContext)`: The execution context
 - `selector (str)`: CSS selector for element to click
 
 **Returns:**
@@ -91,14 +91,14 @@ Success or failure message.
 ### download_pages
 
 ```python
-def download_pages(thread_context: RunContext, pages: List[str]) -> list[tuple[str, str, str]]
+def download_pages(thread_context: ThreadContext, pages: List[str]) -> list[tuple[str, str, str]]
 ```
 
 Downloads the content of multiple pages.
 
 **Parameters:**
 
-- `thread_context (RunContext)`: The execution context
+- `thread_context (ThreadContext)`: The execution context
 - `pages (List[str])`: List of URLs to download
 
 **Returns:**

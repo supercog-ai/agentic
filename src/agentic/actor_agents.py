@@ -243,7 +243,7 @@ class ActorBaseAgent:
             return litellm.completion(**completion_params)
         except Exception as e:
             traceback.print_exc()
-            raise ThreadtimeError("Error calling LLM: " + str(e))
+            raise RuntimeError("Error calling LLM: " + str(e))
 
     def _execute_tool_calls(
         self,
@@ -299,7 +299,7 @@ class ActorBaseAgent:
                 if asyncio.iscoroutinefunction(function_map[name]):
                     try:
                         loop = asyncio.get_running_loop()
-                    except ThreadtimeError:
+                    except RuntimeError:
                         loop = asyncio.new_event_loop()
                         asyncio.set_event_loop(loop)
                     
@@ -432,7 +432,7 @@ class ActorBaseAgent:
             
             tool_function = self.paused_context.tool_function
             if tool_function is None:
-                raise ThreadtimeError("Tool function not found on AgentResume event")
+                raise RuntimeError("Tool function not found on AgentResume event")
                 
             partial_response, events = self._execute_tool_calls(
                 [ChatCompletionMessageToolCall(
@@ -534,7 +534,7 @@ class ActorBaseAgent:
                 model_override=None,
                 stream=True,
             )
-        except ThreadtimeError as e:
+        except RuntimeError as e:
             yield FinishCompletion.create(
                 self.name,
                 Message(content=str(e), role="assistant"),
@@ -766,16 +766,16 @@ class ActorBaseAgent:
         """Handle webhook callbacks by executing the specified tool function
         
         Args:
-            thread_id: ID of the agent run this webhook is for
+            thread_id: ID of the agent thread this webhook is for
             callback_name: Name of the tool function to call
             args: Arguments to pass to the tool function
         """
-        # Get the run context from the database
+        # Get the thread context from the database
         db_manager = DatabaseManager()
-        run = db_manager.get_run(thread_id)
-        if not run:
-            raise ValueError(f"No run found with ID {thread_id}")
-        # Recreate run context
+        thread = db_manager.get_thread(thread_id)
+        if not thread:
+            raise ValueError(f"No thread found with ID {thread_id}")
+        # Recreate thread context
         self.thread_context = ThreadContext(
             agent=self,
             agent_name=self.name, 
@@ -809,7 +809,7 @@ class ActorBaseAgent:
             return response
 
         except Exception as e:
-            raise ThreadtimeError(f"Error executing webhook {callback_name}: {str(e)}")
+            raise RuntimeError(f"Error executing webhook {callback_name}: {str(e)}")
 
     # Add new methods to set mock configuration
     def set_mock_params(self, pattern: str, response: str, tools: dict):
@@ -931,7 +931,7 @@ class BaseAgentProxy:
         # Check we have all the secrets
         self._ensure_tool_secrets()
 
-        # Initialize run tracking
+        # Initialize thread tracking
         self.db_path = db_path
         self.thread_id = None  # This will be set per request
 
@@ -1029,8 +1029,8 @@ class BaseAgentProxy:
         """Get the conversation history"""
         return self._get_agent_history()
 
-    def init_run_tracking(self, agent, thread_id: Optional[str] = None):
-        """Initialize run tracking"""
+    def init_thread_tracking(self, agent, thread_id: Optional[str] = None):
+        """Initialize thread tracking"""
         pass
 
     def get_db_manager(self) -> DatabaseManager:
@@ -1051,14 +1051,14 @@ class BaseAgentProxy:
             print(f"Error getting threads: {e}")
             return []
         
-    def get_run_logs(self, thread_id: str) -> list[ThreadLog]:
-        """Get logs for a specific run"""
+    def get_thread_logs(self, thread_id: str) -> list[ThreadLog]:
+        """Get logs for a specific thread"""
         db_manager = self.get_db_manager()
         
         try:
-            return db_manager.get_run_logs(thread_id)
+            return db_manager.get_thread_logs(thread_id)
         except Exception as e:
-            print(f"Error getting run logs: {e}")
+            print(f"Error getting thread logs: {e}")
             return []
 
     @property
@@ -1191,7 +1191,7 @@ class BaseAgentProxy:
 
         agent_instance = self._get_agent_for_request(request_id)
         if (self.thread_id != thread_id or not self.thread_id) and self.db_path:
-            self.init_run_tracking(agent_instance, thread_id)
+            self.init_thread_tracking(agent_instance, thread_id)
 
         # Initialize new request
         request_obj = Prompt(
@@ -1307,12 +1307,12 @@ class BaseAgentProxy:
         if not self.thread_id and "thread_id" in request_context:
             self.thread_id = request_context["thread_id"]
 
-        # Get agent instance for the run
+        # Get agent instance for the thread
         agent_instance = self._get_agent_for_request(request_id)
 
-        # Initialize run tracking if needed
+        # Initialize thread tracking if needed
         if (not self.thread_id) and self.db_path:
-            self.init_run_tracking(agent_instance, self.thread_id)
+            self.init_thread_tracking(agent_instance, self.thread_id)
 
         # Add thread_id into context explicitly so child agents inherit it
         request_context = {**request_context, "thread_id": self.thread_id}
@@ -1474,10 +1474,10 @@ class RayAgentProxy(BaseAgentProxy):
 
         return agent
 
-    def init_run_tracking(self, agent, thread_id: Optional[str] = None):
-        """Initialize run tracking"""
-        from .run_manager import init_run_tracking
-        self.thread_id, callback = init_run_tracking(self, db_path=self.db_path, resume_thread_id=thread_id)
+    def init_thread_tracking(self, agent, thread_id: Optional[str] = None):
+        """Initialize thread tracking"""
+        from .thread_manager import init_thread_tracking
+        self.thread_id, callback = init_thread_tracking(self, db_path=self.db_path, resume_thread_id=thread_id)
         agent.set_callback.remote('handle_event', callback)
 
     def _handle_mock_settings(self, mock_settings):
@@ -1592,10 +1592,10 @@ class LocalAgentProxy(BaseAgentProxy):
 
         return agent
 
-    def init_run_tracking(self, agent, thread_id: Optional[str] = None):
-        """Initialize run tracking"""
-        from .run_manager import init_run_tracking
-        self.thread_id, callback = init_run_tracking(self, db_path=self.db_path, resume_thread_id=thread_id)
+    def init_thread_tracking(self, agent, thread_id: Optional[str] = None):
+        """Initialize thread tracking"""
+        from .thread_manager import init_thread_tracking
+        self.thread_id, callback = init_thread_tracking(self, db_path=self.db_path, resume_thread_id=thread_id)
         agent.set_callback('handle_event', callback)
 
     def _handle_mock_settings(self, mock_settings):

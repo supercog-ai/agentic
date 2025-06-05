@@ -4,7 +4,7 @@ from playwright.sync_api import sync_playwright, Browser, Page
 
 from agentic.tools.base import BaseAgenticTool
 from agentic.tools.utils.registry import tool_registry, Dependency
-from agentic.common import RunContext
+from agentic.common import ThreadContext
 
 @tool_registry.register(
     name="PlaywrightTool",
@@ -64,7 +64,7 @@ class PlaywrightTool(BaseAgenticTool):
             self.click_element
         ]
 
-    def navigate_to_url(self, thread_context: RunContext, url: str) -> str:
+    def navigate_to_url(self, thread_context: ThreadContext, url: str) -> str:
         """Navigate to a URL and return the page title."""
         self._get_browser()
         try:
@@ -81,7 +81,7 @@ class PlaywrightTool(BaseAgenticTool):
         except Exception as e:
             return None #return f"Failed to navigate to {url}: {str(e)}"
     
-    def extract_text(self, thread_context: RunContext, selector: str, convert_to_markdown: bool = True) -> str:
+    def extract_text(self, thread_context: ThreadContext, selector: str, convert_to_markdown: bool = True) -> str:
         """Extract text content from elements matching a CSS selector."""
         self._get_browser()
         try:
@@ -124,7 +124,7 @@ class PlaywrightTool(BaseAgenticTool):
         
     def take_screenshot(
         self, 
-        thread_context: RunContext, 
+        thread_context: ThreadContext, 
         selector: str = None,
         filename: str = None
     ) -> str:
@@ -153,7 +153,7 @@ class PlaywrightTool(BaseAgenticTool):
         except Exception as e:
             return f"Failed to take screenshot: {str(e)}"
 
-    def click_element(self, thread_context: RunContext, selector: str) -> str:
+    def click_element(self, thread_context: ThreadContext, selector: str) -> str:
         """Click an element matching the CSS selector.
         
         Args:
@@ -171,7 +171,7 @@ class PlaywrightTool(BaseAgenticTool):
         except Exception as e:
             return f"Failed to click element: {str(e)}"
 
-    def download_pages(self, thread_context: RunContext, pages: List[str]) -> list[tuple[str, str, str]]:
+    def download_pages(self, thread_context: ThreadContext, pages: List[str]) -> list[tuple[str, str, str]]:
         # Downloads the content of the indicated pages. Returns
         # a list of results tuples (url, title, content). Content and title may be None if 
         # we could not retrieve a page.

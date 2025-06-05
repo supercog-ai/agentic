@@ -13,7 +13,7 @@ from agentic.tools import PlaywrightTool, TavilySearchTool
 # These can take any Litellm model path [see https://supercog-ai.github.io/agentic/Models/]
 # Or use aliases 'GPT_4O' or 'CLAUDE'
 PLANNER_MODEL = GPT_4O
-WRITER_MODEL = CLAUDE
+WRITER_MODEL = GPT_4O
 
 class Section(BaseModel):
     name: str = Field(

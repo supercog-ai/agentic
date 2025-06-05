@@ -15,7 +15,7 @@ from typing import Callable, Optional, List
 from agentic.tools.base import BaseAgenticTool
 from agentic.tools.utils.registry import tool_registry, Dependency, ConfigRequirement
 from agentic.agentic_secrets import agentic_secrets
-from agentic.common import RunContext
+from agentic.common import ThreadContext
 from agentic.utils.directory_management import get_runtime_directory
 from agentic.utils.rag_helper import init_weaviate, create_collection, init_embedding_model, init_chunker, search_collection
 
@@ -170,7 +170,7 @@ class MeetingBaasTool(BaseAgenticTool):
     def join_meeting(
         self, 
         meeting_url: str,
-        thread_context: RunContext,
+        thread_context: ThreadContext,
         bot_name: str = "Meeting Assistant"
     ) -> dict:
         """Dispatches a bot to join a meeting and return the bot id"""

@@ -2,7 +2,7 @@ import pytest
 from unittest.mock import Mock, patch
 from agentic.tools import LinkedinDataTool
 from agentic.tools.utils.registry import tool_registry
-from agentic.common import RunContext
+from agentic.common import ThreadContext
 import pandas as pd
 
 # Mock API responses
@@ -95,7 +95,7 @@ def linkedin_tool(monkeypatch):
 
 @pytest.fixture
 def thread_context():
-    context = RunContext(None)
+    context = ThreadContext(None)
     return context
 
 def test_linkedin_tool_init(linkedin_tool):

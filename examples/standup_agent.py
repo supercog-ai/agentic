@@ -15,7 +15,7 @@ Post Standup:
 from typing import Any
 
 from agentic.tools.github_tool import GithubTool
-from agentic.common import Agent, AgentRunner, RunContext
+from agentic.common import Agent, AgentRunner, ThreadContext
 from agentic.models import GPT_4O_MINI, GPT_4O
 import tempfile
 

@@ -54,7 +54,7 @@ The tool supports the following authentication methods:
 ### get_resource
 
 ```python
-async def get_resource(url: str, params: dict = {}, thread_context: RunContext = None)
+async def get_resource(url: str, params: dict = {}, thread_context: ThreadContext = None)
 ```
 
 Performs an HTTP GET request with authentication.
@@ -63,7 +63,7 @@ Performs an HTTP GET request with authentication.
 
 - `url (str)`: The URL to request
 - `params (dict)`: Query parameters
-- `thread_context (RunContext)`: The execution context
+- `thread_context (ThreadContext)`: The execution context
 
 **Returns:**
 The parsed response based on content type.
@@ -71,7 +71,7 @@ The parsed response based on content type.
 ### post_resource
 
 ```python
-async def post_resource(url: str, content_type: str = "application/json", data: str = "{}", thread_context: RunContext = None)
+async def post_resource(url: str, content_type: str = "application/json", data: str = "{}", thread_context: ThreadContext = None)
 ```
 
 Performs an HTTP POST request with authentication.
@@ -81,7 +81,7 @@ Performs an HTTP POST request with authentication.
 - `url (str)`: The URL to request
 - `content_type (str)`: The content type (default: "application/json")
 - `data (str)`: Request body
-- `thread_context (RunContext)`: The execution context
+- `thread_context (ThreadContext)`: The execution context
 
 **Returns:**
 The parsed response based on content type.
@@ -89,7 +89,7 @@ The parsed response based on content type.
 ### put_resource
 
 ```python
-async def put_resource(url: str, data: str = "{}", thread_context: RunContext = None)
+async def put_resource(url: str, data: str = "{}", thread_context: ThreadContext = None)
 ```
 
 Performs an HTTP PUT request with authentication.
@@ -98,7 +98,7 @@ Performs an HTTP PUT request with authentication.
 
 - `url (str)`: The URL to request
 - `data (str)`: JSON request body
-- `thread_context (RunContext)`: The execution context
+- `thread_context (ThreadContext)`: The execution context
 
 **Returns:**
 The parsed response based on content type.
@@ -106,7 +106,7 @@ The parsed response based on content type.
 ### patch_resource
 
 ```python
-async def patch_resource(url: str, data: str = "{}", thread_context: RunContext = None)
+async def patch_resource(url: str, data: str = "{}", thread_context: ThreadContext = None)
 ```
 
 Performs an HTTP PATCH request with authentication.
@@ -115,7 +115,7 @@ Performs an HTTP PATCH request with authentication.
 
 - `url (str)`: The URL to request
 - `data (str)`: JSON request body
-- `thread_context (RunContext)`: The execution context
+- `thread_context (ThreadContext)`: The execution context
 
 **Returns:**
 The parsed response based on content type.
@@ -123,7 +123,7 @@ The parsed response based on content type.
 ### delete_resource
 
 ```python
-async def delete_resource(url: str, thread_context: RunContext = None)
+async def delete_resource(url: str, thread_context: ThreadContext = None)
 ```
 
 Performs an HTTP DELETE request with authentication.
@@ -131,7 +131,7 @@ Performs an HTTP DELETE request with authentication.
 **Parameters:**
 
 - `url (str)`: The URL to request
-- `thread_context (RunContext)`: The execution context
+- `thread_context (ThreadContext)`: The execution context
 
 **Returns:**
 The parsed response based on content type.

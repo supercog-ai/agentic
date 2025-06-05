@@ -5,7 +5,7 @@ import os
 from dotenv import load_dotenv
 
 import httpx
-from agentic.common import RunContext
+from agentic.common import ThreadContext
 from agentic.events import OAuthFlowResult
 from agentic.tools.base import BaseAgenticTool
 
@@ -28,7 +28,7 @@ class OAuthTool(BaseAgenticTool):
     def get_tools(self) -> list[Callable]:
         return [self.authenticate]
 
-    async def authenticate(self, thread_context: RunContext) -> str | OAuthFlowResult:
+    async def authenticate(self, thread_context: ThreadContext) -> str | OAuthFlowResult:
         """Start or continue OAuth authentication flow"""
         # Load environment variables from .env file
         load_dotenv()
@@ -50,7 +50,7 @@ class OAuthTool(BaseAgenticTool):
         # Start OAuth flow
         return await self._start_oauth_flow(thread_context)
 
-    def _get_secret(self, key: str, thread_context: RunContext) -> Optional[str]:
+    def _get_secret(self, key: str, thread_context: ThreadContext) -> Optional[str]:
         """Get secret from environment or secrets database"""
         # First try environment variables (including .env file)
         value = os.getenv(key)
@@ -60,7 +60,7 @@ class OAuthTool(BaseAgenticTool):
         # Then try secrets database through thread_context
         return thread_context.get_secret(key)
 
-    async def _start_oauth_flow(self, thread_context: RunContext) -> OAuthFlowResult:
+    async def _start_oauth_flow(self, thread_context: ThreadContext) -> OAuthFlowResult:
         """Initialize OAuth authorization flow"""
         
         client_id = self._get_secret(self.oauth_config.client_id_key, thread_context)
@@ -89,7 +89,7 @@ class OAuthTool(BaseAgenticTool):
             "tool_name": self.oauth_config.tool_name
         })
 
-    async def _exchange_code_for_token(self, auth_code: str, thread_context: RunContext) -> Optional[str]:
+    async def _exchange_code_for_token(self, auth_code: str, thread_context: ThreadContext) -> Optional[str]:
         """Exchange OAuth code for access token"""
         client_id = self._get_secret(self.oauth_config.client_id_key, thread_context)
         client_secret = self._get_secret(self.oauth_config.client_secret_key, thread_context)
@@ -126,14 +126,14 @@ class OAuthTool(BaseAgenticTool):
                     return access_token
         return None
 
-    def _get_extra_auth_params(self, thread_context: RunContext) -> Dict[str, Any]:
+    def _get_extra_auth_params(self, thread_context: ThreadContext) -> Dict[str, Any]:
         """Override to add additional authorization parameters"""
         return {}
 
-    def _get_extra_token_data(self, thread_context: RunContext) -> Dict[str, Any]:
+    def _get_extra_token_data(self, thread_context: ThreadContext) -> Dict[str, Any]:
         """Override to add additional token exchange data"""
         return {}
 
-    async def _handle_token_response(self, token_data: Dict[str, Any], thread_context: RunContext):
+    async def _handle_token_response(self, token_data: Dict[str, Any], thread_context: ThreadContext):
         """Override to handle additional token response data"""
         pass

@@ -3,7 +3,7 @@ import requests
 import json
 from datetime import datetime, date, timedelta, time
 import icalendar
-from agentic.common import RunContext
+from agentic.common import ThreadContext
 from agentic.tools.utils.registry import tool_registry, Dependency
 from agentic.tools.base import BaseAgenticTool
 
@@ -163,7 +163,7 @@ class AirbnbCalendarTool(BaseAgenticTool):
     
     async def list_events(
         self, 
-        thread_context: RunContext,
+        thread_context: ThreadContext,
         start_date: Optional[str] = None, 
         end_date: Optional[str] = None
     ) -> str:
@@ -222,7 +222,7 @@ class AirbnbCalendarTool(BaseAgenticTool):
     
     async def check_availability(
         self, 
-        thread_context: RunContext,
+        thread_context: ThreadContext,
         start_date: Optional[str] = None,
         end_date: Optional[str] = None
     ) -> str:
@@ -273,7 +273,7 @@ class AirbnbCalendarTool(BaseAgenticTool):
     
     async def get_booking_stats(
         self, 
-        thread_context: RunContext,
+        thread_context: ThreadContext,
         start_date: Optional[str] = None,
         end_date: Optional[str] = None
     ) -> str:
@@ -360,7 +360,7 @@ class AirbnbCalendarTool(BaseAgenticTool):
     
     async def get_blocked_dates(
         self, 
-        thread_context: RunContext,
+        thread_context: ThreadContext,
         start_date: Optional[str] = None,
         end_date: Optional[str] = None
     ) -> str:

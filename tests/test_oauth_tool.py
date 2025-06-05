@@ -2,7 +2,7 @@ import pytest
 from unittest.mock import Mock, AsyncMock, patch
 from agentic.tools.oauth_tool import OAuthTool, OAuthConfig
 from agentic.events import OAuthFlowResult
-from agentic.common import RunContext
+from agentic.common import ThreadContext
 
 @pytest.fixture
 def oauth_config():
@@ -17,7 +17,7 @@ def oauth_config():
 
 @pytest.fixture
 def mock_thread_context():
-    context = Mock(spec=RunContext)
+    context = Mock(spec=ThreadContext)
     context.thread_id = "test_run_123"
     return context
 

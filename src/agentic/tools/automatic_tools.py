@@ -3,7 +3,7 @@ import re
 from pydantic import BaseModel
 
 from agentic.llm import llm_generate_with_format
-from agentic.common import RunContext
+from agentic.common import ThreadContext
 from agentic.tools.base  import BaseAgenticTool
 from agentic.tools.utils.registry import tool_registry
 from agentic.tools.file_download import FileDownloadTool
@@ -97,7 +97,7 @@ Return no results if no tool fits the purpose.
         else:
             return result.tool_choices
 
-    async def enable_agent_tool(self, tool_name: str, thread_context: RunContext) -> str:
+    async def enable_agent_tool(self, tool_name: str, thread_context: ThreadContext) -> str:
         """Enables the AI agent to use the tool with the indicated name."""
 
         # Remove use of 'tool' word in the tool name. Use regexp

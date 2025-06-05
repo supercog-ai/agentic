@@ -153,7 +153,7 @@ class ThreadContext:
         print("WARNING:", *args)
 
     def __repr__(self):
-        return f"RunContext({self._context})"
+        return f"ThreadContext({self._context})"
     
     def get_webhook_endpoint(self, callback_name: str, args: dict = None) -> str:
         if not self.thread_id:

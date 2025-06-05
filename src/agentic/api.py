@@ -174,7 +174,7 @@ class AgentAPIServer:
                 raise HTTPException(status_code=404, detail=f"No agent found for thread {thread_id}")
 
             # Create ThreadContext for storing auth code
-            thread_context = RunContext(
+            thread_context = ThreadContext(
                 agent=agent._agent,
                 agent_name=agent.name,
                 debug_level=self.debug,
@@ -298,7 +298,7 @@ class AgentAPIServer:
         
         # Get threads endpoint
         @agent_router.get("/{agent_name}/threads")
-        async def get_runs(
+        async def get_threads(
             agent: Annotated[Agent, Depends(get_agent)],
             current_user: Optional[Any] = Depends(self.get_current_user)
         ):

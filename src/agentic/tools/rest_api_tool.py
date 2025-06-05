@@ -13,7 +13,7 @@ from urllib.parse import urlparse, parse_qsl, urlencode
 
 from agentic.tools.base import BaseAgenticTool
 from agentic.tools.utils.registry import tool_registry
-from agentic.common import RunContext
+from agentic.common import ThreadContext
 
 class AsyncRequestBuilder:
     def __init__(self, base_url: str, logger_func: Callable[..., Awaitable[None]]):
@@ -118,7 +118,7 @@ class RestApiTool(BaseAgenticTool):
         self,
         request_map:  dict[str, AsyncRequestBuilder] = {},
         return_dataframe: bool = False,
-        thread_context: Optional[RunContext] = None
+        thread_context: Optional[ThreadContext] = None
     ):
         super().__init__()
         self.request_map = request_map
@@ -161,7 +161,7 @@ class RestApiTool(BaseAgenticTool):
         password: str | None = None,
         token: str | None = None,
         token_name: str = "Bearer",
-        thread_context: RunContext|None=None,
+        thread_context: ThreadContext|None=None,
     ) -> AsyncGenerator[Any, Any]:
         """Constructs an auth_config object to use with later requests.
         auth_type is one of: basic, bearer, token, or parameter
@@ -221,7 +221,7 @@ class RestApiTool(BaseAgenticTool):
         url: str,
         params: dict = {},
         auth_config_var: Optional[str] = "",
-        thread_context: RunContext|None=None,
+        thread_context: ThreadContext|None=None,
     ):
         """Invoke the GET REST endpoint on the indicate URL. If the endpoints requires
         authentication then call 'prepare_auth_config' first and pass the config name to this function.

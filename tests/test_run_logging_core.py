@@ -5,7 +5,7 @@ from unittest.mock import Mock
 from agentic.db.db_manager import DatabaseManager
 from agentic.db.models import RunLog
 from agentic.run_manager import RunManager
-from agentic.common import RunContext
+from agentic.common import ThreadContext
 from agentic.events import (
     PromptStarted,
     FinishCompletion,
@@ -32,8 +32,8 @@ def run_manager(temp_db_path):
 
 @pytest.fixture
 def thread_context():
-    """Create a RunContext for testing."""
-    return RunContext(agent_name="test_agent", agent=Mock(), debug_level=None)
+    """Create a ThreadContext for testing."""
+    return ThreadContext(agent_name="test_agent", agent=Mock(), debug_level=None)
 
 def test_create_run(db_manager):
     """Test creating a new run."""

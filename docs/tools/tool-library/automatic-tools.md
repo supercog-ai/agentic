@@ -39,14 +39,14 @@ A list of tool names that match the purpose.
 ### enable_agent_tool
 
 ```python
-async def enable_agent_tool(tool_name: str, thread_context: RunContext) -> str
+async def enable_agent_tool(tool_name: str, thread_context: ThreadContext) -> str
 ```
 
 Enables a specific tool for the agent to use.
 
 **Parameters:**
 - `tool_name (str)`: The name of the tool to enable
-- `thread_context (RunContext)`: The agent's running context
+- `thread_context (ThreadContext)`: The agent's running context
 
 **Returns:**
 A status message indicating whether the tool was successfully enabled or suggestions for similar tools.

@@ -1,7 +1,7 @@
 import asyncio
 from typing import Callable, Any
 
-from agentic.common import Agent, AgentRunner, PauseForInputResult, RunContext
+from agentic.common import Agent, AgentRunner, PauseForInputResult, ThreadContext
 from agentic.tools import GoogleNewsTool, LinkedinDataTool
 
 
@@ -16,7 +16,7 @@ def query_news(topic: str):
     return gnt.query_news(topic)
 
 
-def get_human_input(thread_context: RunContext):
+def get_human_input(thread_context: ThreadContext):
     if thread_context.get("topic"):
         return thread_context.get("topic")
     return PauseForInputResult({"topic": "What is the news topic?"})

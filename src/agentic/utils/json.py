@@ -51,7 +51,7 @@ def make_json_serializable(obj):
             return obj.model_dump()
         elif isinstance(obj, datetime):
             return obj.isoformat()
-        elif hasattr(obj, '__dict__'):  # For objects like RunContext
+        elif hasattr(obj, '__dict__'):  # For objects like ThreadContext
             return str(obj)
         return obj
     except Exception as e:

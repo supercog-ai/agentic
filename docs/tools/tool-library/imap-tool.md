@@ -22,14 +22,14 @@ Requires email credentials which can be:
 ### list_folders
 
 ```python
-def list_folders(thread_context: RunContext) -> List[str]
+def list_folders(thread_context: ThreadContext) -> List[str]
 ```
 
 List all available folders in the email account.
 
 **Parameters:**
 
-- `thread_context (RunContext)`: The execution context
+- `thread_context (ThreadContext)`: The execution context
 
 **Returns:**
 List of folder names.
@@ -37,14 +37,14 @@ List of folder names.
 ### list_emails
 
 ```python
-def list_emails(thread_context: RunContext, limit: int = 50, subject_words: str = None, days_back_from_today: int = 1, direct_mail_only: bool = True, folder: str = "INBOX") -> List[Dict[str, Any]]
+def list_emails(thread_context: ThreadContext, limit: int = 50, subject_words: str = None, days_back_from_today: int = 1, direct_mail_only: bool = True, folder: str = "INBOX") -> List[Dict[str, Any]]
 ```
 
 List emails in the inbox, optionally filtering by subject words.
 
 **Parameters:**
 
-- `thread_context (RunContext)`: The execution context
+- `thread_context (ThreadContext)`: The execution context
 - `limit (int)`: Maximum number of emails to return
 - `subject_words (str)`: Filter emails by these words in subject
 - `days_back_from_today (int)`: Number of days back to retrieve
@@ -57,14 +57,14 @@ List of dictionaries containing email information.
 ### send_email
 
 ```python
-def send_email(thread_context: RunContext, to: str, subject: str, body: str, save_draft: bool = True) -> str
+def send_email(thread_context: ThreadContext, to: str, subject: str, body: str, save_draft: bool = True) -> str
 ```
 
 Drafts or sends an email message.
 
 **Parameters:**
 
-- `thread_context (RunContext)`: The execution context
+- `thread_context (ThreadContext)`: The execution context
 - `to (str)`: Recipient email address
 - `subject (str)`: Email subject
 - `body (str)`: Email body content
@@ -76,14 +76,14 @@ Confirmation message.
 ### save_email_draft
 
 ```python
-def save_email_draft(thread_context: RunContext, to: str, subject: str, body: str) -> str
+def save_email_draft(thread_context: ThreadContext, to: str, subject: str, body: str) -> str
 ```
 
 Save a draft email message.
 
 **Parameters:**
 
-- `thread_context (RunContext)`: The execution context
+- `thread_context (ThreadContext)`: The execution context
 - `to (str)`: Recipient email address
 - `subject (str)`: Email subject
 - `body (str)`: Email body content
@@ -94,14 +94,14 @@ Confirmation message.
 ### retrieve_emails
 
 ```python
-def retrieve_emails(thread_context: RunContext, limit: int = 5, search_criteria: str = "", since_date: Optional[str | datetime] = None, to_address: Optional[str] = None, subject_words: Optional[str] = None, folder: str = "INBOX") -> List[Dict[str, Any]]
+def retrieve_emails(thread_context: ThreadContext, limit: int = 5, search_criteria: str = "", since_date: Optional[str | datetime] = None, to_address: Optional[str] = None, subject_words: Optional[str] = None, folder: str = "INBOX") -> List[Dict[str, Any]]
 ```
 
 Retrieve emails from the specified folder without tracking read status.
 
 **Parameters:**
 
-- `thread_context (RunContext)`: The execution context
+- `thread_context (ThreadContext)`: The execution context
 - `limit (int)`: Maximum number of emails to retrieve
 - `search_criteria (str)`: IMAP search string for filtering emails
 - `since_date (Optional[str | datetime])`: Only retrieve emails after this date
@@ -115,14 +115,14 @@ List of dictionaries containing email data.
 ### retrieve_emails_once
 
 ```python
-def retrieve_emails_once(thread_context: RunContext, limit: int = 5, search_criteria: str = "", since_date: Optional[str | datetime] = None, to_address: Optional[str] = None, subject_words: Optional[str] = None, folder: str = "INBOX") -> List[Dict[str, Any]]
+def retrieve_emails_once(thread_context: ThreadContext, limit: int = 5, search_criteria: str = "", since_date: Optional[str | datetime] = None, to_address: Optional[str] = None, subject_words: Optional[str] = None, folder: str = "INBOX") -> List[Dict[str, Any]]
 ```
 
 Retrieve emails while tracking which emails have been read.
 
 **Parameters:**
 
-- `thread_context (RunContext)`: The execution context
+- `thread_context (ThreadContext)`: The execution context
 - `limit (int)`: Maximum number of emails to retrieve
 - `search_criteria (str)`: IMAP search string for filtering emails
 - `since_date (Optional[str | datetime])`: Only retrieve emails after this date

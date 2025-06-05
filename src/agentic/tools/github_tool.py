@@ -7,7 +7,7 @@ import os
 import base64
 import pandas as pd
 
-from agentic.common import RunContext
+from agentic.common import ThreadContext
 from agentic.events import OAuthFlowResult
 from agentic.tools.oauth_tool import OAuthTool, OAuthConfig
 from agentic.tools.utils.registry import tool_registry, Dependency
@@ -81,7 +81,7 @@ class GithubTool(OAuthTool):
             self.download_repo_file
         ]
 
-    def clone_repository(self, thread_context: RunContext, repo_url: str, directory_path: str) -> str:
+    def clone_repository(self, thread_context: ThreadContext, repo_url: str, directory_path: str) -> str:
         """
         Clone a git repository from the given URL.
         :param repo_url: str
@@ -97,7 +97,7 @@ class GithubTool(OAuthTool):
         except GitCommandError as e:
             return f"Error cloning repository: {str(e)}"
 
-    def fetch_changes(self, thread_context: RunContext, repo_path: str) -> str:
+    def fetch_changes(self, thread_context: ThreadContext, repo_path: str) -> str:
         """
         Fetch changes from the remote repository.
         :param repo_path: str
@@ -112,7 +112,7 @@ class GithubTool(OAuthTool):
         except GitCommandError as e:
             return f"Error fetching changes: {str(e)}"
 
-    def create_commit(self, thread_context: RunContext, repo_path: str, message: str, files: Optional[List[str]] = None) -> str:
+    def create_commit(self, thread_context: ThreadContext, repo_path: str, message: str, files: Optional[List[str]] = None) -> str:
         """
         Create a commit in the local repository.
         :param repo_path: str
@@ -135,7 +135,7 @@ class GithubTool(OAuthTool):
         except GitCommandError as e:
             return f"Error creating commit: {str(e)}"
 
-    def push_changes(self, thread_context: RunContext, repo_path: str, branch: str = "master") -> str:
+    def push_changes(self, thread_context: ThreadContext, repo_path: str, branch: str = "master") -> str:
         """
         Push changes from the local repository to the remote repository.
         :param repo_path: str
@@ -153,7 +153,7 @@ class GithubTool(OAuthTool):
         except GitCommandError as e:
             return f"Error pushing changes: {str(e)}"
 
-    def pull_changes(self, thread_context: RunContext, repo_path: str, branch: str = "master") -> str:
+    def pull_changes(self, thread_context: ThreadContext, repo_path: str, branch: str = "master") -> str:
         """
         Pull changes from the remote repository to the local repository.
         :param repo_path: str
@@ -171,7 +171,7 @@ class GithubTool(OAuthTool):
         except GitCommandError as e:
             return f"Error pulling changes: {str(e)}"
 
-    def list_branches(self, thread_context: RunContext, repo_path: str) -> List[str]:
+    def list_branches(self, thread_context: ThreadContext, repo_path: str) -> List[str]:
         """
         List all branches in the local repository.
 
@@ -186,7 +186,7 @@ class GithubTool(OAuthTool):
         except GitCommandError as e:
             return [f"Error listing branches: {str(e)}"]
 
-    def checkout_branch(self, thread_context: RunContext, repo_path: str, branch_name: str) -> str:
+    def checkout_branch(self, thread_context: ThreadContext, repo_path: str, branch_name: str) -> str:
         """
         Checkout a branch in the local repository.
         :param repo_path: str
@@ -203,7 +203,7 @@ class GithubTool(OAuthTool):
         except GitCommandError as e:
             return f"Error checking out branch {branch_name}: {str(e)}"
 
-    def create_branch(self, thread_context: RunContext, repo_path: str, branch_name: str) -> str:
+    def create_branch(self, thread_context: ThreadContext, repo_path: str, branch_name: str) -> str:
         """
         Create a new branch in the local repository.
         :param repo_path: str
@@ -220,7 +220,7 @@ class GithubTool(OAuthTool):
         except GitCommandError as e:
             return f"Error creating branch {branch_name}: {str(e)}"
 
-    def delete_branch(self, thread_context: RunContext, repo_path: str, branch_name: str) -> str:
+    def delete_branch(self, thread_context: ThreadContext, repo_path: str, branch_name: str) -> str:
         """
         Delete a branch in the local repository.
         :param repo_path: str
@@ -237,7 +237,7 @@ class GithubTool(OAuthTool):
         except GitCommandError as e:
             return f"Error deleting branch {branch_name}: {str(e)}"
 
-    def list_tags(self, thread_context: RunContext, repo_path: str) -> List[str]:
+    def list_tags(self, thread_context: ThreadContext, repo_path: str) -> List[str]:
         """
         List all tags in the local repository.
 
@@ -252,7 +252,7 @@ class GithubTool(OAuthTool):
         except GitCommandError as e:
             return [f"Error listing tags: {str(e)}"]  # Return the error message as a single-element list
 
-    def create_tag(self, thread_context: RunContext, repo_path: str, tag_name: str, commit: str = 'HEAD') -> str:
+    def create_tag(self, thread_context: ThreadContext, repo_path: str, tag_name: str, commit: str = 'HEAD') -> str:
         """
         Create a new tag in the local repository.
         :param repo_path: str
@@ -271,7 +271,7 @@ class GithubTool(OAuthTool):
         except GitCommandError as e:
             return f"Error creating tag {tag_name}: {str(e)}"
 
-    def repository_status(self, thread_context: RunContext, repo_path: str) -> str:
+    def repository_status(self, thread_context: ThreadContext, repo_path: str) -> str:
         """
         Get the current status of the local repository.
         :param repo_path: str
@@ -293,7 +293,7 @@ class GithubTool(OAuthTool):
     # Below are the GITRestAPI functions
     ####################################        
 
-    async def test_credential(self, thread_context: RunContext) -> str:
+    async def test_credential(self, thread_context: ThreadContext) -> str:
         """
         Test that the given credential secrets are valid.
         Also validates the default_repo format if provided.
@@ -335,7 +335,7 @@ class GithubTool(OAuthTool):
             return str(e)
         
         
-    async def _github_request(self, method: str, endpoint: str, thread_context: RunContext, data: Optional[Dict[str, Any]] = None, params: Optional[QueryParamTypes] = None) -> Dict[str, Any]:
+    async def _github_request(self, method: str, endpoint: str, thread_context: ThreadContext, data: Optional[Dict[str, Any]] = None, params: Optional[QueryParamTypes] = None) -> Dict[str, Any]:
         """
         Async helper method to make GitHub API requests.
         """
@@ -382,7 +382,7 @@ class GithubTool(OAuthTool):
             else:
                 return {'status': 'error', 'message': f"API request failed: {response.text}"}
         
-    def _get_repo_info(self, thread_context: RunContext, repo_owner: Optional[str] = None, repo_name: Optional[str] = None) -> Tuple[str, str]:
+    def _get_repo_info(self, thread_context: ThreadContext, repo_owner: Optional[str] = None, repo_name: Optional[str] = None) -> Tuple[str, str]:
         """
         Helper method to get repository owner and name, flexibly using defaults when needed.
         If only one parameter is provided, the other is taken from the default repository.
@@ -413,7 +413,7 @@ class GithubTool(OAuthTool):
         
         return (final_owner, final_name)
 
-    async def search_repositories(self, thread_context: RunContext,
+    async def search_repositories(self, thread_context: ThreadContext,
                             query: str,
                             language: Optional[str] = None,
                             sort: str = 'stars',
@@ -435,7 +435,7 @@ class GithubTool(OAuthTool):
         }
         return await self._github_request('GET', '/search/repositories', thread_context, params=params)
 
-    async def create_github_issue(self, thread_context: RunContext, title: str, body: str, labels: List[str] = None, 
+    async def create_github_issue(self, thread_context: ThreadContext, title: str, body: str, labels: List[str] = None, 
                             repo_owner: Optional[str] = None, repo_name: Optional[str] = None) -> Dict[str, Any]:
             """
             Create a new issue in a GitHub repository.
@@ -458,7 +458,7 @@ class GithubTool(OAuthTool):
     
     async def get_github_issues(
             self,
-            thread_context: RunContext,
+            thread_context: ThreadContext,
             state: str = 'open',
             labels: Optional[str] = None,
             assignee: Optional[str] = None,
@@ -520,7 +520,7 @@ class GithubTool(OAuthTool):
         ]
         return pd.DataFrame(slim_issues)
   
-    async def get_github_issue_comments(self, thread_context: RunContext, issue_number: int, repo_owner: Optional[str] = None, repo_name: Optional[str] = None) -> dict[str, Any]:
+    async def get_github_issue_comments(self, thread_context: ThreadContext, issue_number: int, repo_owner: Optional[str] = None, repo_name: Optional[str] = None) -> dict[str, Any]:
         """
         Get comments for a GitHub issue.
         :param issue_number: The number of the issue
@@ -532,7 +532,7 @@ class GithubTool(OAuthTool):
         endpoint = f'/repos/{owner}/{name}/issues/{issue_number}/comments'
         return await self._github_request('GET', endpoint, thread_context)
     
-    async def close_github_issue(self, thread_context: RunContext, issue_number: int, repo_owner: Optional[str] = None, repo_name: Optional[str] = None) -> Dict[str, Any]:
+    async def close_github_issue(self, thread_context: ThreadContext, issue_number: int, repo_owner: Optional[str] = None, repo_name: Optional[str] = None) -> Dict[str, Any]:
         """
         Close a GitHub issue.
         :param issue_number: The number of the issue
@@ -545,7 +545,7 @@ class GithubTool(OAuthTool):
         data = {'state': 'closed'}
         return await self._github_request('PATCH', endpoint, thread_context, data)
 
-    async def create_pull_request(self, thread_context: RunContext, title: str, body: str, head: str, base: str,
+    async def create_pull_request(self, thread_context: ThreadContext, title: str, body: str, head: str, base: str,
                         repo_owner: Optional[str] = None, repo_name: Optional[str] = None) -> Dict[str, Any]:
         """
         Create a new pull request.
@@ -566,7 +566,7 @@ class GithubTool(OAuthTool):
         }
         return await self._github_request('POST', f'/repos/{owner}/{name}/pulls', thread_context, data)
 
-    async def get_pull_requests(self, thread_context: RunContext, state: str = 'open',
+    async def get_pull_requests(self, thread_context: ThreadContext, state: str = 'open',
                         repo_owner: Optional[str] = None, repo_name: Optional[str] = None, since: Optional[str] = None) -> List[Dict[str, Any]]:
         """
         Get a list of pull requests for a repository.
@@ -583,7 +583,7 @@ class GithubTool(OAuthTool):
         owner, name = self._get_repo_info(thread_context, repo_owner, repo_name)
         return await self._github_request('GET', f'/repos/{owner}/{name}/pulls', thread_context, params=params)
 
-    async def get_pr_reviews(self, thread_context: RunContext, pr_number: int, state: str = 'open',
+    async def get_pr_reviews(self, thread_context: ThreadContext, pr_number: int, state: str = 'open',
                         repo_owner: Optional[str] = None, repo_name: Optional[str] = None) -> List[Dict[str, Any]]:
         """
         Get a list of reviews for a pull request.
@@ -596,7 +596,7 @@ class GithubTool(OAuthTool):
         owner, name = self._get_repo_info(thread_context, repo_owner, repo_name)
         return await self._github_request('GET', f'/repos/{owner}/{name}/pulls/{pr_number}/reviews', thread_context)
 
-    async def get_pr_comments(self, thread_context: RunContext, pr_number: int, state: str = 'open',
+    async def get_pr_comments(self, thread_context: ThreadContext, pr_number: int, state: str = 'open',
                         repo_owner: Optional[str] = None, repo_name: Optional[str] = None) -> List[Dict[str, Any]]:
         """
         Get a list of comments in the reviews of a pull request.
@@ -609,7 +609,7 @@ class GithubTool(OAuthTool):
         owner, name = self._get_repo_info(thread_context, repo_owner, repo_name)
         return await self._github_request('GET', f'/repos/{owner}/{name}/pulls/{pr_number}/comments', thread_context)
 
-    async def add_comment_to_issue(self, thread_context: RunContext, issue_number: int, body: str,
+    async def add_comment_to_issue(self, thread_context: ThreadContext, issue_number: int, body: str,
                             repo_owner: Optional[str] = None, repo_name: Optional[str] = None) -> Dict[str, Any]:
         """
         Add a comment to an issue.
@@ -623,7 +623,7 @@ class GithubTool(OAuthTool):
         data = {'body': body}
         return await self._github_request('POST', f'/repos/{owner}/{name}/issues/{issue_number}/comments', thread_context, data)
 
-    async def get_repository_contents(self, thread_context: RunContext, path: str = '',
+    async def get_repository_contents(self, thread_context: ThreadContext, path: str = '',
                             repo_owner: Optional[str] = None, repo_name: Optional[str] = None) -> List[Dict[str, Any]]:
         """
         Get contents of a repository.
@@ -635,7 +635,7 @@ class GithubTool(OAuthTool):
         owner, name = self._get_repo_info(thread_context, repo_owner, repo_name)
         return await self._github_request('GET', f'/repos/{owner}/{name}/contents/{path}', thread_context)
 
-    async def create_repository(self, thread_context: RunContext, name: str, description: str = '', private: bool = False) -> Dict[str, Any]:
+    async def create_repository(self, thread_context: ThreadContext, name: str, description: str = '', private: bool = False) -> Dict[str, Any]:
         """
         Create a new repository.
         :param name: The name of the repository
@@ -650,7 +650,7 @@ class GithubTool(OAuthTool):
         }
         return await self._github_request('POST', '/user/repos', thread_context, data)
 
-    async def delete_repository(self, thread_context: RunContext, repo_owner: Optional[str] = None, repo_name: Optional[str] = None) -> Dict[str, Any]:
+    async def delete_repository(self, thread_context: ThreadContext, repo_owner: Optional[str] = None, repo_name: Optional[str] = None) -> Dict[str, Any]:
         """
         Delete a repository.
         :param repo_owner: Repository owner (if None, uses default_repo owner)
@@ -660,7 +660,7 @@ class GithubTool(OAuthTool):
         owner, name = self._get_repo_info(thread_context, repo_owner, repo_name)
         return await self._github_request('DELETE', f'/repos/{owner}/{name}', thread_context)
 
-    async def get_user_info(self, thread_context: RunContext, username: str = "me") -> Dict[str, Any] | OAuthFlowResult:
+    async def get_user_info(self, thread_context: ThreadContext, username: str = "me") -> Dict[str, Any] | OAuthFlowResult:
         """
         Get information about a GitHub user.
         
@@ -690,7 +690,7 @@ class GithubTool(OAuthTool):
         except Exception as e:
             return {"error": f"Error fetching user info: {str(e)}"}
     
-    async def list_user_repositories(self, thread_context: RunContext, sort: str = 'updated', direction: str = 'desc') -> pd.DataFrame:
+    async def list_user_repositories(self, thread_context: ThreadContext, sort: str = 'updated', direction: str = 'desc') -> pd.DataFrame:
         """
         List repositories for the authenticated user.
         :param username: The GitHub username
@@ -728,7 +728,7 @@ class GithubTool(OAuthTool):
         # Convert to DataFrame for better preview
         return pd.DataFrame(slim_repositories)
 
-    async def list_repository_pull_requests(self, thread_context: RunContext, state: str = 'open', sort: str = 'created', 
+    async def list_repository_pull_requests(self, thread_context: ThreadContext, state: str = 'open', sort: str = 'created', 
                                     direction: str = 'desc',
                                     repo_owner: Optional[str] = None, 
                                     repo_name: Optional[str] = None) -> List[Dict[str, Any]]:
@@ -746,7 +746,7 @@ class GithubTool(OAuthTool):
         params = f'?state={state}&sort={sort}&direction={direction}'
         return await self._github_request('GET', f'{endpoint}{params}', thread_context)
 
-    async def search_in_repo(self, thread_context: RunContext, query: str, 
+    async def search_in_repo(self, thread_context: ThreadContext, query: str, 
                     repo_owner: Optional[str] = None, 
                     repo_name: Optional[str] = None) -> List[Dict[str, str]]:
         """
@@ -817,7 +817,7 @@ class GithubTool(OAuthTool):
 
         return search_results
     
-    async def download_repo_file(self, thread_context: RunContext, file_path: str, 
+    async def download_repo_file(self, thread_context: ThreadContext, file_path: str, 
                         repo_owner: Optional[str] = None, 
                         repo_name: Optional[str] = None, 
                         branch: Optional[str] = None,
