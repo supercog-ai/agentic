@@ -119,7 +119,7 @@ Agentic provides multiple ways to interact with your agents, from command-line i
 |-----------|----------|----------|
 | [Command Line (CLI)](#command-line-interface) | Quick testing, scripting | Simple text I/O, dot commands |
 | [REST API](#rest-api) | Integration with other applications | HTTP endpoints, event streaming |
-| [Next.js Dashboard](#nextjs-dashboard) | Professional web UI | Real-time updates, run history, background tasks |
+| [Next.js Dashboard](#nextjs-dashboard) | Professional web UI | Real-time updates, thread history, background tasks |
 | [Streamlit Dashboard](#streamlit-dashboard) | Quick prototyping | Simple web UI with minimal setup |
 
 ### Command Line Interface
@@ -239,7 +239,7 @@ Some reasons why Agentic is different:
 - We have a thin abstraction over the LLM. The "agent loop" code is a 
 [couple hundred lines](./src/agentic/actor_agents.py) 
 calling directly into the LLM API (the OpenAI _completion_ API via _Litellm_).
-- Logging is **built-in** and usable out of the box. Trace agent runs, tool calls, and LLM completions
+- Logging is **built-in** and usable out of the box. Trace agent threads, tool calls, and LLM completions
 with ability to control the right level of detail.
 - Well designed abstractions with just a few nouns: Agent, Tool, Thread, Run. Stop assembling
 the _computational graph_ out of toothpicks.
