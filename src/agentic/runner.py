@@ -110,7 +110,7 @@ class RayAgentRunner:
         saved_completions = []
 
         def handle_sigint(signum, frame):
-            print("[cancelling run]\n")
+            print("[cancelling thread]\n")
             self.facade.cancel()
             raise KeyboardInterrupt
 

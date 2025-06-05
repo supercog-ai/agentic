@@ -4,7 +4,7 @@ from .events import TurnEnd
 class Pipeline:
     """ Pipeline runs its agents in a sequence. 
         The result from each agent is passed as the input to the next agent.
-        The result is also put into run context using the name of the agent as the key.
+        The result is also put into thread context using the name of the agent as the key.
         Use 'handle_turn_start' to modify the agent prompt if you don't want it to use the prior result.
     """
     def __init__(self, *agents):

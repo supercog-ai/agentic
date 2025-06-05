@@ -11,7 +11,7 @@ The dashboard offers the following features:
 - Chat with any registered agent
 - View real-time agent event logs
 - Run agents in the background while continuing to use the interface
-- Browse run history to review past agent executions
+- Browse thread history to review past agent executions
 - Monitor agent performance metrics
 
 ## Setup and Installation
@@ -91,8 +91,8 @@ The dashboard integrates with the Agentic framework's REST API endpoints:
 - `/<agent_path>/describe` - Gets agent information
 - `/<agent_path>/process` - Sends prompts to an agent
 - `/<agent_path>/getevents` - Streams events from an agent
-- `/<agent_path>/runs` - Gets run history
-- `/<agent_path>/runs/{id}/logs` - Gets logs for a specific run
+- `/<agent_path>/threads` - Gets thread history
+- `/<agent_path>/threads/{id}/logs` - Gets logs for a specific thread
 
 The API integration is implemented in `src/app/lib/api.ts`, which provides a client-side wrapper around these endpoints.
 
@@ -101,10 +101,10 @@ The API integration is implemented in `src/app/lib/api.ts`, which provides a cli
 The dashboard is built with modular React components:
 
 - `AgentChat` - The main chat interface for interacting with agents
-- `AgentSidebar` - Navigation sidebar for agent selection and run history
+- `AgentSidebar` - Navigation sidebar for agent selection and thead history
 - `EventLogs` - Real-time event log viewer
 - `BackgroundTasks` - Background task manager
-- `RunsTable` - Table of historical agent runs
+- `ThreadsTable` - Table of historical agent threads
 - `MarkdownRenderer` - Renderer for agent markdown responses
 
 ### Data Flow

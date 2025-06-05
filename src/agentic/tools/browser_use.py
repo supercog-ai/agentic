@@ -100,7 +100,7 @@ class BrowserUseTool(BaseAgenticTool):
         """Execute a set of instructions via browser automation. Instructions can be in natural language. 
 
             Args:
-                thread_context (ThreadContext): Run context of the current run
+                thread_context (ThreadContext): Thread context of the current thread
                 instructions (str): Instructions to give to the browser automation.
                 model (Optioanl[str]): The model name to use for the agent. Unless specified by the user do not add a model jcust pass None
             

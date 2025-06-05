@@ -1,6 +1,5 @@
 import pytest
-from pathlib import Path
-from datetime import datetime, timedelta
+from datetime import datetime
 
 from agentic.common import Agent, AgentRunner
 from agentic.db.db_manager import DatabaseManager
@@ -52,20 +51,20 @@ def test_thread_logging_enabled(test_agent, db_manager):
     # Run a simple calculation
     runner.turn("What is 5 plus 3? Use your functions")
     
-    # Verify the run was created
+    # Verify the thread was created
     threads = db_manager.get_threads_by_user("default")
     assert len(threads) == 1
     thread = threads[0]
     initial_thread_logs_count = len(db_manager.get_thread_logs(thread.id))
     
-    # Verify run metadata
+    # Verify thread metadata
     assert thread.agent_id == "Calculator"
     assert thread.user_id == "default"
     assert thread.initial_prompt == "What is 5 plus 3? Use your functions"
     assert isinstance(thread.created_at, datetime)
     assert isinstance(thread.updated_at, datetime)
     
-    # Get all logs for this run
+    # Get all logs for this thread
     logs = db_manager.get_thread_logs(thread.id)
     
     # Verify essential events were logged
@@ -111,14 +110,14 @@ def test_thread_logging_disabled(db_manager):
     # Run a calculation
     runner.turn("What is 7 plus 2?")
     
-    # Verify no runs were created
+    # Verify no threads were created
     threads = db_manager.get_threads_by_agent("Calculator")
     assert len(threads) == 0
     
     # Run another calculation
     runner.turn("What is 15 minus 5?")
     
-    # Verify still no runs
+    # Verify still no threads
     threads = db_manager.get_threads_by_agent("Calculator")
     assert len(threads) == 0
 
@@ -128,7 +127,7 @@ def test_run_logging_toggle(test_agent, db_manager, temp_db_path):
     runner = AgentRunner(test_agent)
     
     # Start with logging disabled
-    disable_run_tracking(test_agent)
+    disable_thread_tracking(test_agent)
     runner.turn("What is 3 plus 4?")
     
     threads = db_manager.get_threads_by_agent("Calculator")
@@ -156,7 +155,7 @@ def test_thread_usage_accumulation(test_agent, db_manager):
     # Run a multi-step interaction
     runner.turn("First add 5 and 3, then subtract 2 from the result.")
     
-    # Get the run and its logs
+    # Get the thread and its logs
     threads = db_manager.get_threads_by_user("default")
     assert len(threads) == 1
     thread = threads[0]

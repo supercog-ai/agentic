@@ -51,7 +51,7 @@ This agent is an Airbnb Calendar Assistant that helps users interact with their 
 
 ### API Keys required:
 - LLM token (OpenAI API key for gpt-4o-mini model)
-- AIRBNB_CALENDAR_URL (URL for the Airbnb calendar iCal feed, set in the run context)
+- AIRBNB_CALENDAR_URL (URL for the Airbnb calendar iCal feed, set in the thread context)
 
 ---
 
@@ -79,7 +79,7 @@ This agent is a simple Text-to-SQL agent designed to act as a helpful data analy
 ---
 
 ## [Debugger](https://github.com/supercog-ai/agentic/blob/main/examples/debugger.py)
-This is a simple Text-to-SQL agent designed to query a SQLite database named "Runs". It uses a database tool to answer questions and includes a browser automation tool for potential web-related tasks.
+This is a simple Text-to-SQL agent designed to query a SQLite database named "Threads". It uses a database tool to answer questions and includes a browser automation tool for potential web-related tasks.
 
 ### Tools:
 - **[DatabaseTool](https://github.com/supercog-ai/agentic/blob/main/src/agentic/tools/database_tool.py)** - Provides functionality to interact with and query a SQLite database

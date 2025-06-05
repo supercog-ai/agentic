@@ -149,7 +149,7 @@ The Next.js Dashboard offers a full-featured web interface with:
 - Multiple agent management
 - Real-time event streaming
 - Background task management
-- Run history and logs
+- Thread history and logs
 - Markdown rendering
 
 ```bash

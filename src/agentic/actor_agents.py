@@ -1291,7 +1291,7 @@ class BaseAgentProxy:
                request_id: str = None, continue_result: dict = {},
                debug: DebugLevel = DebugLevel(DebugLevel.OFF)) -> Generator[Event, Any, Any]:
         """
-        Wraps `next_turn` to add run tracking and handle_event logging.
+        Wraps `next_turn` to add thread tracking and handle_event logging.
         Always used internally by the proxy to ensure consistent behavior.
         """
         self.cancelled = False

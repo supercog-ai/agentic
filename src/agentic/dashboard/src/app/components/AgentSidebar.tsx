@@ -1,7 +1,7 @@
 import { Bot, Plus } from 'lucide-react';
 import React from 'react';
 
-import RunsTable from '@/components/RunsTable';
+import ThreadsTable from '@/components/ThreadsTable';
 import { Button } from '@/components/ui/button';
 import {
   Select,
@@ -68,7 +68,7 @@ const AgentSidebar: React.FC<AgentSidebarProps> = ({
         </Select>
       </div>
       {selectedAgent && (
-        <RunsTable 
+        <ThreadsTable 
           agentPath={selectedAgent}
           className="flex-1 border-t pt-4"
           onThreadSelected={onThreadSelected}

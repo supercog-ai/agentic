@@ -22,7 +22,7 @@ def check_availability(thread_context: ThreadContext,start_date: str, end_date: 
 def get_booking_stats( thread_context: ThreadContext,start_date: Optional[str] = None, end_date: Optional[str] = None):
     """Gets booking statistics for a specified date range."""
     print("<<<<<<<<<<<<< Starting booking stats >>>>>>>>>>>>")
-    print(f"run context = {thread_context}")
+    print(f"thread context = {thread_context}")
     return invoke_async(airbnb_tool.get_booking_stats,thread_context, start_date, end_date)
 
 def get_blocked_dates(thread_context: ThreadContext,start_date: Optional[str] = None, end_date: Optional[str] = None):

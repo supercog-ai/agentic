@@ -66,7 +66,7 @@ class UnitTestingTool(BaseAgenticTool):
         return self.story_log
 
     def sync_function_with_logging(self, thread_context: ThreadContext):
-        """ A function that logs to the run context. """
+        """ A function that logs to the thread context. """
         thread_context.log("Something interesting happened: ", "thing1", "thing2")
         return "can you see the logs?"
 
@@ -76,6 +76,6 @@ class UnitTestingTool(BaseAgenticTool):
         return "I yielded a log message"
     
     async def async_function_with_logging(self, thread_context: ThreadContext):
-        """ An async function that logs to the run context. """
+        """ An async function that logs to the thread context. """
         yield thread_context.log("ASYNC interesting happened: ", "thing1", "thing2")
         yield "can you see the logs?"

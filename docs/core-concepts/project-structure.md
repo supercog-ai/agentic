@@ -22,5 +22,5 @@ An Agentic project has the following structure:
         agent1.eval
         agent2.eval
     runtime/
-        agent_runs.db
+        agent_threads.db
 ```
