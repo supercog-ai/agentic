@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 
 from agentic.common import Agent, AgentRunner
 from agentic.db.db_manager import DatabaseManager
-from agentic.run_manager import init_run_tracking, disable_run_tracking
+from agentic.thread_manager import init_thread_tracking, disable_thread_tracking
 
 class SimpleCalculator:
     def get_tools(self):
@@ -24,7 +24,7 @@ class SimpleCalculator:
 @pytest.fixture
 def temp_db_path(tmp_path):
     """Create a temporary database path for testing."""
-    return str(tmp_path / "test_runs.db")
+    return str(tmp_path / "test_threads.db")
 
 @pytest.fixture
 def db_manager(temp_db_path):
@@ -45,28 +45,28 @@ def test_agent(temp_db_path):
     return agent
 
 @pytest.mark.requires_llm
-def test_run_logging_enabled(test_agent, db_manager):
-    """Test that run logging works correctly when enabled."""
+def test_thread_logging_enabled(test_agent, db_manager):
+    """Test that thread logging works correctly when enabled."""
     runner = AgentRunner(test_agent)
     
     # Run a simple calculation
     runner.turn("What is 5 plus 3? Use your functions")
     
     # Verify the run was created
-    runs = db_manager.get_runs_by_user("default")
-    assert len(runs) == 1
-    run = runs[0]
-    initial_run_logs_count = len(db_manager.get_run_logs(run.id))
+    threads = db_manager.get_threads_by_user("default")
+    assert len(threads) == 1
+    thread = threads[0]
+    initial_thread_logs_count = len(db_manager.get_thread_logs(thread.id))
     
     # Verify run metadata
-    assert run.agent_id == "Calculator"
-    assert run.user_id == "default"
-    assert run.initial_prompt == "What is 5 plus 3? Use your functions"
-    assert isinstance(run.created_at, datetime)
-    assert isinstance(run.updated_at, datetime)
+    assert thread.agent_id == "Calculator"
+    assert thread.user_id == "default"
+    assert thread.initial_prompt == "What is 5 plus 3? Use your functions"
+    assert isinstance(thread.created_at, datetime)
+    assert isinstance(thread.updated_at, datetime)
     
     # Get all logs for this run
-    logs = db_manager.get_run_logs(run.id)
+    logs = db_manager.get_thread_logs(thread.id)
     
     # Verify essential events were logged
     event_names = [log.event_name for log in logs]
@@ -88,16 +88,16 @@ def test_run_logging_enabled(test_agent, db_manager):
     # Run another calculation to verify multiple runs are tracked
     runner.turn("What is 10 minus 4?")
     
-    runs = db_manager.get_runs_by_user("default")
-    new_run_logs_count = len(db_manager.get_run_logs(run.id))
-    # Make sure the length of runs is one but that the number of run logs increased
-    assert len(runs) == 1
-    assert new_run_logs_count > initial_run_logs_count
+    threads = db_manager.get_threads_by_user("default")
+    new_thread_logs_count = len(db_manager.get_thread_logs(thread.id))
+    # Make sure the length of threads is one but that the number of thread logs increased
+    assert len(threads) == 1
+    assert new_thread_logs_count > initial_thread_logs_count
 
 @pytest.mark.requires_llm
-def test_run_logging_disabled(db_manager):
-    """Test that no logging occurs when run logging is disabled."""
-    # Disable run tracking
+def test_thread_logging_disabled(db_manager):
+    """Test that no logging occurs when thread logging is disabled."""
+    # Disable thread tracking
     no_logging_agent = Agent(
         name="Calculator",
         instructions="""You are a helpful calculator assistant. Use the provided tools to perform calculations.
@@ -112,15 +112,15 @@ def test_run_logging_disabled(db_manager):
     runner.turn("What is 7 plus 2?")
     
     # Verify no runs were created
-    runs = db_manager.get_runs_by_agent("Calculator")
-    assert len(runs) == 0
+    threads = db_manager.get_threads_by_agent("Calculator")
+    assert len(threads) == 0
     
     # Run another calculation
     runner.turn("What is 15 minus 5?")
     
     # Verify still no runs
-    runs = db_manager.get_runs_by_agent("Calculator")
-    assert len(runs) == 0
+    threads = db_manager.get_threads_by_agent("Calculator")
+    assert len(threads) == 0
 
 @pytest.mark.skip("Disabling isn't supported since the Threaded agent refactor")
 def test_run_logging_toggle(test_agent, db_manager, temp_db_path):
@@ -131,44 +131,44 @@ def test_run_logging_toggle(test_agent, db_manager, temp_db_path):
     disable_run_tracking(test_agent)
     runner.turn("What is 3 plus 4?")
     
-    runs = db_manager.get_runs_by_agent("Calculator")
-    assert len(runs) == 0
+    threads = db_manager.get_threads_by_agent("Calculator")
+    assert len(threads) == 0
     
     # Enable logging
-    init_run_tracking(test_agent, db_path=temp_db_path)
+    init_thread_tracking(test_agent, db_path=temp_db_path)
     runner.turn("What is 8 minus 5?")
     
-    runs = db_manager.get_runs_by_agent("Calculator")
-    assert len(runs) == 1
+    threads = db_manager.get_threads_by_agent("Calculator")
+    assert len(threads) == 1
     
     # Disable logging again
-    disable_run_tracking(test_agent)
+    disable_thread_tracking(test_agent)
     runner.turn("What is 6 plus 7?")
     
-    runs = db_manager.get_runs_by_agent("Calculator")
-    assert len(runs) == 1  # Count should not have increased
+    threads = db_manager.get_threads_by_agent("Calculator")
+    assert len(threads) == 1  # Count should not have increased
 
 @pytest.mark.requires_llm
-def test_run_usage_accumulation(test_agent, db_manager):
-    """Test that token usage is accumulated correctly across multiple completions in a run."""    
+def test_thread_usage_accumulation(test_agent, db_manager):
+    """Test that token usage is accumulated correctly across multiple completions in a thread."""    
     runner = AgentRunner(test_agent)
     
     # Run a multi-step interaction
     runner.turn("First add 5 and 3, then subtract 2 from the result.")
     
     # Get the run and its logs
-    runs = db_manager.get_runs_by_user("default")
-    assert len(runs) == 1
-    run = runs[0]
+    threads = db_manager.get_threads_by_user("default")
+    assert len(threads) == 1
+    thread = threads[0]
     
     # Verify usage data accumulation
-    assert test_agent.model in run.usage_data
-    model_usage = run.usage_data[test_agent.model]
+    assert test_agent.model in thread.usage_data
+    model_usage = thread.usage_data[test_agent.model]
     assert model_usage['input_tokens'] > 0
     assert model_usage['output_tokens'] > 0
     
     # Verify the sum of individual completion usages matches the accumulated total
-    logs = db_manager.get_run_logs(run.id)
+    logs = db_manager.get_thread_logs(thread.id)
     completion_logs = [log for log in logs if log.event_name == 'completion_end']
     
     total_input_tokens = sum(
