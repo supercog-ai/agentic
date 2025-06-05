@@ -3,15 +3,75 @@ from typing import Dict, Optional
 from sqlmodel import Session, SQLModel, create_engine, select, asc, desc
 from pathlib import Path
 from copy import deepcopy
+import sqlite3
+import shutil
 
 from agentic.db.models import Thread, ThreadLog
 from agentic.events import FinishCompletion
 from agentic.utils.directory_management import get_runtime_filepath
 
+# Database migration helper
+# TODO: Remove after migrations are complete
+def _check_and_migrate_database(db_path: str):
+    """Check if database migration is needed and perform it if necessary."""
+    runtime_dir = Path(db_path).parent
+    old_db_path = runtime_dir / "agent_runs.db"
+    new_db_path = runtime_dir / "agent_threads.db"
+    
+    # If old database exists but new one doesn't, perform migration
+    if old_db_path.exists() and not new_db_path.exists():
+        print("Detected old database schema. Performing automatic migration...")
+        
+        try:
+            # Connect to the old database
+            conn = sqlite3.connect(old_db_path)
+            cursor = conn.cursor()
+            
+            # Check if it's actually the old schema
+            cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='runs';")
+            if cursor.fetchone():
+                # Begin transaction
+                conn.execute("BEGIN TRANSACTION;")
+                
+                # Rename columns
+                try:
+                    cursor.execute("ALTER TABLE runs RENAME COLUMN run_metadata TO thread_metadata;")
+                except sqlite3.OperationalError:
+                    pass  # Column might already be renamed
+                
+                try:
+                    cursor.execute("ALTER TABLE run_logs RENAME COLUMN run_id TO thread_id;")
+                except sqlite3.OperationalError:
+                    pass  # Column might already be renamed
+                
+                # Rename tables
+                cursor.execute("ALTER TABLE runs RENAME TO threads;")
+                cursor.execute("ALTER TABLE run_logs RENAME TO thread_logs;")
+                
+                # Commit the transaction
+                conn.commit()
+                conn.close()
+                
+                # Rename the database file
+                shutil.move(old_db_path, new_db_path)
+                print("Migration completed successfully!")
+            else:
+                conn.close()
+        except Exception as e:
+            print(f"Error during migration: {e}")
+            if 'conn' in locals():
+                conn.rollback()
+                conn.close()
+            raise
+
 # Database setup and management
 class DatabaseManager:
     def __init__(self, db_path: str = "agent_threads.db"):
         self.db_path = get_runtime_filepath(db_path)
+        
+        # Check and perform migration if needed
+        _check_and_migrate_database(self.db_path)
+        
         self.engine = create_engine(f"sqlite:///{self.db_path}", echo=False)
         self.create_db_and_tables()
 
@@ -53,23 +113,23 @@ class DatabaseManager:
                   event_name: str,
                   event_data: Dict) -> ThreadLog:
         with self.get_session() as session:
-            run_timestamp = datetime.now(UTC)
+            thread_timestamp = datetime.now(UTC)
             # Create the log entry
             log = ThreadLog(
                 thread_id=thread_id,
                 agent_id=agent_id,
                 user_id=user_id,
                 role=role,
-                created_at=run_timestamp,
+                created_at=thread_timestamp,
                 event_name=event_name,
                 event=event_data
             )
             session.add(log)
             
-            # Update the parent run
+            # Update the parent thread
             thread = session.get(Thread, thread_id)
             if thread:
-                thread.updated_at = run_timestamp
+                thread.updated_at = thread_timestamp
                 # Update usage data if event contains it
                 if event_name == "completion_end":
                     usage = event_data["usage"]
