@@ -65,6 +65,7 @@ from agentic.events import (
     StartRequestResponse,
     OAuthFlow,
     OAuthFlowResult,
+    ReasoningContent,
 )
 from agentic.db.models import Thread, ThreadLog
 from agentic.tools.utils.registry import tool_registry
@@ -126,6 +127,9 @@ class ActorBaseAgent:
     _prompter = None
     _callbacks: dict[CallbackType, CallbackFunc] = {}
     result_model: Type[BaseModel]|None = None,
+    # Reasoning support
+    reasoning_effort: str = None  # Can be "low", "medium", "high" or None
+    thinking: dict = None  # For direct thinking parameter
 
     model_config = ConfigDict(
         arbitrary_types_allowed=True
@@ -170,7 +174,7 @@ class ActorBaseAgent:
         completion_params = {
             "model": model_override or self.model,
             "messages": messages,
-            "temperature": 0.0,
+            "temperature": 0.0,  # Will be adjusted if reasoning is enabled
             "tools": tools or None,
             "tool_choice": self.tool_choice,
             "stream": stream,
@@ -178,6 +182,49 @@ class ActorBaseAgent:
         }
         if self.result_model:
             completion_params["response_format"] = self.result_model
+
+        # Add reasoning support if model supports it
+        model_name = model_override or self.model
+        
+        # Check reasoning support with fallback for older LiteLLM versions
+        supports_reasoning = True  # Default to True and let LiteLLM handle parameter validation
+        try:
+            if hasattr(litellm, 'supports_reasoning'):
+                supports_reasoning = litellm.supports_reasoning(model=model_name)
+                debug_print(self.debug.debug_all(), f"Model supports reasoning: {supports_reasoning}")
+            else:
+                debug_print(self.debug.debug_all(), f"LiteLLM version does not have supports_reasoning function, assuming support")
+        except Exception as e:
+            debug_print(self.debug.debug_all(), f"Error checking reasoning support: {e}, assuming support")
+            supports_reasoning = True
+        
+        # Debug reasoning support
+        if self.debug.debug_all():
+            debug_print(self.debug.debug_all(), f"Checking reasoning support for model: {model_name}")
+            debug_print(self.debug.debug_all(), f"Reasoning effort: {self.reasoning_effort}")
+            debug_print(self.debug.debug_all(), f"Thinking: {self.thinking}")
+        
+        if self.reasoning_effort and supports_reasoning:
+            completion_params["reasoning_effort"] = self.reasoning_effort
+            debug_print(self.debug.debug_all(), f"Added reasoning_effort={self.reasoning_effort} to completion params")
+            
+            # Anthropic requires temperature=1 when reasoning is enabled
+            if "anthropic" in model_name.lower():
+                completion_params["temperature"] = 1.0
+                debug_print(self.debug.debug_all(), f"Set temperature=1.0 for Anthropic reasoning model")
+        elif self.reasoning_effort and not supports_reasoning:
+            debug_print(self.debug.debug_all(), f"Model {model_name} does not support reasoning. Skipping reasoning_effort parameter.")
+        
+        if self.thinking and supports_reasoning:
+            completion_params["thinking"] = self.thinking
+            debug_print(self.debug.debug_all(), f"Added thinking={self.thinking} to completion params")
+            
+            # Anthropic requires temperature=1 when thinking is enabled
+            if "anthropic" in model_name.lower():
+                completion_params["temperature"] = 1.0
+                debug_print(self.debug.debug_all(), f"Set temperature=1.0 for Anthropic thinking model")
+        elif self.thinking and not supports_reasoning:
+            debug_print(self.debug.debug_all(), f"Model {model_name} does not support reasoning. Skipping thinking parameter.")
 
         # Add any special parameters needed for specific model types
         completion_params.update(get_special_model_params(completion_params["model"]))
@@ -194,6 +241,10 @@ class ActorBaseAgent:
             debug_params["tools"] = [
                 f["function"]["name"] for f in debug_params["tools"]
             ]
+        
+        # Debug: Show all completion parameters
+        if self.debug.debug_all():
+            debug_print(self.debug.debug_all(), f"Final completion params: {debug_params}")
 
         # Get model name
         model_name = model_override or self.model
@@ -568,6 +619,44 @@ class ActorBaseAgent:
         input = self.history[-1:]
         output = llm_message.choices[0].message
         
+        # Extract reasoning content if available
+        # Try multiple locations as different providers may place it differently
+        choice = llm_message.choices[0]
+        message = choice.message
+        
+        # Try to extract reasoning content from different locations
+        reasoning_content = None
+        thinking_blocks = None
+        
+        # Check choice level first
+        reasoning_content = getattr(choice, "reasoning_content", None)
+        thinking_blocks = getattr(choice, "thinking_blocks", None)
+        
+        # If not found on choice level, check message level
+        if not reasoning_content:
+            reasoning_content = getattr(message, "reasoning_content", None)
+            thinking_blocks = getattr(message, "thinking_blocks", None)
+        
+        
+        # Debug: Check if we have reasoning content
+        if self.debug.debug_all():
+            debug_print(self.debug.debug_all(), f"Checking for reasoning content...")
+            debug_print(self.debug.debug_all(), f"Choice object attributes: {[attr for attr in dir(choice) if not attr.startswith('_')]}")
+            debug_print(self.debug.debug_all(), f"Message object attributes: {[attr for attr in dir(message) if not attr.startswith('_')]}")
+            
+            # Debug the actual choice and message objects
+            debug_print(self.debug.debug_all(), f"Choice object dict: {choice.model_dump() if hasattr(choice, 'model_dump') else str(choice)}")
+            debug_print(self.debug.debug_all(), f"Message object dict: {message.model_dump() if hasattr(message, 'model_dump') else str(message)}")
+            
+            debug_print(self.debug.debug_all(), f"Reasoning content: {reasoning_content}")
+            debug_print(self.debug.debug_all(), f"Thinking blocks: {thinking_blocks}")
+            if hasattr(message, 'provider_specific_fields'):
+                debug_print(self.debug.debug_all(), f"Provider specific fields: {message.provider_specific_fields}")
+
+            
+            # Also check the full llm_message structure
+            debug_print(self.debug.debug_all(), f"Full LLM message structure: {llm_message.model_dump() if hasattr(llm_message, 'model_dump') else str(llm_message)}")
+        
         # Get usage directly from response
         usage = getattr(llm_message, "usage", None)
         if usage:
@@ -586,6 +675,15 @@ class ActorBaseAgent:
 
         debug_completion_end(self.debug, self.model, llm_message.choices[0].message)
 
+        # Emit reasoning content FIRST as a separate event if present
+        if reasoning_content:
+            yield ReasoningContent(
+                self.name,
+                reasoning_content,
+                thinking_blocks,
+                self.depth
+            )
+
         yield FinishCompletion.create(
             self.name,
             llm_message.choices[0].message,
@@ -594,7 +692,9 @@ class ActorBaseAgent:
             self._callback_params.get("input_tokens"),
             self._callback_params.get("output_tokens"),
             self._callback_params.get("elapsed"),
-            self.depth
+            self.depth,
+            reasoning_content=reasoning_content,
+            thinking_blocks=thinking_blocks
         )
 
     def call_child(
@@ -723,6 +823,8 @@ class ActorBaseAgent:
             "memories",
             "api_endpoint",
             "result_model",
+            "reasoning_effort",
+            "thinking",
         ]:
             if key in state:
                 setattr(self, remap.get(key, key), state[key])
@@ -897,6 +999,8 @@ class BaseAgentProxy:
         debug: DebugLevel = DebugLevel(os.environ.get("AGENTIC_DEBUG") or ""),
         mock_settings: dict = None,
         prompts: Optional[dict[str, str]] = None,
+        reasoning_effort: str = None,
+        thinking: dict = None,
     ):
         self.name = name
         self.welcome = welcome or f"Hello, I am {name}."
@@ -904,6 +1008,8 @@ class BaseAgentProxy:
         self.prompts = prompts or {}
         self.cancelled = False
         self.mock_settings = mock_settings
+        self.reasoning_effort = reasoning_effort
+        self.thinking = thinking
         
         # Find template path if not provided
         from agentic.utils.template import find_template_path
@@ -1475,6 +1581,8 @@ class RayAgentProxy(BaseAgentProxy):
             "debug": self.debug,
             "result_model": self.result_model,
             "prompts": self.prompts,
+            "reasoning_effort": self.reasoning_effort,
+            "thinking": self.thinking,
             # Functions will be added when creating instances
         }
         _AGENT_REGISTRY.append(self)
@@ -1497,6 +1605,8 @@ class RayAgentProxy(BaseAgentProxy):
                     "memories": self.memories,
                     "handle_turn_start": self._handle_turn_start,
                     "result_model": self.result_model,
+                    "reasoning_effort": self.reasoning_effort,
+                    "thinking": self.thinking,
                 },
             ),
         )
@@ -1595,6 +1705,8 @@ class LocalAgentProxy(BaseAgentProxy):
             "result_model": self.result_model,
             "prompts": self.prompts,
             "db_path": self.db_path,
+            "reasoning_effort": self.reasoning_effort,
+            "thinking": self.thinking,
             # Functions will be added when creating instances
         }
         _AGENT_REGISTRY.append(self)
@@ -1617,6 +1729,8 @@ class LocalAgentProxy(BaseAgentProxy):
                     "memories": self.memories,
                     "handle_turn_start": self._handle_turn_start,
                     "result_model": self.result_model,
+                    "reasoning_effort": self.reasoning_effort,
+                    "thinking": self.thinking,
                 },
             ),
         )        

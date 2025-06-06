@@ -11,7 +11,6 @@ dependencies = [
     "html2text==2025.4.15",
     "httpx==0.28.1",
     "jinja2==3.1.6",
-    "litellm==1.68.0",
     "openai==1.75.0",
     "numpy==2.2.5",
     "pandas==2.2.3",
@@ -26,7 +25,8 @@ dependencies = [
     "textract-supercog==1.6.5.post1",
     "thespian==4.0.1",
     "typer==0.15.4",
-    "click==8.1.8"
+    "click==8.1.8",
+    "litellm>=1.72.1",
 ]
 
 [project.optional-dependencies]
