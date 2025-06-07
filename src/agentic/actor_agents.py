@@ -9,6 +9,7 @@ import time
 import traceback
 import uuid
 import yaml
+from pprint import pprint
 
 from copy import deepcopy
 from dataclasses import dataclass
@@ -726,6 +727,9 @@ class ActorBaseAgent:
             if key in state:
                 setattr(self, remap.get(key, key), state[key])
 
+        if 'history' in state and len(self.history) == 0:
+            self.history = state["history"]
+
         if "handle_turn_start" in state:
             self._callbacks["handle_turn_start"] = state["handle_turn_start"]
 
@@ -917,6 +921,7 @@ class BaseAgentProxy:
         self.request_queues: dict[str,Queue] = {}
         self.result_model = result_model
         self.queue_done_sentinel = "QUEUE_DONE"
+        self.thread_log_loaded: bool = False
         
         # Track active agent instances by request ID
         self.agent_instances = {}
@@ -1148,6 +1153,22 @@ class BaseAgentProxy:
         # To be overridden by subclasses
         pass
 
+    def _reload_thread_history(self, thread_id: str):
+        # We load the thread history from the ThreadManager, and pass it to the agent.
+        # We have to keep a flag to avoid loading all of history every time that 'start_request' is
+        # is called. But the agent also has logic to only load its history once.
+        from .thread_manager import reconstruct_chat_history_from_thread_logs, validate_chat_history
+
+        if not self.thread_log_loaded:
+            print("LOADING THREAD LOGS FOR ID: ", thread_id)
+            history = validate_chat_history(
+                reconstruct_chat_history_from_thread_logs(self.get_thread_logs(thread_id))
+            )
+            update = {"history": history}
+            pprint(update)
+            self._update_state(update)
+            self.thread_log_loaded = True    
+
     def _create_agent_instance(self, request_id: str):
         """Create a new agent instance for a request"""
         # This is implemented by the subclasses (e.g., RayAgentProxy, LocalAgentProxy)
@@ -1189,6 +1210,9 @@ class BaseAgentProxy:
         if isinstance(request, str):
             request = self._check_for_prompt_match(request)
 
+        if thread_id is not None:
+            self._reload_thread_history(thread_id)
+
         if not thread_id and "thread_id" in request_context:
             thread_id = request_context["thread_id"]
 
@@ -1197,7 +1221,7 @@ class BaseAgentProxy:
 
         agent_instance = self._get_agent_for_request(request_id)
         if (self.thread_id != thread_id or not self.thread_id) and self.db_path:
-            self.init_thread_tracking(agent_instance, thread_id)
+            self.init_thread_tracking(agent_instance, thread_id or self.thread_id)
 
         # Initialize new request
         request_obj = Prompt(
@@ -1344,6 +1368,7 @@ class BaseAgentProxy:
             yield event
 
             if hasattr(event, "agent") and event.agent != self.name:
+                # skipping event with wrong agent name
                 continue    
 
             # Only now: do logging after yielding
@@ -1565,6 +1590,7 @@ class LocalAgentProxy(BaseAgentProxy):
             "handle_turn_start": self._handle_turn_start,
             "result_model": self.result_model,
             "prompts": self.prompts,
+            "db_path": self.db_path,
             # Functions will be added when creating instances
         }
         _AGENT_REGISTRY.append(self)

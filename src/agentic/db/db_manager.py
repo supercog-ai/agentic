@@ -5,7 +5,7 @@ from pathlib import Path
 from copy import deepcopy
 import sqlite3
 import shutil
-
+from agentic.utils.json import make_json_serializable
 from agentic.db.models import Thread, ThreadLog
 from agentic.events import FinishCompletion
 from agentic.utils.directory_management import get_runtime_filepath
@@ -112,6 +112,8 @@ class DatabaseManager:
                   role: str,
                   event_name: str,
                   event_data: Dict) -> ThreadLog:
+        event_data = make_json_serializable(event_data.copy())
+
         with self.get_session() as session:
             thread_timestamp = datetime.now(UTC)
             # Create the log entry

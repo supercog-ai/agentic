@@ -59,11 +59,16 @@ class RayAgentRunner:
         except:
             pass
 
-    def turn(self, request: str, print_all_events: bool = False) -> str:
+    def turn(self, request: str, thread_id: Optional[str] = None, print_all_events: bool = False) -> str:
         """Runs the agent and waits for the turn to finish, then returns the results
         of all output events as a single string."""
         results = []
-        for event in self.facade.next_turn(request, debug=self.debug):
+        request_id = self.facade.start_request(
+            request, 
+            thread_id=thread_id,
+            debug=self.debug
+        ).request_id
+        for event in self.facade.get_events(request_id):
             if print_all_events:
                 print(event.__dict__)
             if self._should_print(event, ignore_depth=True):
