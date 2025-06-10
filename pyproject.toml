@@ -29,6 +29,11 @@ dependencies = [
     "click==8.1.8"
 ]
 
+[[tool.uv.index]]
+name = "torch"
+url = "https://download.pytorch.org/whl/cpu"
+default = false
+
 [project.optional-dependencies]
 
 # Streamlit package
@@ -42,7 +47,7 @@ rag = [
     "chonkie[semantic]==1.0.6",
     "transformers==4.51.3",
     'torch==2.6.0; platform_system == "Darwin"',
-    'torch==2.6.0+cpu; platform_system == "Linux" or platform_system == "Windows"',
+    'torch==2.6.0; platform_system == "Linux" or platform_system == "Windows"',
     "grpcio==1.71.0",
     "fastembed==0.6.1",
     "extract-msg==0.29.0",
