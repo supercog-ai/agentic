@@ -1627,6 +1627,15 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#configuring-the-database-for-thread-logging" class="md-nav__link">
+    <span class="md-ellipsis">
+      Configuring the database for thread logging
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1657,6 +1666,11 @@
 </blockquote>
 <p>Force all agents to use the indicated model regardless of their configuration. Uses the <code>Litellm</code> 
 qualified model names.</p>
+<h2 id="configuring-the-database-for-thread-logging">Configuring the database for thread logging</h2>
+<p>Set <code>AGENTIC_DATABASE_URL</code> to configure the db connection for storing Agent threads and thread logs.</p>
+<blockquote>
+<p>$ export AGENTIC_DATABASE_URL=postgres://...</p>
+</blockquote>
 
 
 
