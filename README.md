@@ -73,11 +73,8 @@ git clone git@github.com:supercog-ai/agentic.git
 uv venv  --python 3.12
 source .venv/bin/activate
 
-# For MacOS
+# For MacOS, Linux, or Windows
 uv pip install -e "./agentic[all,dev]"
-
-# For Linux or Windows
-uv pip install -e "./agentic[all,dev]" --extra-index-url https://download.pytorch.org/whl/cpu
 ```
 
 these commands will install the `agentic` package locally so that you can use the `agentic` CLI command
