@@ -263,7 +263,7 @@ building a UI for your agents. "Agent contracts" for testing.
 ## Contributing
 
 We would love you to contribute! We especially welcome:
-
+- Updates to the README
 - New tools
 - Example agents
 - New UI apps
