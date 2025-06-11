@@ -15,6 +15,7 @@ from .imap_tool import IMAPTool
 from .linkedin_tool import LinkedinDataTool
 from .mcp_tool import MCPTool
 from .meeting_tool import MeetingBaasTool
+from .openai_websearch import OpenAIWebSearchTool
 from .oauth_tool import OAuthTool
 from .playwright import PlaywrightTool
 from .podcast_tool import PodcastTool
@@ -45,6 +46,7 @@ __all__ = [
     "MCPTool",
     "MeetingBaasTool",
     "OAuthTool",
+    "OpenAIWebSearchTool",
     "PlaywrightTool",
     "PodcastTool",
     "RAGTool",
