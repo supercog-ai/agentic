@@ -1,8 +1,12 @@
 from typing import Callable, Dict, Optional
-from agentic.tools.base import BaseAgenticTool
-from agentic.tools.utils.registry import tool_registry, Dependency, ConfigRequirement
-from agentic.common import Agent, AgentRunner, RunContext
+
 from openai import OpenAI
+
+from agentic.common import Agent, AgentRunner, RunContext
+from agentic.tools.base import BaseAgenticTool
+from agentic.tools.utils.registry import (ConfigRequirement, Dependency,
+                                          tool_registry)
+
 
 @tool_registry.register(
     name="OpenAIWebSearchTool",           # Name of your tool
