@@ -1,4 +1,4 @@
-from typing import Callable, Dict, Optional
+from typing import Callable
 
 from openai import OpenAI
 
