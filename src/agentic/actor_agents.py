@@ -1376,7 +1376,11 @@ class BaseAgentProxy:
             callback = self._agent.get_callback("handle_event") if hasattr(self, "_agent") else None
             if callback:
                 context = ThreadContext(agent=self._agent, agent_name=self.name, thread_id=self.thread_id, context=request_context)
-                callback(event, context)
+                try:
+                    callback(event, context)
+                except Exception as e:
+                    print(f"Error in handle_event callback: {e}")
+                        
         
     def _get_prompt_generator(self, agent_instance, prompt):
         """Get generator for a new prompt - to be implemented by subclasses"""

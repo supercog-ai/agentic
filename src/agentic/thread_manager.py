@@ -2,6 +2,7 @@ import json
 from typing import Optional, Dict, Callable, Any, List
 from uuid import uuid4
 from litellm import Message
+import traceback
 from .events import (
     Event,
     PromptStarted,
@@ -95,16 +96,20 @@ class ThreadManager:
         elif isinstance(event, TurnEnd):
             event_data = {}
             
-        # Log the event
-        self.db_manager.log_event(
-            thread_id=thread_context.thread_id,
-            agent_id=thread_context.agent_name,
-            user_id=str(thread_context.get("user") or "default"),
-            role=role,
-            event_name=event_name,
-            event_data=event_data
-        )
-        
+        try:
+            # Log the event
+            self.db_manager.log_event(
+                thread_id=thread_context.thread_id,
+                agent_id=thread_context.agent_name,
+                user_id=str(thread_context.get("user") or "default"),
+                role=role,
+                event_name=event_name,
+                event_data=make_json_serializable(event_data)
+            )
+        except Exception as e:
+            traceback.print_exc()
+            print(f"Error logging event {event_name} for thread {thread_context.thread_id}: {e}. Data: {event_data}")
+
         # Reset usage tracking after a turn ends
         if isinstance(event, TurnEnd):
             self.usage_data = {}
