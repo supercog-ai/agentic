@@ -48,7 +48,7 @@ def make_json_serializable(obj):
                 "function_call": make_json_serializable(obj.function_call)
             }
         elif isinstance(obj, BaseModel):
-            return obj.model_dump()
+            return make_json_serializable(obj.model_dump())
         elif isinstance(obj, datetime):
             return obj.isoformat()
         elif isinstance(obj, date):
