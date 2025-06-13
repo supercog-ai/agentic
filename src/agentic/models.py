@@ -2,7 +2,7 @@
 CLAUDE = "anthropic/claude-3-5-sonnet-latest"
 CLAUDE_4_SONNET = "anthropic/claude-sonnet-4-20250514"
 CLAUDE_4_OPUS = "anthropic/claude-opus-4-20250514"
-CLAUDE_3_7 = "claude-3-7-sonnet-20250219"
+CLAUDE_3_7 = "anthropic/claude-3-7-sonnet-20250219"
 GPT_4O_MINI = "gpt-4o-mini"  # Default model
 GPT_4O = "openai/gpt-4o"
 GPT_O1 = "openai/gpt-o1"

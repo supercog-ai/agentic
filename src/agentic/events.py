@@ -194,12 +194,55 @@ class StartCompletion(Event):
         super().__init__(agent=agent, type="completion_start", payload={}, depth=depth)
 
 
+class ReasoningContent(Event):
+    """Event to capture and display reasoning content from LLM models that support it"""
+    
+    def __init__(self, agent: str, reasoning_content: str, depth: int = 0):
+        super().__init__(agent=agent, type="reasoning_content", payload={
+            "reasoning_content": reasoning_content
+        }, depth=depth)
+    
+    @property
+    def reasoning_content(self) -> str:
+        return self.payload.get("reasoning_content", "")
+    
+    @property
+    def is_output(self):
+        """Make reasoning content always visible like other output events"""
+        return True
+    
+    def __str__(self):
+        from .colors import Colors
+        
+        # Format with beautiful colors and visual separation
+        brain_emoji = "🧠"
+        separator = "━" * 50
+        
+        # Create visually separated header
+        header = f"\n{Colors.OKCYAN}{separator}{Colors.ENDC}"
+        header += f"\n{Colors.OKCYAN}{brain_emoji} REASONING PROCESS{Colors.ENDC}"
+        header += f"\n{Colors.OKCYAN}{separator}{Colors.ENDC}"
+        
+        # Main reasoning content with full coloring
+        content = f"{header}\n{Colors.OKCYAN}{Colors.ITALICS}{self.reasoning_content}{Colors.ENDC}"
+        
+        # Add closing separator
+        footer = f"\n{Colors.OKCYAN}{separator}{Colors.ENDC}\n"
+            
+        return content + footer
+    
+    def print(self, debug_level: str):
+        # Always show reasoning content with full formatting
+        return self.__str__()
+
+
 class FinishCompletion(Event):
     MODEL_KEY: typing.ClassVar[str] = "model"
     COST_KEY: typing.ClassVar[str]  = "cost"
     INPUT_TOKENS_KEY: typing.ClassVar[str] = "input_tokens"
     OUTPUT_TOKENS_KEY: typing.ClassVar[str] = "output_tokens"
     ELAPSED_TIME_KEY: typing.ClassVar[str] = "elapsed_time"
+    REASONING_CONTENT_KEY: typing.ClassVar[str] = "reasoning_content"
     metadata: dict = {}
 
     model_config = ConfigDict(
@@ -223,6 +266,7 @@ class FinishCompletion(Event):
         output_tokens: int | None,
         elapsed_time: float | None,
         depth: int = 0,
+        reasoning_content: str = None,
     ):
         meta = {
             cls.MODEL_KEY: model,
@@ -231,6 +275,10 @@ class FinishCompletion(Event):
             cls.OUTPUT_TOKENS_KEY: output_tokens or 0,
             cls.ELAPSED_TIME_KEY: elapsed_time or 0,
         }
+        
+        # Add reasoning data to metadata if present
+        if reasoning_content:
+            meta[cls.REASONING_CONTENT_KEY] = reasoning_content
 
         if isinstance(llm_message, str):
             llm_message = Message(content=llm_message, role="assistant")
@@ -241,8 +289,15 @@ class FinishCompletion(Event):
     def response(self) -> Message:
         return self.payload
 
+    @property
+    def reasoning_content(self) -> str:
+        return self.metadata.get(self.REASONING_CONTENT_KEY, "")
+
     def __str__(self):
-        return f"[{self.agent}] {self.payload}, tokens: {self.metadata}"
+        base_str = f"[{self.agent}] {self.payload}, tokens: {self.metadata}"
+        if self.reasoning_content:
+            base_str += f"\n[{self.agent}] 🧠 Reasoning: {self.reasoning_content}"
+        return base_str
 
 class TurnEnd(Event):
     def __init__(
