@@ -77,7 +77,7 @@ source .venv/bin/activate
 uv pip install -e "./agentic[all,dev]"
 
 # For Linux or Windows
-uv pip install -e "./agentic[all,dev]" --extra-index-url https://download.pytorch.org/whl/cpu
+uv pip install -e "./agentic[all,dev]" --extra-index-url https://download.pytorch.org/whl/cpu --index-strategy unsafe-first-match
 ```
 
 these commands will install the `agentic` package locally so that you can use the `agentic` CLI command
