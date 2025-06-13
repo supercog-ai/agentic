@@ -129,7 +129,6 @@ class ActorBaseAgent:
     result_model: Type[BaseModel]|None = None,
     # Reasoning support
     reasoning_effort: str = None  # Can be "low", "medium", "high" or None
-    thinking: dict = None  # For direct thinking parameter
 
     model_config = ConfigDict(
         arbitrary_types_allowed=True
@@ -202,7 +201,6 @@ class ActorBaseAgent:
         if self.debug.debug_all():
             debug_print(self.debug.debug_all(), f"Checking reasoning support for model: {model_name}")
             debug_print(self.debug.debug_all(), f"Reasoning effort: {self.reasoning_effort}")
-            debug_print(self.debug.debug_all(), f"Thinking: {self.thinking}")
         
         if self.reasoning_effort and supports_reasoning:
             completion_params["reasoning_effort"] = self.reasoning_effort
@@ -214,17 +212,6 @@ class ActorBaseAgent:
                 debug_print(self.debug.debug_all(), f"Set temperature=1.0 for Anthropic reasoning model")
         elif self.reasoning_effort and not supports_reasoning:
             debug_print(self.debug.debug_all(), f"Model {model_name} does not support reasoning. Skipping reasoning_effort parameter.")
-        
-        if self.thinking and supports_reasoning:
-            completion_params["thinking"] = self.thinking
-            debug_print(self.debug.debug_all(), f"Added thinking={self.thinking} to completion params")
-            
-            # Anthropic requires temperature=1 when thinking is enabled
-            if "anthropic" in model_name.lower():
-                completion_params["temperature"] = 1.0
-                debug_print(self.debug.debug_all(), f"Set temperature=1.0 for Anthropic thinking model")
-        elif self.thinking and not supports_reasoning:
-            debug_print(self.debug.debug_all(), f"Model {model_name} does not support reasoning. Skipping thinking parameter.")
 
         # Add any special parameters needed for specific model types
         completion_params.update(get_special_model_params(completion_params["model"]))
@@ -626,16 +613,13 @@ class ActorBaseAgent:
         
         # Try to extract reasoning content from different locations
         reasoning_content = None
-        thinking_blocks = None
         
         # Check choice level first
         reasoning_content = getattr(choice, "reasoning_content", None)
-        thinking_blocks = getattr(choice, "thinking_blocks", None)
         
         # If not found on choice level, check message level
         if not reasoning_content:
             reasoning_content = getattr(message, "reasoning_content", None)
-            thinking_blocks = getattr(message, "thinking_blocks", None)
         
         
         # Debug: Check if we have reasoning content
@@ -649,9 +633,6 @@ class ActorBaseAgent:
             debug_print(self.debug.debug_all(), f"Message object dict: {message.model_dump() if hasattr(message, 'model_dump') else str(message)}")
             
             debug_print(self.debug.debug_all(), f"Reasoning content: {reasoning_content}")
-            debug_print(self.debug.debug_all(), f"Thinking blocks: {thinking_blocks}")
-            if hasattr(message, 'provider_specific_fields'):
-                debug_print(self.debug.debug_all(), f"Provider specific fields: {message.provider_specific_fields}")
 
             
             # Also check the full llm_message structure
@@ -680,7 +661,6 @@ class ActorBaseAgent:
             yield ReasoningContent(
                 self.name,
                 reasoning_content,
-                thinking_blocks,
                 self.depth
             )
 
@@ -693,8 +673,7 @@ class ActorBaseAgent:
             self._callback_params.get("output_tokens"),
             self._callback_params.get("elapsed"),
             self.depth,
-            reasoning_content=reasoning_content,
-            thinking_blocks=thinking_blocks
+            reasoning_content=reasoning_content
         )
 
     def call_child(
@@ -824,7 +803,6 @@ class ActorBaseAgent:
             "api_endpoint",
             "result_model",
             "reasoning_effort",
-            "thinking",
         ]:
             if key in state:
                 setattr(self, remap.get(key, key), state[key])
@@ -1000,7 +978,6 @@ class BaseAgentProxy:
         mock_settings: dict = None,
         prompts: Optional[dict[str, str]] = None,
         reasoning_effort: str = None,
-        thinking: dict = None,
     ):
         self.name = name
         self.welcome = welcome or f"Hello, I am {name}."
@@ -1009,7 +986,6 @@ class BaseAgentProxy:
         self.cancelled = False
         self.mock_settings = mock_settings
         self.reasoning_effort = reasoning_effort
-        self.thinking = thinking
         
         # Find template path if not provided
         from agentic.utils.template import find_template_path
@@ -1582,7 +1558,6 @@ class RayAgentProxy(BaseAgentProxy):
             "result_model": self.result_model,
             "prompts": self.prompts,
             "reasoning_effort": self.reasoning_effort,
-            "thinking": self.thinking,
             # Functions will be added when creating instances
         }
         _AGENT_REGISTRY.append(self)
@@ -1606,7 +1581,6 @@ class RayAgentProxy(BaseAgentProxy):
                     "handle_turn_start": self._handle_turn_start,
                     "result_model": self.result_model,
                     "reasoning_effort": self.reasoning_effort,
-                    "thinking": self.thinking,
                 },
             ),
         )
@@ -1706,7 +1680,6 @@ class LocalAgentProxy(BaseAgentProxy):
             "prompts": self.prompts,
             "db_path": self.db_path,
             "reasoning_effort": self.reasoning_effort,
-            "thinking": self.thinking,
             # Functions will be added when creating instances
         }
         _AGENT_REGISTRY.append(self)
@@ -1730,7 +1703,6 @@ class LocalAgentProxy(BaseAgentProxy):
                     "handle_turn_start": self._handle_turn_start,
                     "result_model": self.result_model,
                     "reasoning_effort": self.reasoning_effort,
-                    "thinking": self.thinking,
                 },
             ),
         )        
