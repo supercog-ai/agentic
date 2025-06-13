@@ -6,6 +6,7 @@ declare namespace Api {
   type Output = 'output';
   type Prompt = 'prompt';
   type PromptStarted = 'prompt_started';
+  type ReasoningContent = 'reasoning_content';
   type ResetHistory = 'reset_history';
   type ResumeWithInput = 'resume_with_input';
   type SetState = 'set_state';
@@ -24,6 +25,7 @@ declare namespace Api {
     | Output
     | Prompt
     | PromptStarted
+    | ReasoningContent
     | ResetHistory
     | ResumeWithInput
     | SetState

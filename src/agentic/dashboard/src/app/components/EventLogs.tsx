@@ -28,7 +28,7 @@ interface EventLogsProps {
 
 const EVENT_TYPES: Record<string, AgentEventType[]> = {
   INPUT: [AgentEventType.PROMPT, AgentEventType.PROMPT_STARTED, AgentEventType.RESUME_WITH_INPUT],
-  COMPLETION: [AgentEventType.COMPLETION_START, AgentEventType.COMPLETION_END],
+  COMPLETION: [AgentEventType.COMPLETION_START, AgentEventType.COMPLETION_END, AgentEventType.REASONING_CONTENT],
   OUTPUT: [AgentEventType.CHAT_OUTPUT, AgentEventType.OUTPUT],
   TOOLS: [AgentEventType.TOOL_CALL, AgentEventType.TOOL_RESULT, AgentEventType.TOOL_ERROR],
   TURN_COMPLETION: [AgentEventType.WAIT_FOR_INPUT, AgentEventType.TURN_END, AgentEventType.TURN_CANCELLED],
@@ -102,6 +102,22 @@ const EventLogs: React.FC<EventLogsProps> = ({ events, onClose, className = '' }
       );
     }
     
+    if (event.type === AgentEventType.REASONING_CONTENT) {
+      const content = typeof event.payload === 'string' 
+        ? event.payload 
+        : event.payload?.reasoning_content || JSON.stringify(event.payload);
+      return (
+        <div className="border-l-4 border-cyan-400 pl-4 bg-cyan-50/30 dark:bg-cyan-950/30 rounded-r-md">
+          <div className="flex items-center gap-2 mb-2 text-cyan-600 dark:text-cyan-400">
+            <span className="text-sm font-medium">AI Reasoning Process</span>
+          </div>
+          <div className="italic text-sm text-muted-foreground whitespace-pre-wrap">
+            {content}
+          </div>
+        </div>
+      );
+    }
+    
     if (event.type === AgentEventType.PROMPT_STARTED) {
       const content = typeof event.payload === 'string' 
         ? event.payload 
@@ -151,6 +167,8 @@ const EventLogs: React.FC<EventLogsProps> = ({ events, onClose, className = '' }
         return 'text-purple-500';
       case AgentEventType.COMPLETION_END:
         return 'text-purple-600';
+      case AgentEventType.REASONING_CONTENT:
+        return 'text-cyan-500';
       case AgentEventType.CHAT_OUTPUT:
       case AgentEventType.OUTPUT:
         return 'text-indigo-400';
