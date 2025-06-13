@@ -8,6 +8,7 @@ export enum AgentEventType {
   OUTPUT = 'output',
   PROMPT = 'prompt',
   PROMPT_STARTED = 'prompt_started',
+  REASONING_CONTENT = 'reasoning_content',
   RESET_HISTORY = 'reset_history',
   RESUME_WITH_INPUT = 'resume_with_input',
   SET_STATE = 'set_state',

@@ -1,9 +1,9 @@
 from agentic.tools import WeatherTool
 
 from agentic.common import Agent, AgentRunner
-from agentic.models import CLAUDE_4_SONNET
+from agentic.models import GEMINI_2_5_FLASH_PREVIEW
 
-MODEL=CLAUDE_4_SONNET
+MODEL=GEMINI_2_5_FLASH_PREVIEW
 
 agent = Agent(
     name="Basic Agent",
@@ -11,7 +11,7 @@ agent = Agent(
     instructions="You are a helpful assistant that reports the weather.",
     model=MODEL,
     tools=[WeatherTool()],
-    reasoning_effort="low"
+    reasoning_effort="medium"
 )
 
 if __name__ == "__main__":
