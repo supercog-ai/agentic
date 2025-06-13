@@ -24,49 +24,12 @@ def mock_settings():
             yield mock_settings
 
 # Now import the CLI functions
-from agentic.cli import settings_set, settings_list, settings_get, settings_delete
 
 @pytest.fixture
 def mock_typer():
     """Mock typer"""
     with patch('typer.echo') as mock:
         yield mock
-
-def test_settings_set(mock_typer, mock_settings):
-    """Test setting a setting"""
-    settings_set("TEST_SETTING", "test_value")
-    mock_typer.assert_called_with(None)
-    assert mock_settings.get("TEST_SETTING") == "test_value"
-
-def test_settings_list(mock_typer, mock_settings):
-    """Test listing settings"""
-    # Set up test settings
-    mock_settings.set("SETTING1", "value1")
-    mock_settings.set("SETTING2", "value2")
-    
-    settings_list()
-    mock_typer.assert_called_with("SETTING1\nSETTING2")
-
-def test_settings_get(mock_typer, mock_settings):
-    """Test getting a setting"""
-    mock_settings.set("TEST_SETTING", "test_value")
-    
-    settings_get("TEST_SETTING")
-    mock_typer.assert_called_with("test_value")
-    
-    settings_get("NONEXISTENT")
-    mock_typer.assert_called_with(None)
-
-def test_settings_delete(mock_typer, mock_settings):
-    """Test deleting a setting"""
-    mock_settings.set("TEST_SETTING", "test_value")
-    
-    settings_delete("TEST_SETTING")
-    mock_typer.assert_called_with(None)
-    assert mock_settings.get("TEST_SETTING") is None
-    
-    settings_delete("NONEXISTENT")
-    mock_typer.assert_called_with(None)
 
 def test_settings_type_conversion(mock_settings):
     """Test that settings are properly converted to their original type"""

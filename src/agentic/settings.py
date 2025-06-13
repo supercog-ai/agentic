@@ -4,7 +4,6 @@ from typing import Optional, overload, TypeVar
 
 T = TypeVar("T")
 
-
 class Settings:
     def __init__(self, db_path="agentsdb", cache_dir="~/.agentic", key=None):
         self.cache_dir = Path(cache_dir).expanduser()
