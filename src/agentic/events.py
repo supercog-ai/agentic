@@ -197,19 +197,14 @@ class StartCompletion(Event):
 class ReasoningContent(Event):
     """Event to capture and display reasoning content from LLM models that support it"""
     
-    def __init__(self, agent: str, reasoning_content: str, thinking_blocks: list = None, depth: int = 0):
+    def __init__(self, agent: str, reasoning_content: str, depth: int = 0):
         super().__init__(agent=agent, type="reasoning_content", payload={
-            "reasoning_content": reasoning_content,
-            "thinking_blocks": thinking_blocks or []
+            "reasoning_content": reasoning_content
         }, depth=depth)
     
     @property
     def reasoning_content(self) -> str:
         return self.payload.get("reasoning_content", "")
-    
-    @property
-    def thinking_blocks(self) -> list:
-        return self.payload.get("thinking_blocks", [])
     
     @property
     def is_output(self):
@@ -221,7 +216,6 @@ class ReasoningContent(Event):
         
         # Format with beautiful colors and visual separation
         brain_emoji = "🧠"
-        thinking_emoji = "💭"
         separator = "━" * 50
         
         # Create visually separated header
@@ -231,12 +225,6 @@ class ReasoningContent(Event):
         
         # Main reasoning content with full coloring
         content = f"{header}\n{Colors.OKCYAN}{Colors.ITALICS}{self.reasoning_content}{Colors.ENDC}"
-        
-        # Add thinking blocks if available
-        if self.thinking_blocks:
-            content += f"\n\n{Colors.OKGREEN}{thinking_emoji} Thinking blocks:{Colors.ENDC}"
-            for i, block in enumerate(self.thinking_blocks, 1):
-                content += f"\n{Colors.OKGREEN}Block {i}:{Colors.ENDC} {Colors.OKGREEN}{Colors.ITALICS}{block}{Colors.ENDC}"
         
         # Add closing separator
         footer = f"\n{Colors.OKCYAN}{separator}{Colors.ENDC}\n"
@@ -255,7 +243,6 @@ class FinishCompletion(Event):
     OUTPUT_TOKENS_KEY: typing.ClassVar[str] = "output_tokens"
     ELAPSED_TIME_KEY: typing.ClassVar[str] = "elapsed_time"
     REASONING_CONTENT_KEY: typing.ClassVar[str] = "reasoning_content"
-    THINKING_BLOCKS_KEY: typing.ClassVar[str] = "thinking_blocks"
     metadata: dict = {}
 
     model_config = ConfigDict(
@@ -280,7 +267,6 @@ class FinishCompletion(Event):
         elapsed_time: float | None,
         depth: int = 0,
         reasoning_content: str = None,
-        thinking_blocks: list = None,
     ):
         meta = {
             cls.MODEL_KEY: model,
@@ -293,8 +279,6 @@ class FinishCompletion(Event):
         # Add reasoning data to metadata if present
         if reasoning_content:
             meta[cls.REASONING_CONTENT_KEY] = reasoning_content
-        if thinking_blocks:
-            meta[cls.THINKING_BLOCKS_KEY] = thinking_blocks
 
         if isinstance(llm_message, str):
             llm_message = Message(content=llm_message, role="assistant")
@@ -308,10 +292,6 @@ class FinishCompletion(Event):
     @property
     def reasoning_content(self) -> str:
         return self.metadata.get(self.REASONING_CONTENT_KEY, "")
-    
-    @property
-    def thinking_blocks(self) -> list:
-        return self.metadata.get(self.THINKING_BLOCKS_KEY, [])
 
     def __str__(self):
         base_str = f"[{self.agent}] {self.payload}, tokens: {self.metadata}"

@@ -10,7 +10,7 @@ agent = Agent(
     welcome="I am a simple agent here to help answer your weather questions.",
     instructions="You are a helpful assistant that reports the weather.",
     model=MODEL,
-    tools=[],
+    tools=[WeatherTool()],
     reasoning_effort="low"
 )
 
