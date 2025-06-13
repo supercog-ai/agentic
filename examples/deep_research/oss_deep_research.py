@@ -8,7 +8,7 @@ from agentic.agentic_secrets import agentic_secrets
 from agentic.common import Agent, AgentRunner, ThreadContext
 from agentic.events import Event, ChatOutput, WaitForInput, Prompt, PromptStarted, TurnEnd, ResumeWithInput
 from agentic.models import GPT_4O_MINI, CLAUDE, GPT_4O
-from agentic.tools import PlaywrightTool, TavilySearchTool
+from agentic.tools import PlaywrightTool, OpenAIWebSearchTool
 
 # These can take any Litellm model path [see https://supercog-ai.github.io/agentic/Models/]
 # Or use aliases 'GPT_4O' or 'CLAUDE'
@@ -52,7 +52,7 @@ class DeepResearchAgent(Agent):
             model=model,
             **kwargs
         )
-        self.tavily_tool = TavilySearchTool(api_key=agentic_secrets.get_required_secret("TAVILY_API_KEY"))
+        self.openai_tool = OpenAIWebSearchTool()
 
         ## CONFIGURATION
         self.num_queries = 4
@@ -127,7 +127,7 @@ class DeepResearchAgent(Agent):
             self.topic = request.payload if isinstance(request, Prompt) else request
             prompt_event = PromptStarted(
                 self.name,
-                {"content": self.topic}
+                self.topic
             )
             yield prompt_event
         else:
@@ -278,13 +278,11 @@ provide feedback to regenerate the report plan:\n
             for query in queries.queries:
                 missing_pages = []
                 try:
-                    res = await self.tavily_tool.perform_web_search(
-                        query.search_query, 
-                        include_content=True
-                    )
+                    res = await self.openai_tool.perform_web_search(query.search_query)
                 except:
                     res = []
-                content = self.tavily_tool._deduplicate_and_format_sources(
+                    
+                content = self.openai_tool._deduplicate_and_format_sources(
                     res, 
                     content_max, 
                     missing_pages_list=missing_pages
