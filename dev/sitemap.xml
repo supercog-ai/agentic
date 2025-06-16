@@ -2,222 +2,222 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://supercog.ai/agentic/dev/</loc>
-         <lastmod>2025-06-10</lastmod>
+         <lastmod>2025-06-16</lastmod>
     </url>
     <url>
          <loc>https://supercog.ai/agentic/dev/FLOWS/</loc>
-         <lastmod>2025-06-10</lastmod>
+         <lastmod>2025-06-16</lastmod>
     </url>
     <url>
          <loc>https://supercog.ai/agentic/dev/Internals/</loc>
-         <lastmod>2025-06-10</lastmod>
+         <lastmod>2025-06-16</lastmod>
     </url>
     <url>
          <loc>https://supercog.ai/agentic/dev/Settings/</loc>
-         <lastmod>2025-06-10</lastmod>
+         <lastmod>2025-06-16</lastmod>
     </url>
     <url>
          <loc>https://supercog.ai/agentic/dev/agent-memory/</loc>
-         <lastmod>2025-06-10</lastmod>
+         <lastmod>2025-06-16</lastmod>
     </url>
     <url>
          <loc>https://supercog.ai/agentic/dev/data-model/</loc>
-         <lastmod>2025-06-10</lastmod>
+         <lastmod>2025-06-16</lastmod>
     </url>
     <url>
          <loc>https://supercog.ai/agentic/dev/example-agents/</loc>
-         <lastmod>2025-06-10</lastmod>
+         <lastmod>2025-06-16</lastmod>
     </url>
     <url>
          <loc>https://supercog.ai/agentic/dev/getting-started/</loc>
-         <lastmod>2025-06-10</lastmod>
+         <lastmod>2025-06-16</lastmod>
     </url>
     <url>
          <loc>https://supercog.ai/agentic/dev/glossary/</loc>
-         <lastmod>2025-06-10</lastmod>
+         <lastmod>2025-06-16</lastmod>
     </url>
     <url>
          <loc>https://supercog.ai/agentic/dev/planning-agents/</loc>
-         <lastmod>2025-06-10</lastmod>
+         <lastmod>2025-06-16</lastmod>
     </url>
     <url>
          <loc>https://supercog.ai/agentic/dev/rag-support/</loc>
-         <lastmod>2025-06-10</lastmod>
+         <lastmod>2025-06-16</lastmod>
     </url>
     <url>
          <loc>https://supercog.ai/agentic/dev/building-agents/</loc>
-         <lastmod>2025-06-10</lastmod>
+         <lastmod>2025-06-16</lastmod>
     </url>
     <url>
          <loc>https://supercog.ai/agentic/dev/building-agents/advanced-custom-agents/</loc>
-         <lastmod>2025-06-10</lastmod>
+         <lastmod>2025-06-16</lastmod>
     </url>
     <url>
          <loc>https://supercog.ai/agentic/dev/building-agents/agent-teams/</loc>
-         <lastmod>2025-06-10</lastmod>
+         <lastmod>2025-06-16</lastmod>
     </url>
     <url>
          <loc>https://supercog.ai/agentic/dev/building-agents/debugging/</loc>
-         <lastmod>2025-06-10</lastmod>
+         <lastmod>2025-06-16</lastmod>
     </url>
     <url>
          <loc>https://supercog.ai/agentic/dev/core-concepts/</loc>
-         <lastmod>2025-06-10</lastmod>
+         <lastmod>2025-06-16</lastmod>
     </url>
     <url>
          <loc>https://supercog.ai/agentic/dev/core-concepts/agentic-design-principles/</loc>
-         <lastmod>2025-06-10</lastmod>
+         <lastmod>2025-06-16</lastmod>
     </url>
     <url>
          <loc>https://supercog.ai/agentic/dev/core-concepts/event-system/</loc>
-         <lastmod>2025-06-10</lastmod>
+         <lastmod>2025-06-16</lastmod>
     </url>
     <url>
          <loc>https://supercog.ai/agentic/dev/core-concepts/event-types/</loc>
-         <lastmod>2025-06-10</lastmod>
+         <lastmod>2025-06-16</lastmod>
     </url>
     <url>
          <loc>https://supercog.ai/agentic/dev/core-concepts/introduction-to-agents/</loc>
-         <lastmod>2025-06-10</lastmod>
+         <lastmod>2025-06-16</lastmod>
     </url>
     <url>
          <loc>https://supercog.ai/agentic/dev/core-concepts/models/</loc>
-         <lastmod>2025-06-10</lastmod>
+         <lastmod>2025-06-16</lastmod>
     </url>
     <url>
          <loc>https://supercog.ai/agentic/dev/core-concepts/project-structure/</loc>
-         <lastmod>2025-06-10</lastmod>
+         <lastmod>2025-06-16</lastmod>
     </url>
     <url>
          <loc>https://supercog.ai/agentic/dev/deployment/</loc>
-         <lastmod>2025-06-10</lastmod>
+         <lastmod>2025-06-16</lastmod>
     </url>
     <url>
          <loc>https://supercog.ai/agentic/dev/deployment/updating-deployments/</loc>
-         <lastmod>2025-06-10</lastmod>
+         <lastmod>2025-06-16</lastmod>
     </url>
     <url>
          <loc>https://supercog.ai/agentic/dev/interacting-with-agents/</loc>
-         <lastmod>2025-06-10</lastmod>
+         <lastmod>2025-06-16</lastmod>
     </url>
     <url>
          <loc>https://supercog.ai/agentic/dev/interacting-with-agents/%5BDEPRECIATED%5D-rest-api-no-swagger/</loc>
-         <lastmod>2025-06-10</lastmod>
+         <lastmod>2025-06-16</lastmod>
     </url>
     <url>
          <loc>https://supercog.ai/agentic/dev/interacting-with-agents/cli/</loc>
-         <lastmod>2025-06-10</lastmod>
+         <lastmod>2025-06-16</lastmod>
     </url>
     <url>
          <loc>https://supercog.ai/agentic/dev/interacting-with-agents/nextjs-dashboard/</loc>
-         <lastmod>2025-06-10</lastmod>
+         <lastmod>2025-06-16</lastmod>
     </url>
     <url>
          <loc>https://supercog.ai/agentic/dev/interacting-with-agents/rest-api/</loc>
-         <lastmod>2025-06-10</lastmod>
+         <lastmod>2025-06-16</lastmod>
     </url>
     <url>
          <loc>https://supercog.ai/agentic/dev/interacting-with-agents/streamlit-dashboard/</loc>
-         <lastmod>2025-06-10</lastmod>
+         <lastmod>2025-06-16</lastmod>
     </url>
     <url>
          <loc>https://supercog.ai/agentic/dev/tools/</loc>
-         <lastmod>2025-06-10</lastmod>
+         <lastmod>2025-06-16</lastmod>
     </url>
     <url>
          <loc>https://supercog.ai/agentic/dev/tools/building-tools/</loc>
-         <lastmod>2025-06-10</lastmod>
+         <lastmod>2025-06-16</lastmod>
     </url>
     <url>
          <loc>https://supercog.ai/agentic/dev/tools/tool-library/</loc>
-         <lastmod>2025-06-10</lastmod>
+         <lastmod>2025-06-16</lastmod>
     </url>
     <url>
          <loc>https://supercog.ai/agentic/dev/tools/tool-library/airbnb-calendar-tool/</loc>
-         <lastmod>2025-06-10</lastmod>
+         <lastmod>2025-06-16</lastmod>
     </url>
     <url>
          <loc>https://supercog.ai/agentic/dev/tools/tool-library/authorized-rest-api-tool/</loc>
-         <lastmod>2025-06-10</lastmod>
+         <lastmod>2025-06-16</lastmod>
     </url>
     <url>
          <loc>https://supercog.ai/agentic/dev/tools/tool-library/automatic-tools/</loc>
-         <lastmod>2025-06-10</lastmod>
+         <lastmod>2025-06-16</lastmod>
     </url>
     <url>
          <loc>https://supercog.ai/agentic/dev/tools/tool-library/browser-use-tool/</loc>
-         <lastmod>2025-06-10</lastmod>
+         <lastmod>2025-06-16</lastmod>
     </url>
     <url>
          <loc>https://supercog.ai/agentic/dev/tools/tool-library/database-tool/</loc>
-         <lastmod>2025-06-10</lastmod>
+         <lastmod>2025-06-16</lastmod>
     </url>
     <url>
          <loc>https://supercog.ai/agentic/dev/tools/tool-library/duckduckgo-tool/</loc>
-         <lastmod>2025-06-10</lastmod>
+         <lastmod>2025-06-16</lastmod>
     </url>
     <url>
          <loc>https://supercog.ai/agentic/dev/tools/tool-library/file-download-tool/</loc>
-         <lastmod>2025-06-10</lastmod>
+         <lastmod>2025-06-16</lastmod>
     </url>
     <url>
          <loc>https://supercog.ai/agentic/dev/tools/tool-library/github-tool/</loc>
-         <lastmod>2025-06-10</lastmod>
+         <lastmod>2025-06-16</lastmod>
     </url>
     <url>
          <loc>https://supercog.ai/agentic/dev/tools/tool-library/google-news-tool/</loc>
-         <lastmod>2025-06-10</lastmod>
+         <lastmod>2025-06-16</lastmod>
     </url>
     <url>
          <loc>https://supercog.ai/agentic/dev/tools/tool-library/human-interrupt-tool/</loc>
-         <lastmod>2025-06-10</lastmod>
+         <lastmod>2025-06-16</lastmod>
     </url>
     <url>
          <loc>https://supercog.ai/agentic/dev/tools/tool-library/image-generator-tool/</loc>
-         <lastmod>2025-06-10</lastmod>
+         <lastmod>2025-06-16</lastmod>
     </url>
     <url>
          <loc>https://supercog.ai/agentic/dev/tools/tool-library/imap-tool/</loc>
-         <lastmod>2025-06-10</lastmod>
+         <lastmod>2025-06-16</lastmod>
     </url>
     <url>
          <loc>https://supercog.ai/agentic/dev/tools/tool-library/linkedin-data-tool/</loc>
-         <lastmod>2025-06-10</lastmod>
+         <lastmod>2025-06-16</lastmod>
     </url>
     <url>
          <loc>https://supercog.ai/agentic/dev/tools/tool-library/mcp-tool/</loc>
-         <lastmod>2025-06-10</lastmod>
+         <lastmod>2025-06-16</lastmod>
     </url>
     <url>
          <loc>https://supercog.ai/agentic/dev/tools/tool-library/meeting-baas-tool/</loc>
-         <lastmod>2025-06-10</lastmod>
+         <lastmod>2025-06-16</lastmod>
     </url>
     <url>
          <loc>https://supercog.ai/agentic/dev/tools/tool-library/playwright-tool/</loc>
-         <lastmod>2025-06-10</lastmod>
+         <lastmod>2025-06-16</lastmod>
     </url>
     <url>
          <loc>https://supercog.ai/agentic/dev/tools/tool-library/rag-tool/</loc>
-         <lastmod>2025-06-10</lastmod>
+         <lastmod>2025-06-16</lastmod>
     </url>
     <url>
          <loc>https://supercog.ai/agentic/dev/tools/tool-library/rest-api-tool/</loc>
-         <lastmod>2025-06-10</lastmod>
+         <lastmod>2025-06-16</lastmod>
     </url>
     <url>
          <loc>https://supercog.ai/agentic/dev/tools/tool-library/scaleserp-browser-tool/</loc>
-         <lastmod>2025-06-10</lastmod>
+         <lastmod>2025-06-16</lastmod>
     </url>
     <url>
          <loc>https://supercog.ai/agentic/dev/tools/tool-library/tavily-search-tool/</loc>
-         <lastmod>2025-06-10</lastmod>
+         <lastmod>2025-06-16</lastmod>
     </url>
     <url>
          <loc>https://supercog.ai/agentic/dev/tools/tool-library/text-to-speech-tool/</loc>
-         <lastmod>2025-06-10</lastmod>
+         <lastmod>2025-06-16</lastmod>
     </url>
     <url>
          <loc>https://supercog.ai/agentic/dev/tools/tool-library/weather-tool/</loc>
-         <lastmod>2025-06-10</lastmod>
+         <lastmod>2025-06-16</lastmod>
     </url>
 </urlset>
