@@ -513,7 +513,7 @@ def index_search(
             client.close()
 
 # Index document commands
-@index_document_app.command("add")
+@index_document_app.command("add_doc")
 def document_add(
     index_name: str,
     file_path: str,
@@ -548,7 +548,7 @@ def document_add(
         console.print(f"[bold red]Error: {str(e)}")
         raise typer.Exit(1)
 
-@index_document_app.command("list")
+@index_document_app.command("list_docs")
 def document_list(index_name: str):
     """List all documents in an index with basic info"""
     from agentic.utils.rag_helper import (
@@ -579,7 +579,7 @@ def document_list(index_name: str):
         if client:
             client.close()
 
-@index_document_app.command("show")
+@index_document_app.command("show_doc")
 def document_show(index_name: str, document_identifier: str):
     """Show detailed metadata for a specific document using its ID or filename/path"""
     from agentic.utils.rag_helper import (
@@ -625,7 +625,7 @@ def document_show(index_name: str, document_identifier: str):
         if client:
             client.close()
 
-@index_document_app.command("delete")
+@index_document_app.command("delete_doc")
 def document_delete(
     index_name: str,
     document_identifier: str,  # Changed from file_path to accept both
