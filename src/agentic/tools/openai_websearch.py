@@ -43,12 +43,8 @@ class OpenAIWebSearchTool(BaseAgenticTool):
             self.perform_web_search,
             self.launch_model
         ]
-
-    def launch_model(self,  run_context: RunContext):
-        """Function to launch the openAI model. Use this function before calling perform_web_search()."""
-        self.client = OpenAI(api_key=run_context.get_secret("OPENAI_API_KEY"))
-
-    def perform_web_search(self, prompt: str):
+    
+    def perform_web_search(self, prompt: str,  run_context: RunContext):
         """
         Function to prompt the model to perform a web search.
 
@@ -58,7 +54,8 @@ class OpenAIWebSearchTool(BaseAgenticTool):
         Returns:
             The message returned by the model
         """
-        completion = self.client.chat.completions.create(
+        client = OpenAI(api_key=run_context.get_secret("OPENAI_API_KEY"))
+        completion = client.chat.completions.create(
             model="gpt-4o-search-preview",
             web_search_options={},
             messages=[
