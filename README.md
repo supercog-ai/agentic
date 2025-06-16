@@ -193,7 +193,7 @@ for event in agent.get_events(request_id):
     print(event)
 ```
 
-[Learn more about Programmtic Access →](https://supercog-ai.github.io/agentic/latest/interacting-with-agents/)
+[Learn more about Programmatic Access →](https://supercog-ai.github.io/agentic/latest/interacting-with-agents/)
 
 ## Dependencies
 
