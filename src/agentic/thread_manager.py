@@ -208,6 +208,10 @@ def reconstruct_chat_history_from_thread_logs(thread_logs: List[ThreadLog]) -> L
         
         # Handle tool results
         elif event_name == "tool_result":
+            if isinstance(event_data, dict):
+                if event_data.get("is_log") == True:
+                    # Skip log messages
+                    continue
             # Find the corresponding tool call
             tool_name = event_data.get("name", "")
             result = event_data.get("result", "")
@@ -220,7 +224,7 @@ def reconstruct_chat_history_from_thread_logs(thread_logs: List[ThreadLog]) -> L
                     break
             
             if call_id is None:
-                call_id = f"call_{tool_name}_{tool_call_counter}"
+                continue  # Skip if no matching tool call found
             
             history.append({
                 "role": "tool",

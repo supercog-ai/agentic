@@ -14,13 +14,6 @@
     secrets list    - List all secrets (use --values to show values)
     secrets get     - Get a secret value
     secrets delete  - Delete a secret
-    
-## Settings Management
-
-    settings set    - Set a setting value
-    settings list   - List all settings
-    settings get    - Get a setting value
-    settings delete - Delete a setting
 
 ## Dashboard Commands
 

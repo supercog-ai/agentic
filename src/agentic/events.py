@@ -149,15 +149,16 @@ class ToolCall(Event):
 class ToolResult(Event):
     result: Any = None
 
-    def __init__(self, agent: str, name: str, result: Any, depth: int = 0):
+    def __init__(self, agent: str, name: str, result: Any, depth: int = 0, intermediate_result: bool = False):
         super().__init__(
             agent=agent,
             type="tool_result",
             payload={
                 "name": name,
-                "result": result
+                "result": result,
+                "is_log": intermediate_result
             },
-            depth=depth
+            depth=depth,
         )
         self.result = result
 

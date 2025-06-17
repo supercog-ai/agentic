@@ -1222,7 +1222,6 @@ class BaseAgentProxy:
                 self._reload_thread_history(thread_id)
 
             self.init_thread_tracking(agent_instance, thread_id or self.thread_id)
-            print("USING THREAD ID: ", self.thread_id)
 
         # Initialize new request
         request_obj = Prompt(

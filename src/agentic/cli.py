@@ -235,7 +235,6 @@ def shell(args: List[str]):
 
 # Create command groups
 secrets_app = typer.Typer(name="secrets", help="Manage secrets")
-settings_app = typer.Typer(name="settings", help="Manage settings")
 dashboard_app = typer.Typer(name="dashboard", help="Manage the dashboard UI")
 index_app = typer.Typer(name="index", help="Manage vector indexes")
 index_document_app = typer.Typer(name="document", help="Manage documents in indexes")
@@ -243,7 +242,6 @@ models_app = typer.Typer(name="models", help="Work with LLM models")
 
 # Register command groups
 app.add_typer(secrets_app)
-app.add_typer(settings_app)
 app.add_typer(dashboard_app)
 app.add_typer(index_app)
 index_app.add_typer(index_document_app)
@@ -276,27 +274,6 @@ def secrets_get(name: str):
 def secrets_delete(name: str):
     """Delete a secret"""
     typer.echo(secrets.delete_secret(name))
-
-# Settings commands
-@settings_app.command("set")
-def settings_set(name: str, value: str):
-    """Set a setting value"""
-    typer.echo(settings.set(name, value))
-
-@settings_app.command("list")
-def settings_list():
-    """List all settings"""
-    typer.echo("\n".join(sorted(settings.list_settings())))
-
-@settings_app.command("get")
-def settings_get(name: str):
-    """Get a setting"""
-    typer.echo(settings.get(name))
-
-@settings_app.command("delete")
-def settings_delete(name: str):
-    """Delete a setting"""
-    typer.echo(settings.delete_setting(name))
 
 # Dashboard commands
 @dashboard_app.callback()

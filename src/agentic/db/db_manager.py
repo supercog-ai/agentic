@@ -71,7 +71,6 @@ class DatabaseManager:
         if 'AGENTIC_DATABASE_URL' in os.environ:
             # Use the database URL from environment variable if set
             dburl = os.environ['AGENTIC_DATABASE_URL']
-            print(f"Connecting to database {dburl}")
             self.engine = create_engine(dburl, echo=False)
             self.db_path = None
         else:

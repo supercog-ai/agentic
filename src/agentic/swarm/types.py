@@ -111,7 +111,7 @@ class ThreadContext:
 
         caller_frame = inspect.currentframe().f_back
         caller_name = inspect.getframeinfo(caller_frame).function
-        event = ToolResult(self.agent_name, caller_name, result=" ".join(map(str, args)))
+        event = ToolResult(self.agent_name, caller_name, result=" ".join(map(str, args)), intermediate_result=True)
         self._log_queue.append(event)
         return event
     
