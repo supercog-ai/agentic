@@ -44,7 +44,7 @@ class OpenAIWebSearchTool(BaseAgenticTool):
             self.perform_web_search,
         ]
 
-    async def perform_web_search(self, prompt: str,  thread_context: ThreadContext) -> str:
+    async def perform_web_search(self, prompt: str,  thread_context: ThreadContext):
         """
         Function to prompt the model to perform a web search.
 
@@ -68,3 +68,34 @@ class OpenAIWebSearchTool(BaseAgenticTool):
 
         return completion.choices[0].message.content
     
+    def format_sources(self, content: str):
+        """
+        Replaces all embedded Markdown links with index numbers and returns a tuple:
+        (formatted_content, sources_dict)
+        where the sources_dict maps index numbers to URLs, and formatted_content is the string result 
+        without long links.
+        """
+        # Pattern to match Markdown links: [text](url)
+        pattern = re.compile(r'\[([^\]]+)\]\((https?://[^\)]+)\)')
+        sources = {}
+        idx = 1
+
+        def replacer(match):
+            nonlocal idx
+            text = match.group(1)
+            url = match.group(2)
+
+            # Don't add existing URLs in the sources dict
+            for key, value in sources.items():
+                if value == url:
+                    return key
+            
+            # If it's not already a source, add it
+            sources[str(idx)] = url
+            replacement = f"{idx}"
+            idx += 1
+            return replacement
+
+        formatted_content = pattern.sub(replacer, content)
+        print(str(formatted_content) + "\n\n" + str(sources))
+        return formatted_content, sources

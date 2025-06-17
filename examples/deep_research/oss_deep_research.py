@@ -278,7 +278,13 @@ provide feedback to regenerate the report plan:\n
             all_results = []
             for query in queries.queries:
                 result = await self.openai_tool.perform_web_search(query.search_query, thread_context)
-                all_results.append(result)
+
+                content, sources = self.openai_tool.format_sources(result)
+                # sources variable is a dictionary that holds all the sources, mapped to indexes
+                # content is the result but with the links replaced with indexes, ex. (4)
+
+                all_results.append(content)
+
             return "\n".join(all_results)
         
         content = asyncio.run(_query_web_content(queries))
