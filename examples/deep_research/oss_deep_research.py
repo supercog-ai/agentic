@@ -1,5 +1,7 @@
 import asyncio
 import os
+import traceback
+import re
 from typing import Any, Generator, List, Optional
 from pydantic import BaseModel, Field
 from datetime import datetime
@@ -8,12 +10,12 @@ from agentic.agentic_secrets import agentic_secrets
 from agentic.common import Agent, AgentRunner, ThreadContext
 from agentic.events import Event, ChatOutput, WaitForInput, Prompt, PromptStarted, TurnEnd, ResumeWithInput
 from agentic.models import GPT_4O_MINI, CLAUDE, GPT_4O
-from agentic.tools import PlaywrightTool, OpenAIWebSearchTool
+from agentic.tools import PlaywrightTool, OpenAIWebSearchTool, TavilySearchTool
 
 # These can take any Litellm model path [see https://supercog-ai.github.io/agentic/Models/]
 # Or use aliases 'GPT_4O' or 'CLAUDE'
-PLANNER_MODEL = GPT_4O
-WRITER_MODEL = GPT_4O
+PLANNER_MODEL = GPT_4O_MINI
+WRITER_MODEL = GPT_4O_MINI
 
 class Section(BaseModel):
     name: str = Field(
@@ -270,43 +272,17 @@ provide feedback to regenerate the report plan:\n
             }
         )
 
-    def query_web_content(self, queries: "Queries", thread_context) -> str:
-        content_max = 20000
+    def query_web_content(self, queries: "Queries", thread_context: ThreadContext) -> str:
 
-        async def _query_web_content(queries: Queries, missing_results: list[str]) -> str:
+        async def _query_web_content(queries: Queries) -> str:
             all_results = []
             for query in queries.queries:
-                missing_pages = []
-                try:
-                    res = await self.openai_tool.perform_web_search(query.search_query)
-                except:
-                    res = []
-                    
-                content = self.openai_tool._deduplicate_and_format_sources(
-                    res, 
-                    content_max, 
-                    missing_pages_list=missing_pages
-                )
-                all_results.append(content)
-                missing_results.extend(missing_pages)
+                result = await self.openai_tool.perform_web_search(query.search_query, thread_context)
+                all_results.append(result)
             return "\n".join(all_results)
         
-        missing_pages = []
-        content = asyncio.run(_query_web_content(queries, missing_pages))
+        content = asyncio.run(_query_web_content(queries))
 
-        # Use playwright browser for missing pages
-        if (
-            self.playwright_fallback and 
-            len(missing_pages) > 0 and 
-            len(content) < content_max
-        ):
-            max_playwright_pages = 3
-            content_tuples = self.playwright_tool.download_pages(thread_context, missing_pages[:max_playwright_pages])
-            for _, title, page_content in content_tuples:
-                if page_content:
-                    content += f"\n\n===\n{title}\n===\n{page_content}\n\n"
-                    if len(content) >= content_max:
-                        break
         return content
 
 class SearchQuery(BaseModel):
