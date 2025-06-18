@@ -1243,12 +1243,10 @@ class BaseAgentProxy:
         if thread_id == 'NEW':
             history = []
         else:
-            print("LOADING THREAD LOGS FOR ID: ", thread_id)
             history = validate_chat_history(
                 reconstruct_chat_history_from_thread_logs(self.get_thread_logs(thread_id))
             )
         update = {"history": history}
-        pprint(update)
         self._update_state(update)
 
     def _create_agent_instance(self, request_id: str):
