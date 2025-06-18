@@ -40,7 +40,7 @@ Some of the _framework_ features:
 - Easy definition and use of tools (functions, class methods, import LangChain tools, ...)
 - Built alongside a set of production-tested tools
 
-Visits the docs: https://supercog-ai.github.io/agentic/latest/
+Visit the docs: https://supercog-ai.github.io/agentic/latest/
 
 ## Pre-built agents you can run today
 
@@ -63,7 +63,7 @@ Your own meeting bot agent with meeting summaries stored into RAG.
 
 ## Install
 
-At this stage it's probably easiest to run this repo from source. We use `uv` for package managment:
+At this stage it's probably easiest to run this repo from source. We use `uv` for package management:
 
 > **Note** If you're on Linux or Windows and installing the `rag` extra you will need to add `--extra-index-url https://download.pytorch.org/whl/cpu` to install the CPU version of PyTorch.
 
@@ -193,7 +193,7 @@ for event in agent.get_events(request_id):
     print(event)
 ```
 
-[Learn more about Programtic Access →](https://supercog-ai.github.io/agentic/latest/interacting-with-agents/)
+[Learn more about Programmatic Access →](https://supercog-ai.github.io/agentic/latest/interacting-with-agents/)
 
 ## Dependencies
 
