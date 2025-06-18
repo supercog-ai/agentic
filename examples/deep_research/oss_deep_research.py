@@ -1,7 +1,4 @@
 import asyncio
-import os
-import traceback
-import re
 from typing import Any, Generator, List, Optional
 from pydantic import BaseModel, Field
 from datetime import datetime
@@ -10,7 +7,8 @@ from agentic.agentic_secrets import agentic_secrets
 from agentic.common import Agent, AgentRunner, ThreadContext
 from agentic.events import Event, ChatOutput, WaitForInput, Prompt, PromptStarted, TurnEnd, ResumeWithInput
 from agentic.models import GPT_4O_MINI, CLAUDE, GPT_4O
-from agentic.tools import PlaywrightTool, OpenAIWebSearchTool, TavilySearchTool
+from agentic.tools import PlaywrightTool, OpenAIWebSearchTool
+from agentic.tools.utils.registry import format_sources
 
 # These can take any Litellm model path [see https://supercog-ai.github.io/agentic/Models/]
 # Or use aliases 'GPT_4O' or 'CLAUDE'
@@ -278,11 +276,7 @@ provide feedback to regenerate the report plan:\n
             all_results = []
             for query in queries.queries:
                 result = await self.openai_tool.perform_web_search(query.search_query, thread_context)
-
-                content, sources = self.openai_tool.format_sources(result)
-                # sources variable is a dictionary that holds all the sources, mapped to indexes
-                # content is the result but with the links replaced with indexes, ex. (4)
-
+                content = format_sources(result)
                 all_results.append(content)
 
             return "\n".join(all_results)
