@@ -1,4 +1,4 @@
-import { isUserTurn } from '@/lib/utils';
+import { isUserRun } from '@/lib/utils';
 
 export enum AgentEventType {
   ADD_CHILD = 'add_child',
@@ -15,8 +15,8 @@ export enum AgentEventType {
   TOOL_CALL = 'tool_call',
   TOOL_ERROR = 'tool_error',
   TOOL_RESULT = 'tool_result',
-  TURN_CANCELLED = 'turn_cancelled',
-  TURN_END = 'turn_end',
+  run_CANCELLED = 'run_cancelled',
+  run_END = 'run_end',
   WAIT_FOR_INPUT = 'wait_for_input'
 }
 
@@ -128,8 +128,8 @@ export const agenticApi = {
       try {
         const data = JSON.parse(event.data) as Api.AgentEvent;
         onEvent(data);
-        // Close the event source when the agent's turn ends
-        if (isUserTurn(agentName, data)) {
+        // Close the event source when the agent's run ends
+        if (isUserRun(agentName, data)) {
           eventSource.close();
         }
       } catch (error) {

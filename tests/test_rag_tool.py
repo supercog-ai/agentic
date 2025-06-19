@@ -25,13 +25,13 @@ def runner(rag_agent):
 def test_save_content_to_index(runner):
     # Test basic content saving
     url = "https://raw.githubusercontent.com/deepseek-ai/DeepSeek-R1/refs/heads/main/README.md"
-    response = runner.turn(f"Save the {url} to index 'pytest_save'")
+    response = runner.run(f"Save the {url} to index 'pytest_save'")
     assert ("Indexed" in response and "pytest_save" in response) or "README.md" in response
 
 @pytest.mark.requires_llm
 def test_search_knowledge_index(runner):
     # Test search
-    response = runner.turn("Search for 'deepseek' in index 'pytest_save'")
+    response = runner.run("Search for 'deepseek' in index 'pytest_save'")
     # The response should be a list (or serialized list)
     if isinstance(response, str):
         import json
@@ -47,10 +47,10 @@ def test_search_knowledge_index(runner):
 @pytest.mark.requires_llm
 def test_list_documents(runner):
 
-    response = runner.turn("List documents in index 'pytest_save'")
+    response = runner.run("List documents in index 'pytest_save'")
     assert "readme.md" in str(response).lower()
 
 @pytest.mark.requires_llm
 def test_review_full_document(runner):
-    response = runner.turn(f"Review document readme.md in index 'pytest_save'")
+    response = runner.run(f"Review document readme.md in index 'pytest_save'")
     assert len(response) > 0  # Just check that we got some content back

@@ -6,7 +6,7 @@ from datetime import datetime
 
 from agentic.agentic_secrets import agentic_secrets
 from agentic.common import Agent, AgentRunner, ThreadContext
-from agentic.events import Event, ChatOutput, WaitForInput, Prompt, PromptStarted, TurnEnd, ResumeWithInput
+from agentic.events import Event, ChatOutput, WaitForInput, Prompt, PromptStarted, RunEnd, ResumeWithInput
 from agentic.models import GPT_4O_MINI, CLAUDE, GPT_4O
 from agentic.tools import PlaywrightTool, TavilySearchTool
 
@@ -112,7 +112,7 @@ class DeepResearchAgent(Agent):
             model=WRITER_MODEL
         )
 
-    def next_turn(
+    def next_run(
         self,
         request: str|Prompt,
         request_context: dict = {},
@@ -123,7 +123,7 @@ class DeepResearchAgent(Agent):
         """Main workflow orchestration"""
 
         if not continue_result:
-        # Starting a new turn with a Prompt
+        # Starting a new run with a Prompt
             self.topic = request.payload if isinstance(request, Prompt) else request
             prompt_event = PromptStarted(
                 self.name,
@@ -131,7 +131,7 @@ class DeepResearchAgent(Agent):
             )
             yield prompt_event
         else:
-            # Resuming a previous turn with ResumeWithInput
+            # Resuming a previous run with ResumeWithInput
             resume_event = ResumeWithInput(
                 self.name,
                 continue_result,
@@ -192,7 +192,7 @@ provide feedback to regenerate the report plan:\n
         if self.sections_limit:
             self.sections.sections = self.sections.sections[:self.sections_limit]
 
-        # Do web research and writing for each section in turn
+        # Do web research and writing for each section in run
         for idx, section in enumerate(self.sections.sections):
             yield from self.process_section(section, idx)
 
@@ -233,7 +233,7 @@ provide feedback to regenerate the report plan:\n
             }
         )
 
-        yield TurnEnd(
+        yield RunEnd(
             self.name,
             [{"role": "assistant", "content": report}],
             thread_context=None,

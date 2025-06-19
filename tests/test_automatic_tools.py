@@ -5,7 +5,7 @@ from agentic.tools import AutomaticTools, DatabaseTool, GoogleNewsTool, WeatherT
 from agentic.common import ThreadContext, Agent
 
 def a_dummy_tool_function(name: str):
-    """ This turns the parameter into a dummy. """
+    """ This runs the parameter into a dummy. """
     return name + " is a dummy"
 
 @pytest.fixture

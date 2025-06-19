@@ -50,11 +50,11 @@ from agentic.events import (
     ChatOutput,
     ToolCall,
     ToolResult,
-    TurnCancelledError,
+    RunCancelledError,
     StartCompletion,
     FinishCompletion,
     FinishAgentResult,
-    TurnEnd,
+    RunEnd,
     SetState,
     AddChild,
     WaitForInput,
@@ -76,8 +76,8 @@ from agentic.models import get_special_model_params, mock_provider
 __CTX_VARS_NAME__ = "thread_context"
 __LEGACY_CTX_VARS_NAME__ = "run_context"
 
-# define a CallbackType Enum with values: "handle_turn_start", "handle_event", "handle_turn_end"
-CallbackType = Literal["handle_turn_start", "handle_event", "handle_turn_end"]
+# define a CallbackType Enum with values: "handle_run_start", "handle_event", "handle_run_end"
+CallbackType = Literal["handle_run_start", "handle_event", "handle_run_end"]
 
 # make a Callable type that expects a Prompt and ThreadContext
 CallbackFunc = Callable[[Event, ThreadContext], None]
@@ -118,7 +118,7 @@ class ActorBaseAgent:
     depth: int = 0
     children: dict = {}
     history: list = []
-    # Memories are static facts that are always injected into the context on every turn
+    # Memories are static facts that are always injected into the context on every run
     memories: list[str] = []
     # The Actor who sent us our Prompt
     max_tokens: int = None
@@ -354,7 +354,7 @@ class ActorBaseAgent:
                     # write generate functions as long as they yield events. Or we could catch
                     # strings and wrap them as events.
                     for child_event in function_map[name](**args):
-                        if isinstance(child_event, TurnEnd):
+                        if isinstance(child_event, RunEnd):
                             raw_result = child_event.result
                             events.append(child_event)
                         elif isinstance(child_event, Result):
@@ -456,8 +456,8 @@ class ActorBaseAgent:
                 self.thread_context.thread_id = actor_message.request_context["thread_id"]  
 
             # Middleware to modify the input prompt (or change agent context)
-            if self._callbacks.get('handle_turn_start'):
-                self._callbacks['handle_turn_start'](actor_message, self.thread_context)
+            if self._callbacks.get('handle_run_start'):
+                self._callbacks['handle_run_start'](actor_message, self.thread_context)
                 
             self.debug = actor_message.debug
             self.depth = actor_message.depth
@@ -547,11 +547,11 @@ class ActorBaseAgent:
             self.history.extend(partial_response.messages)
 
         # We have already emitted history for intervening events, and I think we just look at the
-        # last message from TurnEnd anyway. So probably we just want to publish a single result here.
-        # You can see it in TurnEnd.result which just returns the "content" part of the last message.
-        yield TurnEnd(
+        # last message from RunEnd anyway. So probably we just want to publish a single result here.
+        # You can see it in RunEnd.result which just returns the "content" part of the last message.
+        yield RunEnd(
             self.name,
-            # result_model gets applied when TurnEnd is processed. We dont want to alter the the text response in history
+            # result_model gets applied when RunEnd is processed. We dont want to alter the the text response in history
             deepcopy(self.history[init_len:]),
             self.thread_context,
             self.depth
@@ -810,8 +810,8 @@ class ActorBaseAgent:
         if 'history' in state:
             self.history = state["history"]
 
-        if "handle_turn_start" in state:
-            self._callbacks["handle_turn_start"] = state["handle_turn_start"]
+        if "handle_run_start" in state:
+            self._callbacks["handle_run_start"] = state["handle_run_start"]
 
         # Update our functions
         if "functions" in state:
@@ -948,9 +948,9 @@ depthLocal.depth = -1
 # The common agent proxy interface
 # The core of the interface is 'start_request' and 'get_events'. Use these in
 # pairs to request operation threads from the agent.
-# It is deprecated to call 'next_turn' directly now.
+# It is deprecated to call 'next_run' directly now.
 #
-# Subclasses can override next_turn to do their own orchestration logic.
+# Subclasses can override next_run to do their own orchestration logic.
 
 class BaseAgentProxy:
     """Base agent proxy class with common functionality. Manages multiple parallel
@@ -972,7 +972,7 @@ class BaseAgentProxy:
         max_tokens: int = None,
         db_path: Optional[str | Path] = "./agent_threads.db",
         memories: list[str] = [],
-        handle_turn_start: Callable[[Prompt, ThreadContext], None] = None,
+        handle_run_start: Callable[[Prompt, ThreadContext], None] = None,
         result_model: Type[BaseModel]|None = None,
         debug: DebugLevel = DebugLevel(os.environ.get("AGENTIC_DEBUG") or ""),
         mock_settings: dict = None,
@@ -999,7 +999,7 @@ class BaseAgentProxy:
         self.max_tokens = max_tokens
         self.memories = memories
         self.debug = debug
-        self._handle_turn_start = handle_turn_start
+        self._handle_run_start = handle_run_start
         self.request_queues: dict[str,Queue] = {}
         self.result_model = result_model
         self.queue_done_sentinel = "QUEUE_DONE"
@@ -1317,7 +1317,7 @@ class BaseAgentProxy:
 
         def producer(queue, request_obj, continue_result):
             depthLocal.depth = request_obj.depth
-            for event in self._next_turn(request_obj, request_context=request_context, continue_result=continue_result, request_id=request_id):
+            for event in self._next_run(request_obj, request_context=request_context, continue_result=continue_result, request_id=request_id):
                 queue.put(event)
             queue.put(self.queue_done_sentinel)
             # Cleanup the agent instance when done
@@ -1360,12 +1360,12 @@ class BaseAgentProxy:
         
         depthLocal.depth -= 1
 
-    def next_turn(self, request: str | Prompt, request_context: dict = {},
+    def next_run(self, request: str | Prompt, request_context: dict = {},
               request_id: str = None, continue_result: dict = {},
               debug: DebugLevel = DebugLevel(DebugLevel.OFF)) -> Generator[Event, Any, Any]:
         """
         Default agent orchestration logic. Subclasses may override this.
-        If not overridden, this handles prompt/resume and returns generator from agent.
+        If not overridden, this handles run/resume and returns generator from agent.
         """
         # Get agent instance
         agent_instance = self._get_agent_for_request(request_id)
@@ -1399,11 +1399,11 @@ class BaseAgentProxy:
             return self._get_resume_generator(agent_instance, resume_input)
 
 
-    def _next_turn(self, request: str | Prompt, request_context: dict = {},
+    def _next_run(self, request: str | Prompt, request_context: dict = {},
                request_id: str = None, continue_result: dict = {},
                debug: DebugLevel = DebugLevel(DebugLevel.OFF)) -> Generator[Event, Any, Any]:
         """
-        Wraps `next_turn` to add thread tracking and handle_event logging.
+        Wraps `next_run` to add thread tracking and handle_event logging.
         Always used internally by the proxy to ensure consistent behavior.
         """
         self.cancelled = False
@@ -1429,8 +1429,8 @@ class BaseAgentProxy:
         # Add thread_id into context explicitly so child agents inherit it
         request_context = {**request_context, "thread_id": self.thread_id}
 
-        # Call the user’s or default next_turn
-        event_gen = self.next_turn(
+        # Call the user’s or default next_run
+        event_gen = self.next_run(
             request=request,
             request_context=request_context,
             request_id=request_id,
@@ -1441,11 +1441,11 @@ class BaseAgentProxy:
         # Central logging of all events
         for event in self._process_generator(event_gen):
             if self.cancelled:
-                raise TurnCancelledError()
+                raise RunCancelledError()
 
-            # Handle TurnEnd result validation
-            if isinstance(event, TurnEnd):
-                event = self._process_turn_end(event)
+            # Handle RunEnd result validation
+            if isinstance(event, RunEnd):
+                event = self._process_run_end(event)
 
             yield event
 
@@ -1475,8 +1475,8 @@ class BaseAgentProxy:
         """Process generator events - to be implemented by subclasses"""
         pass
         
-    def _process_turn_end(self, event):
-        """Process TurnEnd event to handle result model validation"""
+    def _process_run_end(self, event):
+        """Process RunEnd event to handle result model validation"""
         if isinstance(event.result, str) and self.result_model:
             try:
                 event.set_result(self.result_model.model_validate_json(event.result))
@@ -1505,15 +1505,15 @@ class BaseAgentProxy:
             request_context=request_context, 
             debug=self.debug
         ).request_id
-        turn_end = None
+        run_end = None
         for event in self.get_events(request_id):
             if event_handler:
                 event_handler(event)
             yield event
-            if isinstance(event, TurnEnd):
-                turn_end = event
-        if turn_end:
-            return turn_end.result
+            if isinstance(event, RunEnd):
+                run_end = event
+        if run_end:
+            return run_end.result
         else:
             return event
 
@@ -1521,7 +1521,7 @@ class BaseAgentProxy:
         """Convenience method to get the final result of a request"""
         try:
             items = list(self.final_result(request, request_context))
-            if isinstance(items[-1], TurnEnd):
+            if isinstance(items[-1], RunEnd):
                 return items[-1].result
             else:
                 return items[-1]
@@ -1578,15 +1578,15 @@ class RayAgentProxy(BaseAgentProxy):
                     "model": self.model,
                     "max_tokens": self.max_tokens,
                     "memories": self.memories,
-                    "handle_turn_start": self._handle_turn_start,
+                    "handle_run_start": self._handle_run_start,
                     "result_model": self.result_model,
                     "reasoning_effort": self.reasoning_effort,
                 },
             ),
         )
         ray.get(obj_ref)
-        if self._handle_turn_start:
-            agent.set_callback.remote("handle_turn_start", self._handle_turn_start)
+        if self._handle_run_start:
+            agent.set_callback.remote("handle_run_start", self._handle_run_start)
 
         if request_id is None:
             self._agent = agent
@@ -1675,7 +1675,7 @@ class LocalAgentProxy(BaseAgentProxy):
             "max_tokens": self.max_tokens,
             "memories": self.memories,
             "debug": self.debug,
-            "handle_turn_start": self._handle_turn_start,
+            "handle_run_start": self._handle_run_start,
             "result_model": self.result_model,
             "prompts": self.prompts,
             "db_path": self.db_path,
@@ -1700,14 +1700,14 @@ class LocalAgentProxy(BaseAgentProxy):
                     "model": self.model,
                     "max_tokens": self.max_tokens,
                     "memories": self.memories,
-                    "handle_turn_start": self._handle_turn_start,
+                    "handle_run_start": self._handle_run_start,
                     "result_model": self.result_model,
                     "reasoning_effort": self.reasoning_effort,
                 },
             ),
         )        
-        if self._handle_turn_start:
-            agent.set_callback("handle_turn_start", self._handle_turn_start)
+        if self._handle_run_start:
+            agent.set_callback("handle_run_start", self._handle_run_start)
 
         if request_id is None:
             self._agent = agent

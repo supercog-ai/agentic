@@ -15,7 +15,7 @@ def test_agent():
     assert agent.instructions == "You are a helpful assistant."
 
     agent_runnner = AgentRunner(agent)
-    response = agent_runnner.turn("please tell me hello")
+    response = agent_runnner.run("please tell me hello")
     assert "hello" in response.lower(), response
 
 @pytest.mark.requires_llm
@@ -37,7 +37,7 @@ Then call agent B once with the request 'run'
     )
 
     agent_runnner = AgentRunner(agent)
-    response = agent_runnner.turn("run your instructions")
+    response = agent_runnner.run("run your instructions")
     assert "99" in response.lower(), response
 
 @pytest.mark.requires_llm
@@ -81,5 +81,5 @@ def test_simple_tool_use():
     )
 
     agent_runnner = AgentRunner(agent)
-    response = agent_runnner.turn("read the file")
+    response = agent_runnner.run("read the file")
     assert "world" in response.lower(), response

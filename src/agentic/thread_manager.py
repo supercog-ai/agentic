@@ -7,7 +7,7 @@ from .events import (
     Event,
     PromptStarted,
     Output,
-    TurnEnd,
+    RunEnd,
     FinishCompletion,
     ToolCall,
     ToolResult,
@@ -27,7 +27,7 @@ class ThreadManager:
     
     def __init__(self, initial_thread_id: Optional[str] = None, db_path: str = "agent_threads.db"):
         self.initial_thread_id: Optional[str] = initial_thread_id
-        # Should this not be propagated from the next_turn?
+        # Should this not be propagated from the next_run?
         self.usage_data: Dict = {}
         self.db_path = get_runtime_filepath(db_path)
         self.db_manager = DatabaseManager(db_path=self.db_path)
@@ -93,7 +93,7 @@ class ThreadManager:
                 "usage": self.usage_data
             }
 
-        elif isinstance(event, TurnEnd):
+        elif isinstance(event, RunEnd):
             event_data = {}
             
         try:
@@ -110,8 +110,8 @@ class ThreadManager:
             traceback.print_exc()
             print(f"Error logging event {event_name} for thread {thread_context.thread_id}: {e}. Data: {event_data}")
 
-        # Reset usage tracking after a turn ends
-        if isinstance(event, TurnEnd):
+        # Reset usage tracking after a run ends
+        if isinstance(event, RunEnd):
             self.usage_data = {}
 
 def init_thread_tracking(
@@ -270,13 +270,13 @@ def reconstruct_chat_history_from_thread_logs(thread_logs: List[ThreadLog]) -> L
                 current_assistant_message = None
                 current_tool_calls = []
         
-        # Handle turn end - ensure any pending assistant message is added
-        elif event_name == "turn_end":
+        # Handle run end - ensure any pending assistant message is added
+        elif event_name == "run_end":
             if current_assistant_message is not None:
                 history.append(current_assistant_message)
                 current_assistant_message = None
             
-            # Reset tool calls for next turn
+            # Reset tool calls for next run
             current_tool_calls = []
     
     # Handle any remaining assistant message at the end
@@ -319,40 +319,40 @@ def reconstruct_chat_history_with_filtering(
 
 
 # NOT USED YET
-def get_last_n_turns(thread_logs: List[ThreadLog], n_turns: int = 5) -> List[Dict[str, Any]]:
+def get_last_n_runs(thread_logs: List[ThreadLog], n_runs: int = 5) -> List[Dict[str, Any]]:
     """
-    Get the last N conversation turns from thread logs.
+    Get the last N conversation runs from thread logs.
     
     Args:
         thread_logs: List of ThreadLog objects from the database
-        n_turns: Number of turns to include (user message + assistant response = 1 turn)
+        n_runs: Number of runs to include (user message + assistant response = 1 run)
         
     Returns:
-        List of chat messages for the last N turns
+        List of chat messages for the last N runs
     """
-    # Find TurnEnd events to identify turn boundaries
-    turn_boundaries = []
+    # Find RunEnd events to identify run boundaries
+    run_boundaries = []
     for i, log in enumerate(thread_logs):
-        if log.event_name == "TurnEnd":
-            turn_boundaries.append(i)
+        if log.event_name == "RunEnd":
+            run_boundaries.append(i)
     
-    if not turn_boundaries:
-        # No turns found, return all
+    if not run_boundaries:
+        # No runs found, return all
         return reconstruct_chat_history_from_thread_logs(thread_logs)
     
-    # Get the last n_turns boundaries
-    last_turns = turn_boundaries[-n_turns:] if len(turn_boundaries) >= n_turns else turn_boundaries
+    # Get the last n_runs boundaries
+    last_runs = run_boundaries[-n_runs:] if len(run_boundaries) >= n_runs else run_boundaries
     
-    if not last_turns:
+    if not last_runs:
         return []
     
-    # Find the start index for the first turn we want to include
+    # Find the start index for the first run we want to include
     start_idx = 0
-    if len(last_turns) > 0:
-        # Look for the previous TurnEnd or start of logs
-        first_turn_end = last_turns[0]
-        # Find the PromptStarted that begins this turn
-        for i in range(first_turn_end, -1, -1):
+    if len(last_runs) > 0:
+        # Look for the previous RunEnd or start of logs
+        first_run_end = last_runs[0]
+        # Find the PromptStarted that begins this run
+        for i in range(first_run_end, -1, -1):
             if thread_logs[i].event_name == "PromptStarted":
                 start_idx = i
                 break

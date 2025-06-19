@@ -31,7 +31,7 @@ const EVENT_TYPES: Record<string, AgentEventType[]> = {
   COMPLETION: [AgentEventType.COMPLETION_START, AgentEventType.COMPLETION_END, AgentEventType.REASONING_CONTENT],
   OUTPUT: [AgentEventType.CHAT_OUTPUT, AgentEventType.OUTPUT],
   TOOLS: [AgentEventType.TOOL_CALL, AgentEventType.TOOL_RESULT, AgentEventType.TOOL_ERROR],
-  TURN_COMPLETION: [AgentEventType.WAIT_FOR_INPUT, AgentEventType.TURN_END, AgentEventType.TURN_CANCELLED],
+  run_COMPLETION: [AgentEventType.WAIT_FOR_INPUT, AgentEventType.run_END, AgentEventType.run_CANCELLED],
   STATE_MANAGEMENT: [AgentEventType.SET_STATE, AgentEventType.ADD_CHILD, AgentEventType.RESET_HISTORY],
   OTHER: [] as AgentEventType[]
 };
@@ -42,7 +42,7 @@ const EventLogs: React.FC<EventLogsProps> = ({ events, onClose, className = '' }
     COMPLETION: true,
     OUTPUT: true,
     TOOLS: true,
-    TURN_COMPLETION: true,
+    run_COMPLETION: true,
     STATE_MANAGEMENT: true,
     OTHER: true
   });
@@ -172,8 +172,8 @@ const EventLogs: React.FC<EventLogsProps> = ({ events, onClose, className = '' }
       case AgentEventType.CHAT_OUTPUT:
       case AgentEventType.OUTPUT:
         return 'text-indigo-400';
-      case AgentEventType.TURN_END:
-      case AgentEventType.TURN_CANCELLED:
+      case AgentEventType.run_END:
+      case AgentEventType.run_CANCELLED:
         return 'text-teal-500';
       case AgentEventType.WAIT_FOR_INPUT:
         return 'text-orange-500';
