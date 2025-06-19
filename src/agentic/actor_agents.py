@@ -1370,7 +1370,7 @@ class BaseAgentProxy:
               debug: DebugLevel = DebugLevel(DebugLevel.OFF)) -> Generator[Event, Any, Any]:
         """
         Default agent orchestration logic. Subclasses may override this.
-        If not overridden, this handles prompt/resume and returns generator from agent.
+        If not overridden, this handles run/resume and returns generator from agent.
         """
         # Get agent instance
         agent_instance = self._get_agent_for_request(request_id)

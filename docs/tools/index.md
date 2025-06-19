@@ -12,7 +12,7 @@ better "off the shelf" tools all the time.)
 
 At root, tools are exposing _functions_ to your Agent. Using the _tool calling_ protocol developed
 by OpenAI, your agent elects to call tools by generating a text block in its output, and this
-output is parsed by the framework and turned into the actual function call.
+output is parsed by the framework and runed into the actual function call.
 
 > Side node: The _smolagents_ library from Huggingface promotes the idea of using 
 > [CodeAgents](https://huggingface.co/blog/smolagents#code-agents) instead of tool calling. Some
