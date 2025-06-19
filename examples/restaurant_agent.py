@@ -1,7 +1,7 @@
 import os
 from agentic.common import Agent, AgentRunner
+from agentic.tools import GooglePlacesTool, GoogleGeocodingTool
 from openai import OpenAI
-from agentic.tools import GooglePlacesTool
 
 def rank_restaurants_with_llm(places_api_data, user_preferences):
     """
@@ -62,7 +62,7 @@ Include the ranking, reasoning for each choice, and any additional suggestions.
         return f"Error generating ranking report: {e}"
 
 # Example usage
-if __name__ == "__main__":
+###if __name__ == "__main__":
     # Sample data
     places_api_data = {
         "places": [
@@ -122,18 +122,23 @@ if __name__ == "__main__":
 
     # Generate and print the ranking report
     report = rank_restaurants_with_llm(places_api_data, preferences)
-    print(report)
+    print(report)###
+
+restaurant_agent = Agent(
+        name="Restaurant Agent",
+        welcome="""I am the Restaurant Recommendation Agent.
+Provide your location, the max distance you're willing to travel, time you're planning on eating, food type, and any other preferences and I'll rank relevant restaurants in your area.
+""",
+        instructions="""You provide restaurant recommendations based on location and user preferences.
+The user will input a location, a max distance, a time for eating, what type of food they want to eat, and any other preferences.
+You must call the GoogleGeocodingTool to get the longitude and latitude of the location, and then use the GooglePlacesTool to find nearby restaurants.
+When you are done with this, generate a ranking according to the user's preferences.
+If you get a tool error, stop.
+""",
+        tools=[GooglePlacesTool(), GoogleGeocodingTool()],
+)
 
 if __name__ == "__main__":
-    restaurant_agent = Agent(
-        name="Restaurant Agent",
-        welcome="I am the Restaurant Recommendation Agent. Ask me about restaurants nearby including your preferences.",
-        instructions="""
-    You provide restaurant recommendations based on location and user preferences. 
-    """,
-        tools=[GooglePlacesTool()],
-    )
-
     AgentRunner(restaurant_agent).repl_loop()
     
 # Data format: {

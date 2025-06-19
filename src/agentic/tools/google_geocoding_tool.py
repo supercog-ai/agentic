@@ -85,7 +85,7 @@ class GoogleGeocodingTool(BaseAgenticTool):
             )
         
         # Log the operation
-        thread_context.info(f"Calling Google Geogoding API")
+        thread_context.info(f"Calling Google Geocoding API")
         thread_context.debug(f"Address: {address}")
 
         params = {

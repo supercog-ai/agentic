@@ -66,8 +66,8 @@ class GooglePlacesTool(BaseAgenticTool):
     latitude: float,
     longitude: float,
     maxResultCount: int = 10,
-    field_mask: str = "places.name,places.priceRange,places.rating",
-    radius: float = 500,
+    field_mask: str = "places.displayName,places.priceRange,places.rating",
+    radius: float = 1000,
     ):
         """
         Wrapper for the Nearby Search API.
