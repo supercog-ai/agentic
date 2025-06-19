@@ -9,8 +9,8 @@ from agentic.tools.utils.registry import tool_registry, ConfigRequirement
 from agentic.common import ThreadContext, PauseForInputResult
 
 @tool_registry.register(
-    name="GooglePlacesTool",
-    description="Tool for interacting with the Google Places API",
+    name="GoogleGeocodingTool",
+    description="Tool for interacting with the Google Geocoding API",
     dependencies=[],  # List any required pip packages here that are not already in the pyproject.toml
     config_requirements=[
         # List any required configuration settings here
@@ -22,15 +22,15 @@ from agentic.common import ThreadContext, PauseForInputResult
     ],
 )
 
-class GooglePlacesTool(BaseAgenticTool):
+class GoogleGeocodingTool(BaseAgenticTool):
     
     # Instance variables for configuration
     api_key: Optional[str]
     base_url: str
 
-    def __init__(self, api_key: str = None, base_url: str = "https://places.googleapis.com/v1/places:"):
+    def __init__(self, api_key: str = None, base_url: str = "https://maps.googleapis.com/maps/api/geocode/json"):
         """
-        Initialize the Google Places tool.
+        Initialize the Google Geocoding tool.
         
         Args:
             api_key: Optional API key for authentication, can also be provided via secrets
@@ -58,30 +58,22 @@ class GooglePlacesTool(BaseAgenticTool):
             List of callable methods
         """
         return [
-            self.nearby_search
+            self.geocode,
         ]
 
-    async def nearby_search(self,
+    async def geocode(self,
     thread_context: ThreadContext,
-    latitude: float,
-    longitude: float,
-    maxResultCount: int = 10,
-    field_mask: str = "places.name,places.priceRange,places.rating",
-    radius: float = 500,
+    address: str
     ):
         """
-        Wrapper for the Nearby Search API.
-        Docs: https://developers.google.com/maps/documentation/places/web-service/nearby-search
+        Wrapper for the Geocoding API.
+        Docs: https://developers.google.com/maps/documentation/geocoding/requests-geocoding
         
         Parameters:
-            latitude: Search center
-            longitude: Search center
-            maxResultCount: Maximum number of results to return (default 10)
-            field_mask: The fields to return WITHOUT space separated commas (eg. places.name,places.priceRange,places.rating)
-            radius: Search radius (default 1000)
+            address: Street address or plus code to be geocoded. Addresses should be formatted in the same format as the national post service of the country.
 
         Returns:
-            DataFrame containing the query results
+            Query results JSON object, including lat/long coordinates of the address.
         """
 
         api_key = os.environ.get("GOOGLE_API_KEY")
@@ -93,46 +85,18 @@ class GooglePlacesTool(BaseAgenticTool):
             )
         
         # Log the operation
-        thread_context.info(f"Calling Google API: Nearby Search")
-        thread_context.info(f"Location: {latitude}, {longitude}")
-
-        headers = {
-            "Content-Type" : "application/json",
-            "X-Goog-Api-Key" : f"{api_key}",
-            "X-Goog-FieldMask" : f"places.displayName"
-        }
+        thread_context.info(f"Calling Google Geogoding API")
+        thread_context.debug(f"Address: {address}")
 
         params = {
-            "maxResultCount": maxResultCount,
-            "locationRestriction" : {
-                "circle": {
-                    "center": {
-                        "latitude": latitude,
-                        "longitude": longitude,
-                    },
-                    "radius": radius
-                }
-            }
-        }
-
-        params = {
-            "maxResultCount": 10,
-            "locationRestriction" : {
-                "circle": {
-                    "center": {
-                        "latitude": 43.874168,
-                        "longitude": -79.258743,
-                    },
-                    "radius": 500
-                }       
-            }
+            "address": address,
+            "key" : f"{api_key}"
         }
 
         async with httpx.AsyncClient() as client:
             response = await client.post(
-                f"{self.base_url}searchNearby",
-                headers=headers,
-                json=params,
+                f"{self.base_url}",
+                params=params,
                 timeout=30,
             )
 
