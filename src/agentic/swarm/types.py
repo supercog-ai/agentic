@@ -1,3 +1,5 @@
+import time
+from queue import Queue
 from openai.types.chat import ChatCompletionMessage
 from openai.types.chat.chat_completion_message_tool_call import (
     ChatCompletionMessageToolCall,
@@ -63,6 +65,8 @@ class DebugLevel:
     def __str__(self) -> str:
         return str(self.level)
 
+EVENT_QUEUE_KEY = "_event_queue"
+
 
 class ThreadContext:
     def __init__(
@@ -81,6 +85,7 @@ class ThreadContext:
         self.thread_id = thread_id
         self.api_endpoint = api_endpoint
         self._log_queue: list = []
+        self._event_queue: Queue| None = self._context.get(EVENT_QUEUE_KEY, None)
 
     def __getitem__(self, key):
         return self._context.get(key, None)
@@ -93,6 +98,8 @@ class ThreadContext:
 
     def update(self, context: dict) -> "ThreadContext":
         self._context.update(context)
+        if '_event_queue' in context:
+            self._event_queue = context[EVENT_QUEUE_KEY]
         return self
 
     def get_agent(self) -> "Agent":
@@ -112,7 +119,11 @@ class ThreadContext:
         caller_frame = inspect.currentframe().f_back
         caller_name = inspect.getframeinfo(caller_frame).function
         event = ToolResult(self.agent_name, caller_name, result=" ".join(map(str, args)), intermediate_result=True)
-        self._log_queue.append(event)
+        if self._event_queue:
+            self._event_queue.put(event)
+            time.sleep(0)
+        else:
+            self._log_queue.append(event)
         return event
     
     def get_logs(self):
