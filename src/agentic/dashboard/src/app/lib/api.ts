@@ -15,8 +15,8 @@ export enum AgentEventType {
   TOOL_CALL = 'tool_call',
   TOOL_ERROR = 'tool_error',
   TOOL_RESULT = 'tool_result',
-  run_CANCELLED = 'run_cancelled',
-  run_END = 'run_end',
+  RUN_CANCELLED = 'run_cancelled',
+  RUN_END = 'run_end',
   WAIT_FOR_INPUT = 'wait_for_input'
 }
 
