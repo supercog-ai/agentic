@@ -1,5 +1,7 @@
 import os
+from agentic.common import Agent, AgentRunner
 from openai import OpenAI
+from agentic.tools import GooglePlacesTool
 
 def rank_restaurants_with_llm(places_api_data, user_preferences):
     """
@@ -7,160 +9,9 @@ def rank_restaurants_with_llm(places_api_data, user_preferences):
 
     Args:
         places_api_data (list): A list of dictionaries containing restaurant information from the Places API.  
-            Data format: {
-                "name": string,
-                "id": string,
-                "displayName": {
-                    object (LocalizedText)
-                },
-                "types": [
-                    string
-                ],
-                "primaryType": string,
-                "primaryTypeDisplayName": {
-                    object (LocalizedText)
-                },
-                "nationalPhoneNumber": string,
-                "internationalPhoneNumber": string,
-                "formattedAddress": string,
-                "shortFormattedAddress": string,
-                "postalAddress": {
-                    object (PostalAddress)
-                },
-                "addressComponents": [
-                    {
-                    object (AddressComponent)
-                    }
-                ],
-                "plusCode": {
-                    object (PlusCode)
-                },
-                "location": {
-                    object (LatLng)
-                },
-                "viewport": {
-                    object (Viewport)
-                },
-                "rating": number,
-                "googleMapsUri": string,
-                "websiteUri": string,
-                "reviews": [
-                    {
-                    object (Review)
-                    }
-                ],
-                "regularOpeningHours": {
-                    object (OpeningHours)
-                },
-                "timeZone": {
-                    object (TimeZone)
-                },
-                "photos": [
-                    {
-                    object (Photo)
-                    }
-                ],
-                "adrFormatAddress": string,
-                "businessStatus": enum (BusinessStatus),
-                "priceLevel": enum (PriceLevel),
-                "attributions": [
-                    {
-                    object (Attribution)
-                    }
-                ],
-                "iconMaskBaseUri": string,
-                "iconBackgroundColor": string,
-                "currentOpeningHours": {
-                    object (OpeningHours)
-                },
-                "currentSecondaryOpeningHours": [
-                    {
-                    object (OpeningHours)
-                    }
-                ],
-                "regularSecondaryOpeningHours": [
-                    {
-                    object (OpeningHours)
-                    }
-                ],
-                "editorialSummary": {
-                    object (LocalizedText)
-                },
-                "paymentOptions": {
-                    object (PaymentOptions)
-                },
-                "parkingOptions": {
-                    object (ParkingOptions)
-                },
-                "subDestinations": [
-                    {
-                    object (SubDestination)
-                    }
-                ],
-                "fuelOptions": {
-                    object (FuelOptions)
-                },
-                "evChargeOptions": {
-                    object (EVChargeOptions)
-                },
-                "generativeSummary": {
-                    object (GenerativeSummary)
-                },
-                "containingPlaces": [
-                    {
-                    object (ContainingPlace)
-                    }
-                ],
-                "addressDescriptor": {
-                    object (AddressDescriptor)
-                },
-                "googleMapsLinks": {
-                    object (GoogleMapsLinks)
-                },
-                "priceRange": {
-                    object (PriceRange)
-                },
-                "reviewSummary": {
-                    object (ReviewSummary)
-                },
-                "evChargeAmenitySummary": {
-                    object (EvChargeAmenitySummary)
-                },
-                "neighborhoodSummary": {
-                    object (NeighborhoodSummary)
-                },
-                "utcOffsetMinutes": integer,
-                "userRatingCount": integer,
-                "takeout": boolean,
-                "delivery": boolean,
-                "dineIn": boolean,
-                "curbsidePickup": boolean,
-                "reservable": boolean,
-                "servesBreakfast": boolean,
-                "servesLunch": boolean,
-                "servesDinner": boolean,
-                "servesBeer": boolean,
-                "servesWine": boolean,
-                "servesBrunch": boolean,
-                "servesVegetarianFood": boolean,
-                "outdoorSeating": boolean,
-                "liveMusic": boolean,
-                "menuForChildren": boolean,
-                "servesCocktails": boolean,
-                "servesDessert": boolean,
-                "servesCoffee": boolean,
-                "goodForChildren": boolean,
-                "allowsDogs": boolean,
-                "restroom": boolean,
-                "goodForGroups": boolean,
-                "goodForWatchingSports": boolean,
-                "accessibilityOptions": {
-                    object (AccessibilityOptions)
-                },
-                "pureServiceAreaBusiness": boolean
-                }
-        user_preferences (dict): A dictionary containing user preferences.
-            Example: {"cuisine": "Italian", "budget": "$$", "time_of_day": "dinner"}
+
+    user_preferences (dict): A dictionary containing user preferences.
+        Example: {"cuisine": "Italian", "budget": "$$", "time_of_day": "dinner"}
 
     Returns:
         str: A formatted ranking report of restaurants.
@@ -272,3 +123,168 @@ if __name__ == "__main__":
     # Generate and print the ranking report
     report = rank_restaurants_with_llm(places_api_data, preferences)
     print(report)
+
+if __name__ == "__main__":
+    restaurant_agent = Agent(
+        name="Restaurant Agent",
+        welcome="I am the Restaurant Recommendation Agent. Ask me about restaurants nearby including your preferences.",
+        instructions="""
+    You provide restaurant recommendations based on location and user preferences. 
+    """,
+        tools=[GooglePlacesTool()],
+    )
+
+    AgentRunner(restaurant_agent).repl_loop()
+    
+# Data format: {
+#     "name": string,
+#     "id": string,
+#     "displayName": {
+#         object (LocalizedText)
+#     },
+#     "types": [
+#         string
+#     ],
+#     "primaryType": string,
+#     "primaryTypeDisplayName": {
+#         object (LocalizedText)
+#     },
+#     "nationalPhoneNumber": string,
+#     "internationalPhoneNumber": string,
+#     "formattedAddress": string,
+#     "shortFormattedAddress": string,
+#     "postalAddress": {
+#         object (PostalAddress)
+#     },
+#     "addressComponents": [
+#         {
+#         object (AddressComponent)
+#         }
+#     ],
+#     "plusCode": {
+#         object (PlusCode)
+#     },
+#     "location": {
+#         object (LatLng)
+#     },
+#     "viewport": {
+#         object (Viewport)
+#     },
+#     "rating": number,
+#     "googleMapsUri": string,
+#     "websiteUri": string,
+#     "reviews": [
+#         {
+#         object (Review)
+#         }
+#     ],
+#     "regularOpeningHours": {
+#         object (OpeningHours)
+#     },
+#     "timeZone": {
+#         object (TimeZone)
+#     },
+#     "photos": [
+#         {
+#         object (Photo)
+#         }
+#     ],
+#     "adrFormatAddress": string,
+#     "businessStatus": enum (BusinessStatus),
+#     "priceLevel": enum (PriceLevel),
+#     "attributions": [
+#         {
+#         object (Attribution)
+#         }
+#     ],
+#     "iconMaskBaseUri": string,
+#     "iconBackgroundColor": string,
+#     "currentOpeningHours": {
+#         object (OpeningHours)
+#     },
+#     "currentSecondaryOpeningHours": [
+#         {
+#         object (OpeningHours)
+#         }
+#     ],
+#     "regularSecondaryOpeningHours": [
+#         {
+#         object (OpeningHours)
+#         }
+#     ],
+#     "editorialSummary": {
+#         object (LocalizedText)
+#     },
+#     "paymentOptions": {
+#         object (PaymentOptions)
+#     },
+#     "parkingOptions": {
+#         object (ParkingOptions)
+#     },
+#     "subDestinations": [
+#         {
+#         object (SubDestination)
+#         }
+#     ],
+#     "fuelOptions": {
+#         object (FuelOptions)
+#     },
+#     "evChargeOptions": {
+#         object (EVChargeOptions)
+#     },
+#     "generativeSummary": {
+#         object (GenerativeSummary)
+#     },
+#     "containingPlaces": [
+#         {
+#         object (ContainingPlace)
+#         }
+#     ],
+#     "addressDescriptor": {
+#         object (AddressDescriptor)
+#     },
+#     "googleMapsLinks": {
+#         object (GoogleMapsLinks)
+#     },
+#     "priceRange": {
+#         object (PriceRange)
+#     },
+#     "reviewSummary": {
+#         object (ReviewSummary)
+#     },
+#     "evChargeAmenitySummary": {
+#         object (EvChargeAmenitySummary)
+#     },
+#     "neighborhoodSummary": {
+#         object (NeighborhoodSummary)
+#     },
+#     "utcOffsetMinutes": integer,
+#     "userRatingCount": integer,
+#     "takeout": boolean,
+#     "delivery": boolean,
+#     "dineIn": boolean,
+#     "curbsidePickup": boolean,
+#     "reservable": boolean,
+#     "servesBreakfast": boolean,
+#     "servesLunch": boolean,
+#     "servesDinner": boolean,
+#     "servesBeer": boolean,
+#     "servesWine": boolean,
+#     "servesBrunch": boolean,
+#     "servesVegetarianFood": boolean,
+#     "outdoorSeating": boolean,
+#     "liveMusic": boolean,
+#     "menuForChildren": boolean,
+#     "servesCocktails": boolean,
+#     "servesDessert": boolean,
+#     "servesCoffee": boolean,
+#     "goodForChildren": boolean,
+#     "allowsDogs": boolean,
+#     "restroom": boolean,
+#     "goodForGroups": boolean,
+#     "goodForWatchingSports": boolean,
+#     "accessibilityOptions": {
+#         object (AccessibilityOptions)
+#     },
+#     "pureServiceAreaBusiness": boolean
+#     }
