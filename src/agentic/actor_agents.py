@@ -30,7 +30,8 @@ from agentic.swarm.types import (
     Response,
     Result,
     ThreadContext,
-    tool_name
+    tool_name,
+    EVENT_QUEUE_KEY,
 )
 from agentic.swarm.util import (
     debug_print,
@@ -509,6 +510,8 @@ class ActorBaseAgent:
                 self.thread_context
             )
             yield from events
+            # Yield to our publisher thread which will send queued events out to the client
+            time.sleep(0)
 
             if partial_response.last_tool_result:
                 if isinstance(partial_response.last_tool_result, PauseForInputResult):
@@ -1306,6 +1309,10 @@ class BaseAgentProxy:
             self.init_thread_tracking(agent_instance, thread_id or self.thread_id)
 
         # Initialize new request
+        queue = Queue()
+        # pass the queue down ultimate to ThreadContext by putting it in the request_context
+        request_context[EVENT_QUEUE_KEY] = queue
+
         request_obj = Prompt(
             self.name,
             request,
@@ -1323,7 +1330,6 @@ class BaseAgentProxy:
             # Cleanup the agent instance when done
             self._cleanup_agent_instance(request_id)
             
-        queue = Queue()
         self.request_queues[request_id] = queue
 
         t = threading.Thread(target=producer, args=(queue, request_obj, continue_result))
@@ -1351,7 +1357,8 @@ class BaseAgentProxy:
                     break
                     
                 yield event
-                time.sleep(0.01)
+                # yield to subscriber thread so it can publish events to clients
+                time.sleep(0)
                 
             except Exception:
                 # Timeout or other exception, set sentinel and break
