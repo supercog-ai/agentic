@@ -29,6 +29,6 @@ export const formatDate = (date: string | Date, convertToLocale: boolean = false
 };
 
 export const isUserRun = (agentName: string, event: Api.AgentEvent): boolean => {
-  const isTerminationEvent = event.type === AgentEventType.run_END || event.type === AgentEventType.run_CANCELLED || event.type === AgentEventType.WAIT_FOR_INPUT;
+  const isTerminationEvent = event.type === AgentEventType.RUN_END || event.type === AgentEventType.RUN_CANCELLED || event.type === AgentEventType.WAIT_FOR_INPUT;
   return isTerminationEvent && agentName === event.agent;
 };
