@@ -99,7 +99,7 @@ class GooglePlacesTool(BaseAgenticTool):
         headers = {
             "Content-Type" : "application/json",
             "X-Goog-Api-Key" : f"{api_key}",
-            "X-Goog-FieldMask" : f"places.displayName"
+            "X-Goog-FieldMask" : f"{field_mask}"
         }
 
         params = {
@@ -112,19 +112,6 @@ class GooglePlacesTool(BaseAgenticTool):
                     },
                     "radius": radius
                 }
-            }
-        }
-
-        params = {
-            "maxResultCount": 10,
-            "locationRestriction" : {
-                "circle": {
-                    "center": {
-                        "latitude": 43.874168,
-                        "longitude": -79.258743,
-                    },
-                    "radius": 500
-                }       
             }
         }
 
