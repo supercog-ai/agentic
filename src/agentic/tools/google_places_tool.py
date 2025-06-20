@@ -28,7 +28,7 @@ class GooglePlacesTool(BaseAgenticTool):
     api_key: Optional[str]
     base_url: str
 
-    def __init__(self, api_key: str = None, base_url: str = "https://places.googleapis.com/v1/places:"):
+    def __init__(self, api_key: str = None, base_url: str = "https://places.googleapis.com/v1/places"):
         """
         Initialize the Google Places tool.
         
@@ -58,17 +58,68 @@ class GooglePlacesTool(BaseAgenticTool):
             List of callable methods
         """
         return [
+            self.place_details,
             self.nearby_search
         ]
+
+    async def place_details(self, 
+    thread_context: ThreadContext,
+    place_id: str,
+    field_mask_list: list[str]
+    ) -> pd.DataFrame:
+        """
+        Wrapper for the Place Details API.
+        Docs: https://developers.google.com/maps/documentation/places/web-service/place-details
+        
+        Parameters:
+            place_id: A textual identifier that uniquely identifies a place
+            field_mask_list: List of field masks to return
+        
+        Returns:
+            DataFrame containing the included fields from field_mask
+        """
+
+        api_key = os.environ.get("GOOGLE_API_KEY")
+        
+        # If no API key is available, request it from the user
+        if not api_key:
+            return PauseForInputResult(
+                {"GOOGLE_API_KEY": "Please provide your Google API key"}
+            )
+        
+        # Log the operation
+        thread_context.info(f"Calling Google API: Place Details")
+        thread_context.debug(f"Place ID: {place_id}")
+
+        field_mask = ",".join(field_mask_list)
+
+        headers = {
+            "Content-Type" : "application/json",
+            "X-Goog-Api-Key" : f"{api_key}",
+            "X-Goog-FieldMask" : f"{field_mask}"
+        }
+
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                f"{self.base_url}/{place_id}",
+                headers=headers,
+                timeout=30,
+            )
+
+        response.raise_for_status()
+        results = response.json()
+        df = pd.json_normalize(results)
+        return df
 
     async def nearby_search(self,
     thread_context: ThreadContext,
     latitude: float,
     longitude: float,
-    maxResultCount: int = 10,
-    field_mask: str = "places.name,places.priceRange,places.rating",
-    radius: float = 500,
-    ):
+    includedTypes: list[str],
+    maxResultCount: int,
+    field_mask: str,
+    radius: float,
+    ) -> pd.DataFrame:
         """
         Wrapper for the Nearby Search API.
         Docs: https://developers.google.com/maps/documentation/places/web-service/nearby-search
@@ -76,14 +127,14 @@ class GooglePlacesTool(BaseAgenticTool):
         Parameters:
             latitude: Search center
             longitude: Search center
+            includedTypes: Included types (eg. ["restaurant"])
             maxResultCount: Maximum number of results to return (default 10)
-            field_mask: The fields to return WITHOUT space separated commas (eg. places.name,places.priceRange,places.rating)
+            field_mask: The fields to return WITHOUT space separated commas (default: places.name,places.id), the best practice is to include few fields here and use place_details to find more details about a restaurant
             radius: Search radius (default 1000)
 
         Returns:
-            DataFrame containing the query results
+            DataFrame containing the query results as a list of place objects, containing the fields specified by field_mask
         """
-
         api_key = os.environ.get("GOOGLE_API_KEY")
         
         # If no API key is available, request it from the user
@@ -99,10 +150,11 @@ class GooglePlacesTool(BaseAgenticTool):
         headers = {
             "Content-Type" : "application/json",
             "X-Goog-Api-Key" : f"{api_key}",
-            "X-Goog-FieldMask" : f"places.displayName"
+            "X-Goog-FieldMask" : f"{field_mask}"
         }
 
         params = {
+            "includedTypes": includedTypes,
             "maxResultCount": maxResultCount,
             "locationRestriction" : {
                 "circle": {
@@ -115,22 +167,9 @@ class GooglePlacesTool(BaseAgenticTool):
             }
         }
 
-        params = {
-            "maxResultCount": 10,
-            "locationRestriction" : {
-                "circle": {
-                    "center": {
-                        "latitude": 43.874168,
-                        "longitude": -79.258743,
-                    },
-                    "radius": 500
-                }       
-            }
-        }
-
         async with httpx.AsyncClient() as client:
             response = await client.post(
-                f"{self.base_url}searchNearby",
+                f"{self.base_url}:searchNearby",
                 headers=headers,
                 json=params,
                 timeout=30,
@@ -138,5 +177,5 @@ class GooglePlacesTool(BaseAgenticTool):
 
         response.raise_for_status()
         results = response.json()
-
-        return results
+        df = pd.json_normalize(results)
+        return df
