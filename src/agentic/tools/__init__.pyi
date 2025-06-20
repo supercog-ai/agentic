@@ -8,7 +8,9 @@ from .duckduckgo import DuckDuckGoTool
 from .example_tool import ExampleTool
 from .file_download import FileDownloadTool
 from .github_tool import GithubTool
+from .google_geocoding_tool import GoogleGeocodingTool
 from .google_news import GoogleNewsTool
+from .google_places_tool import GooglePlacesTool
 from .human_interrupt import HumanInterruptTool
 from .image_generator import ImageGeneratorTool
 from .imap_tool import IMAPTool
@@ -37,7 +39,9 @@ __all__ = [
     "ExampleTool",
     "FileDownloadTool",
     "GithubTool",
+    "GoogleGeocodingTool",
     "GoogleNewsTool",
+    "GooglePlacesTool",
     "HumanInterruptTool",
     "ImageGeneratorTool",
     "IMAPTool",
