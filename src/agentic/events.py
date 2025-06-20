@@ -1,19 +1,16 @@
-# Shutup stupid pydantic warnings
-import warnings
 import typing
 import uuid
-from typing import Dict
+import warnings
+from datetime import timedelta
+from litellm.types.utils import Message
+from pydantic import BaseModel, ConfigDict, field_serializer
+from typing import  Any, Optional, Dict
 
+from .swarm.types import Result, DebugLevel
+
+
+# Shutup stupid pydantic warnings
 warnings.filterwarnings("ignore", message="Valid config keys have changed in V2:*")
-
-from dataclasses import dataclass
-from typing import Any, Optional
-from typing_extensions import override
-from pydantic import BaseModel, ConfigDict
-from .swarm.types import Result, DebugLevel, ThreadContext
-
-from litellm.types.utils import ModelResponse, Message
-
 
 class Event(BaseModel):
     agent: str
@@ -243,6 +240,7 @@ class FinishCompletion(Event):
     OUTPUT_TOKENS_KEY: typing.ClassVar[str] = "output_tokens"
     ELAPSED_TIME_KEY: typing.ClassVar[str] = "elapsed_time"
     REASONING_CONTENT_KEY: typing.ClassVar[str] = "reasoning_content"
+    usage: dict = {}
     metadata: dict = {}
 
     model_config = ConfigDict(
@@ -250,10 +248,23 @@ class FinishCompletion(Event):
     )
 
     def __init__(
-        self, agent: str, llm_message: Message, metadata: dict = {}, depth: int = 0
+        self, agent: str, llm_message: Message, usage: dict = {}, metadata: dict = {}, depth: int = 0
     ):
         super().__init__(agent=agent, type="completion_end", payload=llm_message, depth=depth)
+        self.usage = usage
         self.metadata = metadata
+
+    @field_serializer('usage')
+    def serialize_metadata(self, usage: dict, _info):
+        """Custom serializer for usage to handle timedelta objects"""
+        serialized = {}
+        for key, value in usage.items():
+            if isinstance(value, timedelta):
+                # Convert timedelta to total seconds
+                serialized[key] = value.total_seconds()
+            else:
+                serialized[key] = value
+        return serialized
 
     @classmethod
     def create(
@@ -268,22 +279,24 @@ class FinishCompletion(Event):
         depth: int = 0,
         reasoning_content: str = None,
     ):
-        meta = {
+        usage = {
             cls.MODEL_KEY: model,
             cls.COST_KEY: cost or 0,
             cls.INPUT_TOKENS_KEY: input_tokens or 0,
             cls.OUTPUT_TOKENS_KEY: output_tokens or 0,
             cls.ELAPSED_TIME_KEY: elapsed_time or 0,
         }
+
+        metadata = {}
         
         # Add reasoning data to metadata if present
         if reasoning_content:
-            meta[cls.REASONING_CONTENT_KEY] = reasoning_content
+            metadata[cls.REASONING_CONTENT_KEY] = reasoning_content
 
         if isinstance(llm_message, str):
             llm_message = Message(content=llm_message, role="assistant")
 
-        return cls(agent, llm_message, meta, depth)
+        return cls(agent, llm_message, usage, metadata, depth)
 
     @property
     def response(self) -> Message:
@@ -294,7 +307,7 @@ class FinishCompletion(Event):
         return self.metadata.get(self.REASONING_CONTENT_KEY, "")
 
     def __str__(self):
-        base_str = f"[{self.agent}] {self.payload}, tokens: {self.metadata}"
+        base_str = f"[{self.agent}] {self.payload}, tokens: {self.usage}"
         if self.reasoning_content:
             base_str += f"\n[{self.agent}] 🧠 Reasoning: {self.reasoning_content}"
         return base_str
