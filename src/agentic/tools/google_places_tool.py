@@ -59,8 +59,7 @@ class GooglePlacesTool(BaseAgenticTool):
         """
         return [
             self.place_details,
-            self.nearby_search,
-            self.create_report
+            self.nearby_search
         ]
 
     async def place_details(self, 
@@ -129,7 +128,7 @@ class GooglePlacesTool(BaseAgenticTool):
             latitude: Search center
             longitude: Search center
             includedTypes: Included types (eg. ["restaurant"])
-            maxResultCount: Maximum number of results to return (default 10)
+            maxResultCount: Maximum number of results to return (default 10, appears to have a max of 20)
             field_mask: The fields to return WITHOUT spaces, separated by commas (default: "places.name,places.id,places.types"), the best practice is to include few fields here and use place_details to find more details about a restaurant
             radius: Search radius (default 1000)
 
