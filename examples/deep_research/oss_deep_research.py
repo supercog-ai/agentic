@@ -8,7 +8,7 @@ from agentic.common import Agent, AgentRunner, ThreadContext
 from agentic.events import Event, ChatOutput, WaitForInput, Prompt, PromptStarted, TurnEnd, ResumeWithInput
 from agentic.models import GPT_4O_MINI, CLAUDE, GPT_4O
 from agentic.tools import PlaywrightTool, OpenAIWebSearchTool
-from agentic.tools.utils.registry import format_sources
+from agentic.tools.utils.text_parsing import format_sources
 
 # These can take any Litellm model path [see https://supercog-ai.github.io/agentic/Models/]
 # Or use aliases 'GPT_4O' or 'CLAUDE'
