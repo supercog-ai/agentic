@@ -20,7 +20,6 @@ class ConfigRequirement:
     required: bool = True
     default: Any = None
 
-
 def check_package(package_name):
     try:
         # Method 1: Try importing the module directly
