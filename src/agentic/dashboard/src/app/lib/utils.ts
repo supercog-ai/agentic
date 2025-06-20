@@ -28,7 +28,7 @@ export const formatDate = (date: string | Date, convertToLocale: boolean = false
   return `${month} ${day}${suffix}, ${time}`;
 };
 
-export const isUserTurn = (agentName: string, event: Api.AgentEvent): boolean => {
-  const isTerminationEvent = event.type === AgentEventType.TURN_END || event.type === AgentEventType.TURN_CANCELLED || event.type === AgentEventType.WAIT_FOR_INPUT;
+export const isUserRun = (agentName: string, event: Api.AgentEvent): boolean => {
+  const isTerminationEvent = event.type === AgentEventType.RUN_END || event.type === AgentEventType.RUN_CANCELLED || event.type === AgentEventType.WAIT_FOR_INPUT;
   return isTerminationEvent && agentName === event.agent;
 };

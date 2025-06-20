@@ -34,7 +34,7 @@ uses this approach extensively to coordinate a large team of special-purpose age
 A good pattern for calling sub-agents looks like this:
 
 ```python
-    def next_turn(self):
+    def next_run(self):
         self.sub_agent = Agent(...)
         result = yield from self.sub_agent.final_result(
                 "Please query the order system.",

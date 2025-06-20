@@ -22,7 +22,7 @@ from agentic.events import (
     StartCompletion,
     ToolCall,
     ToolResult,
-    TurnEnd,
+    RunEnd,
     WaitForInput,
     ToolError,
     OAuthFlow
@@ -59,8 +59,8 @@ class RayAgentRunner:
         except:
             pass
 
-    def turn(self, request: str, thread_id: Optional[str] = None, print_all_events: bool = False) -> str:
-        """Runs the agent and waits for the turn to finish, then returns the results
+    def run(self, request: str, thread_id: Optional[str] = None, print_all_events: bool = False) -> str:
+        """Runs the agent and waits for the run to finish, then returns the results
         of all output events as a single string."""
         results = []
         request_id = self.facade.start_request(
@@ -77,7 +77,7 @@ class RayAgentRunner:
         return "".join(results)
 
     def __lshift__(self, prompt: str):
-        print(self.turn(prompt))
+        print(self.run(prompt))
 
     def _should_print(self, event: Event, ignore_depth: bool = False) -> bool:
         if self.debug.debug_all():
@@ -90,7 +90,7 @@ class RayAgentRunner:
             return self.debug.debug_tools()
         elif isinstance(event, PromptStarted):
             return self.debug.debug_llm() or self.debug.debug_agents()
-        elif isinstance(event, TurnEnd):
+        elif isinstance(event, RunEnd):
             return self.debug.debug_agents()
         elif isinstance(event, (StartCompletion, FinishCompletion)):
             return self.debug.debug_llm()

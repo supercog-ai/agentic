@@ -11,7 +11,7 @@ from agentic.events import (
     FinishCompletion,
     ToolCall,
     ToolResult,
-    TurnEnd
+    RunEnd
 )
 from litellm import Message
 
@@ -211,9 +211,9 @@ def test_thread_manager_handle_events(db_manager, thread_manager, thread_context
     tool_result = ToolResult(agent="test_agent", name="test_tool", result="success")
     thread_manager.handle_event(tool_result, thread_context)
     
-    # Test handling TurnEnd event
-    turn_end = TurnEnd(agent="test_agent", messages=[], thread_context=thread_context)
-    thread_manager.handle_event(turn_end, thread_context)
+    # Test handling RunEnd event
+    run_end = RunEnd(agent="test_agent", messages=[], thread_context=thread_context)
+    thread_manager.handle_event(run_end, thread_context)
     
     # Verify logs were created
     logs = db_manager.get_thread_logs(thread_manager.current_thread_id)

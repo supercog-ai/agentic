@@ -25,7 +25,7 @@ A base class for implementing custom agents. Handles concerns like event dispatc
 ## C
 
 ### Chat History
-The running record of turns between the agent and user in the current [thread](#thread). Consumes part of the LLM context window.
+The running record of runs between the agent and user in the current [thread](#thread). Consumes part of the LLM context window.
 
 ### Context Window
 The number of [tokens](#token) an agent can utilize when executing in a thread. Each LLM has a different context window. Smaller context windows lower execution costs but also limit ability.
@@ -138,7 +138,7 @@ A function or capability that allows an agent to interact with the world, query 
 ### Tool Library
 A collection of pre-built tools provided by Agentic that agents can use for common tasks like web browsing, database access, API calls, etc.
 
-### TurnEnd
+### RunEnd
 An event marking the completion of an agent's processing for a particular [run](#run).
 
 ## V

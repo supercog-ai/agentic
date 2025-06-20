@@ -24,7 +24,7 @@ def test_mock_llm_response():
     
     # Send a message to the agent
     agent_runner = AgentRunner(agent)
-    response = agent_runner.turn("What time is it right now?")
+    response = agent_runner.run("What time is it right now?")
     
     # Verify the response
     assert response == "That is a great question!"
@@ -44,7 +44,7 @@ def test_mock_llm_pattern_matching():
     
     # Send a message to the agent
     agent_runner = AgentRunner(agent)
-    response = agent_runner.turn("my name is Richard")
+    response = agent_runner.run("my name is Richard")
     
     # Verify the response
     assert response == "Hello, Richard!"
@@ -70,7 +70,7 @@ def test_mock_llm_tool_calling():
     
     # Send a message requesting to call the function
     agent_runner = AgentRunner(agent)
-    response = agent_runner.turn("call the function convert_to_pdf with filename=output.txt")
+    response = agent_runner.run("call the function convert_to_pdf with filename=output.txt")
     
     # Verify the response contains the function output
     assert "output.txt is converted to PDF" in response
