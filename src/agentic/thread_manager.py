@@ -78,7 +78,11 @@ class ThreadManager:
         role = event.payload.role if isinstance(event.payload, Message) else "system"
         event_name = event.type
         payload = event.payload.content if isinstance(event.payload, Message) else event.payload
-        event_data = {"content": payload} if payload else {}
+        event_data =  {}
+        if payload and isinstance(payload, dict) and "content" in payload:
+            event_data = payload
+        else:
+            event_data = { "content": payload }
         
         if isinstance(event, Output):
             event_data = payload
@@ -161,6 +165,9 @@ def reconstruct_chat_history_from_thread_logs(thread_logs: List[ThreadLog]) -> L
             content = ""
             if isinstance(event_data, dict):
                 content = event_data.get("content", "")
+                # Necessary to support db logs that were created with a buggy duel content structure ({content: {content: "prompt"}})
+                if isinstance(content, dict):
+                    content = content.get("content", "")
             elif isinstance(event_data, str):
                 content = event_data
             
