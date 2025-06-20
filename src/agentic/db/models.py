@@ -14,7 +14,6 @@ class Thread(SQLModel, table=True):
     updated_at: datetime = Field(default_factory=datetime.utcnow)
     initial_prompt: str
     description: Optional[str] = None
-    usage_data: Dict = Field(default={}, sa_column=Column(JSON))
     thread_metadata: Dict = Field(default={}, sa_column=Column(JSON))
 
 class ThreadLog(SQLModel, table=True):

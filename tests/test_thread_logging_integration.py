@@ -148,41 +148,6 @@ def test_run_logging_toggle(test_agent, db_manager, temp_db_path):
     threads = db_manager.get_threads_by_agent("Calculator")
     assert len(threads) == 1  # Count should not have increased
 
-@pytest.mark.requires_llm
-def test_thread_usage_accumulation(test_agent, db_manager):
-    """Test that token usage is accumulated correctly across multiple completions in a thread."""    
-    runner = AgentRunner(test_agent)
-    
-    # Run a multi-step interaction
-    runner.turn("First add 5 and 3, then subtract 2 from the result.")
-    
-    # Get the thread and its logs
-    threads = db_manager.get_threads_by_user("default")
-    assert len(threads) == 1
-    thread = threads[0]
-    
-    # Verify usage data accumulation
-    assert test_agent.model in thread.usage_data
-    model_usage = thread.usage_data[test_agent.model]
-    assert model_usage['input_tokens'] > 0
-    assert model_usage['output_tokens'] > 0
-    
-    # Verify the sum of individual completion usages matches the accumulated total
-    logs = db_manager.get_thread_logs(thread.id)
-    completion_logs = [log for log in logs if log.event_name == 'completion_end']
-    
-    total_input_tokens = sum(
-        log.event.get('usage', {}).get(test_agent.model, {}).get('input_tokens', 0)
-        for log in completion_logs
-    )
-    total_output_tokens = sum(
-        log.event.get('usage', {}).get(test_agent.model, {}).get('output_tokens', 0)
-        for log in completion_logs
-    )
-    
-    assert model_usage['input_tokens'] == total_input_tokens
-    assert model_usage['output_tokens'] == total_output_tokens
-
 def agent_turn(agent: Agent, request: str, thread_id: str=None) -> tuple[str, str]:
     """Run a turn with the agent and return the response and the thread_id."""
     results = []

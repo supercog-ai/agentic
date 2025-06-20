@@ -8,7 +8,6 @@ import sqlite3
 import shutil
 from agentic.utils.json import make_json_serializable
 from agentic.db.models import Thread, ThreadLog
-from agentic.events import FinishCompletion
 from agentic.utils.directory_management import get_runtime_filepath
 
 # Database migration helper
@@ -93,7 +92,6 @@ class DatabaseManager:
                    initial_prompt: str,
                    thread_id: Optional[str] = None,
                    description: Optional[str] = None,
-                   usage_data: Dict = None,
                    thread_metadata: Dict = None) -> Thread:
         thread = Thread(
             id=thread_id,
@@ -101,7 +99,6 @@ class DatabaseManager:
             user_id=user_id,
             initial_prompt=initial_prompt,
             description=description,
-            usage_data=usage_data or {},
             thread_metadata=thread_metadata or {}
         )
         
@@ -122,6 +119,7 @@ class DatabaseManager:
 
         with self.get_session() as session:
             thread_timestamp = datetime.now(UTC)
+
             # Create the log entry
             log = ThreadLog(
                 thread_id=thread_id,
@@ -138,21 +136,6 @@ class DatabaseManager:
             thread = session.get(Thread, thread_id)
             if thread:
                 thread.updated_at = thread_timestamp
-                # Update usage data if event contains it
-                if event_name == "completion_end":
-                    usage = event_data["usage"]
-
-                    # Make a copy so changes are detected
-                    usage_data = deepcopy(thread.usage_data)
-                    for model in usage:
-                        if model not in usage_data:
-                            usage_data[model] = usage[model]
-                        else:
-                            usage_data[model][FinishCompletion.INPUT_TOKENS_KEY] += usage[model].get(FinishCompletion.INPUT_TOKENS_KEY, 0)
-                            usage_data[model][FinishCompletion.OUTPUT_TOKENS_KEY] += usage[model].get(FinishCompletion.OUTPUT_TOKENS_KEY, 0)
-                            usage_data[model][FinishCompletion.COST_KEY] += usage[model].get(FinishCompletion.COST_KEY, 0)
-                    
-                    thread.usage_data = usage_data
                 session.add(thread)
             
             session.commit()
@@ -162,17 +145,12 @@ class DatabaseManager:
     def update_thread(self,
                    thread_id: int,
                    description: Optional[str] = None,
-                   usage_data: Optional[Dict] = None,
                    thread_metadata: Optional[Dict] = None) -> Optional[Thread]:
         with self.get_session() as session:
             thread = session.get(Thread, thread_id)
             if thread:
                 if description is not None:
                     thread.description = description
-                if usage_data is not None:
-                    updated_usage_data = deepcopy(thread.usage_data)
-                    updated_usage_data.update(usage_data)
-                    thread.usage_data = updated_usage_data
                 if thread_metadata is not None:
                     updated_thread_metadata = deepcopy(thread.thread_metadata)
                     updated_thread_metadata.update(thread_metadata)
@@ -205,3 +183,56 @@ class DatabaseManager:
                 query = query.where(Thread.user_id == user_id)
             
             return session.exec(query.order_by(desc(Thread.updated_at))).all()
+
+    def get_thread_usage(self, thread_id: str) -> Dict[str, Dict[str, float]]:
+        """Calculate total usage for a thread by summing completion events"""
+        logs = self.get_thread_logs(thread_id)
+        
+        usage_by_model = {}
+        for log in logs:
+            if log.event_name == "completion_end" and "usage" in log.event:
+                usage = log.event["usage"]
+                model = usage.get("model", "unknown")
+                
+                if model not in usage_by_model:
+                    usage_by_model[model] = {
+                        "input_tokens": 0,
+                        "output_tokens": 0,
+                        "cost": 0,
+                        "elapsed_time": 0,
+                        "call_count": 0
+                    }
+                
+                usage_by_model[model]["input_tokens"] += usage.get("input_tokens", 0)
+                usage_by_model[model]["output_tokens"] += usage.get("output_tokens", 0)
+                usage_by_model[model]["cost"] += usage.get("cost", 0)
+                usage_by_model[model]["elapsed_time"] += usage.get("elapsed_time", 0)
+                usage_by_model[model]["call_count"] += 1
+        
+        return usage_by_model
+    
+    def get_thread_summary(self, thread_id: str) -> Dict:
+        """Get thread summary including usage statistics"""
+        thread = self.get_thread(thread_id)
+        if not thread:
+            return None
+        
+        usage = self.get_thread_usage(thread_id)
+        
+        # Calculate totals
+        total_cost = sum(model_usage["cost"] for model_usage in usage.values())
+        total_tokens = sum(
+            model_usage["input_tokens"] + model_usage["output_tokens"] 
+            for model_usage in usage.values()
+        )
+        
+        return {
+            "thread_id": thread.id,
+            "agent_id": thread.agent_id,
+            "created_at": thread.created_at,
+            "updated_at": thread.updated_at,
+            "initial_prompt": thread.initial_prompt,
+            "usage_by_model": usage,
+            "total_cost": total_cost,
+            "total_tokens": total_tokens
+        }

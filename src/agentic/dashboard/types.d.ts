@@ -65,13 +65,6 @@ declare namespace Api {
     updated_at: string;
     initial_prompt: string;
     description: string | null;
-    usage_data: {
-      [model: string]: {
-        input_tokens: number;
-        output_tokens: number;
-        cost: number;
-      };
-    };
   }
   
   interface ThreadLog {
