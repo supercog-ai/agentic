@@ -366,8 +366,7 @@ class MarchMadnessAgent(Agent):
         
         yield TurnEnd(
             self.name,
-            [{"role": "assistant", "content": final_bracket}],
-            thread_context=None,
+            [{"role": "assistant", "content": final_bracket}]
         )
 
     def generate_first_round_matchups(self):

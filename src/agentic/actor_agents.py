@@ -556,7 +556,6 @@ class ActorBaseAgent:
             self.name,
             # result_model gets applied when TurnEnd is processed. We dont want to alter the the text response in history
             deepcopy(self.history[init_len:]),
-            self.thread_context,
             self.depth
         )
         self.paused_context = None

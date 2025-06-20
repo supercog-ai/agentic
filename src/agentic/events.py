@@ -301,10 +301,10 @@ class FinishCompletion(Event):
 
 class TurnEnd(Event):
     def __init__(
-        self, agent: str, messages: list, thread_context: ThreadContext, depth: int = 0
+        self, agent: str, messages: list, depth: int = 0
     ):
         super().__init__(
-            agent=agent, type="turn_end", payload={"messages": messages, "thread_context": thread_context}, depth=depth
+            agent=agent, type="turn_end", payload={"messages": messages}, depth=depth
         )
 
     @property
