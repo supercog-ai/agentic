@@ -40,7 +40,7 @@ export function useChat(agentPath: string, agentName: string, currentThreadId: s
       // First convert all logs to Ui.Event format
       const eventsFromLogs: Ui.Event[] = threadLogs.map(log => ({
         type: log.event_name,
-        payload: log.event.content || log.event,
+        payload: log.event.content || log.event.payload || log.event,
         agentName: log.agent_id,
         timestamp: convertFromUTC(log.created_at),
       }));

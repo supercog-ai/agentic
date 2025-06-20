@@ -76,9 +76,11 @@ declare namespace Api {
     created_at: string;
     event_name: string;
     event: {
+      agent: string;
       type: AgentEventType;
       payload: any;
-      content?: string;
+      depth: number;
+      content?: string;  // DEPRECIATED 6/20/25
     };
   }
 }
