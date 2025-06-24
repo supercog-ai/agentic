@@ -22,7 +22,7 @@ The proxy class manages these concerns:
 - manages running the FastAPI app for the agent
 
 You can implement custom agents by subclassing `BaseAgentProxy`. You should call the base
-constructor in your `__init__` method, then implement the `next_turn` method to process
+constructor in your `__init__` method, then implement the `next_run` method to process
 operation requests. That method should `yield` events as your agent runs.
 
 Any instance of `BaseAgentProxy` can be used as a tool by another agent.
@@ -48,19 +48,19 @@ events to sub-agents, and those agents emit events back with results.
 
 ### Special tool results:
 
-`PauseForChildResult`  - Put the agent in a paused state, and wait for `TurnEnd` to come
+`PauseForChildResult`  - Put the agent in a paused state, and wait for `RunEnd` to come
 back from a sub-agent call. Assumes the event has **already** been sent to the child.
 
 `PauseForInputResult`  - Put the agent in a paused state, and emit a `WaitForInput`
 event back to the caller. Wait for the `ResumeWithInput` event to come back from the caller.
 
 `FinishAgentResult` - Special result to indicate that we have sent a handoff Prompt
-to the next agent, and this agent can finish execution (without sending TurnEnd).
+to the next agent, and this agent can finish execution (without sending RunEnd).
 
 When Agent A calls Agent B, it sends a `Prompt` message and then enters a "pause" state
 (by having the sub-agent tool call return `PauseForChildResult`).
 
-The pause state is mid-way through an LLM function call. When the `TurnEnd` event is 
+The pause state is mid-way through an LLM function call. When the `RunEnd` event is 
 received from agent B then Agent A can resume by processing the result as the
 result of the tool call.
 
@@ -78,9 +78,9 @@ and continue processing.
 
 ### Handoff
 
-_Handoff_ is when agent A calls agent B, but then "hands off" its turn to Agent B.
+_Handoff_ is when agent A calls agent B, but then "hands off" its run to Agent B.
 Agent A stops processing. Agent B assumes current context, the original caller,
-the original depth, and is expected to emit the `TurnEnd` event back to the original
+the original depth, and is expected to emit the `RunEnd` event back to the original
 caller. It should also emit the 
 
 
@@ -98,9 +98,9 @@ sequenceDiagram
     Agent A->>Agent B: Prompt
     Note over Agent A: Return PauseForChildResult
     Note over Agent A: Enter Paused State
-    Agent B->>Agent A: TurnEnd
+    Agent B->>Agent A: RunEnd
     Note over Agent A: Resume Processing
-    Agent A->>caller: TurnEnd
+    Agent A->>caller: RunEnd
 
 ```
 
@@ -122,7 +122,7 @@ sequenceDiagram
     caller->>Agent A: ResumeWithInput
     Note over Agent A: Re-call tool with input
     Note over Agent A: Continue Processing
-    Agent A->>caller: TurnEnd
+    Agent A->>caller: RunEnd
 ```
 
 ### Case 3: Handoff to Another Agent
@@ -140,7 +140,7 @@ sequenceDiagram
     Note over Agent A: Return FinishAgentResult
     Note over Agent A: Stop Processing
     Note over Agent B: Assume Context & Depth
-    Agent B->>caller: TurnEnd
+    Agent B->>caller: RunEnd
 ```
 
 ## Ray Actor logic
@@ -154,9 +154,9 @@ Our basic agent execution loop looks like:
 ```python
 user input ->
     remote_gen = agent.receiveMessage.remote(Prompt())
-        (agent starts the LLM "turn" loop, calling LLM completions and yielding events)
+        (agent starts the LLM "run" loop, calling LLM completions and yielding events)
     for next_ref in remote_gen:
-        event = ray.get(next_ref)  # Prompt handling yields events until turn is over
+        event = ray.get(next_ref)  # Prompt handling yields events until run is over
 ```
 
 If our agent needs to call another agent, it creates the Agent and calls it via
@@ -165,18 +165,18 @@ Ray remote:
 ```python
 user input ->
     remote_gen = 
-        (agent starts the LLM "turn" loop, calling LLM completions and yielding events)
+        (agent starts the LLM "run" loop, calling LLM completions and yielding events)
     for next_ref in agent.receiveMessage.remote(Prompt()):
             # Agent does a function call to a child. 
             agent -> starts sub_agent
                 agent -> iterate over Prompt
                     sub_agent yield Event
                 agent yield Event
-        event = ray.get(next_ref)  # Prompt handling yields events until turn is over
+        event = ray.get(next_ref)  # Prompt handling yields events until run is over
 ```
 If the child call is a `handoff` then the parent agent simply gives the child agent
 the same `depth`, and once the child is done then the parent agent finishes without
-generating the `TurnEnd` event, since the child already did.
+generating the `RunEnd` event, since the child already did.
 
 ### Pause and Resume
 

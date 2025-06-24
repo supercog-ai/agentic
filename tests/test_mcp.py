@@ -138,7 +138,7 @@ def test_sequential_thinking_mpc():
     
     # Ask the agent to solve a simple multiplication problem using sequential thinking
     agent_runner = AgentRunner(agent)
-    response = agent_runner.turn("What is 25 * 4? use sequential thinking to solve this and provide the final answer")
+    response = agent_runner.run("What is 25 * 4? use sequential thinking to solve this and provide the final answer")
     
 
     
@@ -188,7 +188,7 @@ def test_fetch_mcp():
     
     # Ask the agent to fetch a simple, stable webpage
     agent_runner = AgentRunner(agent)
-    response = agent_runner.turn("Fetch https://www.york.ac.uk/teaching/cws/wws/webpage1.html")
+    response = agent_runner.run("Fetch https://www.york.ac.uk/teaching/cws/wws/webpage1.html")
     
     # Check that we got something relevant back
     assert any(term in response.lower() for term in ["html", "web", "page"]), response
@@ -224,7 +224,7 @@ def test_multiple_mcp_tools():
     
     # Ask a question that requires both tools
     agent_runner = AgentRunner(agent)
-    response = agent_runner.turn("Fetch https://www.york.ac.uk/teaching/cws/wws/webpage1.html and answer what are the ways to create web pages? Use sequential thinking")
+    response = agent_runner.run("Fetch https://www.york.ac.uk/teaching/cws/wws/webpage1.html and answer what are the ways to create web pages? Use sequential thinking")
     
     # Check that fetch was used
     assert fetch_tool.was_fetch_used(), "The fetch tool wasn't used"

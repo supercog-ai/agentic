@@ -1,12 +1,12 @@
 # Advanced Agent Configuration
 
-This document explains how to implement your own agent using a custom `next_turn` method in the Agentic framework. It covers the use cases, benefits, tradeoffs, and best practices to follow.
+This document explains how to implement your own agent using a custom `next_run` method in the Agentic framework. It covers the use cases, benefits, tradeoffs, and best practices to follow.
 
 ---
 
-## Why Customize `next_turn`?
+## Why Customize `next_run`?
 
-The `next_turn` method is the **core orchestration loop** for an agent in Agentic. Overriding it gives you control over:
+The `next_run` method is the **core orchestration loop** for an agent in Agentic. Overriding it gives you control over:
 
 - How your agent interacts with subagents.
 - How tools are invoked.
@@ -14,17 +14,17 @@ The `next_turn` method is the **core orchestration loop** for an agent in Agenti
 - Waiting for user feedback or pausing between steps.
 
 ### Example Use Case 
-Our [Open Source Deep Research](https://github.com/supercog-ai/agentic/blob/main/examples/deep_research/oss_deep_research.py) agent uses a custom `next_turn` to orchestrate a multi-step workflow:
+Our [Open Source Deep Research](https://github.com/supercog-ai/agentic/blob/main/examples/deep_research/oss_deep_research.py) agent uses a custom `next_run` to orchestrate a multi-step workflow:
 
 Research planning → Human validation → Knowledge accumulation → Section writing → Final report assembly.
 
-This approach allows for iterative refinement and human-in-the-loop validation, making it suitable for complex research tasks. Each step along the way has its own subagent. The custom `next_turn` method calls the subagents and orchestrates the overall workflow.
+This approach allows for iterative refinement and human-in-the-loop validation, making it suitable for complex research tasks. Each step along the way has its own subagent. The custom `next_run` method calls the subagents and orchestrates the overall workflow.
 
 > **Note**: This workflow supports human-in-the-loop validation, where the agent pauses after an initial plan generation to wait for user feedback before continuing to allow for iterative refinement.
 
 ---
 
-## Pros of Writing a Custom `next_turn`
+## Pros of Writing a Custom `next_run`
 
 | Benefit                            | Explanation                           |
 |------------------------------------|-------------------------------------------|
@@ -63,16 +63,16 @@ return  # Safely exit the generator after yielding pause
 queries = yield from self.query_planner.final_result("Generate queries", request_context={...})
 ```
 
-### 4. Always finish with a `TurnEnd` event
+### 4. Always finish with a `RunEnd` event
 ```python
-yield TurnEnd(self.name, {"status": "Turn completed."})
+yield RunEnd(self.name, {"status": "Run completed."})
 ```
 
 This ensures that:
 
 - Events from the subagent are streamed properly.
 - Subagent run tracking remains isolated.
-- The turn is ended properly.
+- The run is ended properly.
 
 ---
 ## Subagent `thread_id` Propagation for Subagents
@@ -95,18 +95,18 @@ result = yield from self.section_planner.final_result(
 
 | Event Type          | Purpose                        |
 |----------------------|--------------------------------|
-| `PromptStarted`      | Start of a turn, log the prompt. |
+| `PromptStarted`      | Start of a run, log the prompt. |
 | `ChatOutput`         | Message from agent or subagent. |
 | `ToolCall` / `ToolResult` | Tool usage events.         |
 | `WaitForInput`       | Pauses until user input.       |
-| `TurnEnd`            | Signals end of a turn + final result. |
+| `RunEnd`            | Signals end of a run + final result. |
 
 ---
 
-## Minimal Example of Custom `next_turn`
+## Minimal Example of Custom `next_run`
 
 ```python
-def next_turn(self, request: str | Prompt, request_context: dict = {}, **kwargs):
+def next_run(self, request: str | Prompt, request_context: dict = {}, **kwargs):
     topic = request.payload if isinstance(request, Prompt) else request
     yield PromptStarted(self.name, {"content": topic})
 
@@ -119,16 +119,16 @@ def next_turn(self, request: str | Prompt, request_context: dict = {}, **kwargs)
     yield ChatOutput(self.name, {"content": f"Plan: {plan}"})
 
     yield WaitForInput(self.name, {"feedback": "Approve the plan or provide feedback."})
-    yield TurnEnd(self.name, {"status": "Turn completed after waiting for input."})
+    yield RunEnd(self.name, {"status": "Run completed after waiting for input."})
 ```
 
 ---
 
 ## Key Things to Avoid
 
-- Don’t return early without yielding `TurnEnd`.
+- Don’t return early without yielding `RunEnd`.
 - Don’t mix sync calls and generator calls (`yield from`) improperly.
-- Don’t directly call subagent methods like `.next_turn()` — use the proxy API (`final_result`, etc.).
+- Don’t directly call subagent methods like `.next_run()` — use the proxy API (`final_result`, etc.).
 
 ---
 

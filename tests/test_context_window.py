@@ -18,7 +18,7 @@ def test_context_compression():
     
     # First message - normal size
     agent_runner = AgentRunner(agent)
-    response = agent_runner.turn("Hello, who are you?")
+    response = agent_runner.run("Hello, who are you?")
     assert response, "Agent should respond to initial message"
     
     for i in range(10):
@@ -28,12 +28,12 @@ def test_context_compression():
         prompt = f"Here's a lot of text: {large_text}. Ignore all that and just tell me your name."
         
         # This should trigger context compression internally
-        response = agent_runner.turn(prompt)
+        response = agent_runner.run(prompt)
         
         # Check if we got a coherent response
         assert response, "Agent should respond despite large input"
         assert "Context Test Agent" in response, "Agent should remember its identity after handling large context"
     
     # Final check - agent should still be functional after handling large input
-    response = agent_runner.turn("What's your name again?")
+    response = agent_runner.run("What's your name again?")
     assert "Context Test Agent" in response, "Agent should maintain identity after processing large context" 

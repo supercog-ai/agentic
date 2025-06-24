@@ -80,7 +80,7 @@ if __name__ == 'main':
     AgentRunner(agent).run_repl()
 ```
 
-By default it maintains a persistent Thread (session) with your agent, so that each turn is appending
+By default it maintains a persistent Thread (session) with your agent, so that each run is appending
 to the active thread. 
 
 ```sh

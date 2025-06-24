@@ -13,8 +13,8 @@ declare namespace Api {
   type ToolCall = 'tool_call';
   type ToolError = 'tool_error';
   type ToolResult = 'tool_result';
-  type TurnCancelled = 'turn_cancelled';
-  type TurnEnd = 'turn_end';
+  type RunCancelled = 'run_cancelled';
+  type RunEnd = 'run_end';
   type WaitForInput = 'wait_for_input';
 
   type AgentEventType = 
@@ -32,8 +32,8 @@ declare namespace Api {
     | ToolCall
     | ToolError
     | ToolResult
-    | TurnCancelled
-    | TurnEnd
+    | RunCancelled
+    | RunEnd
     | WaitForInput;
     
   interface AgentEvent {

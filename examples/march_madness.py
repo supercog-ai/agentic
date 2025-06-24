@@ -5,7 +5,7 @@ from datetime import datetime
 
 from agentic.common import Agent, AgentRunner
 from agentic.agentic_secrets import agentic_secrets
-from agentic.events import Event, Prompt, TurnEnd, ChatOutput, PromptStarted
+from agentic.events import Event, Prompt, RunEnd, ChatOutput, PromptStarted
 from agentic.models import GPT_4O, CLAUDE
 from agentic.tools import TavilySearchTool
 
@@ -264,7 +264,7 @@ class MarchMadnessAgent(Agent):
             model=ANALYZER_MODEL
         )
 
-    def next_turn(
+    def next_run(
         self,
         request: str|Prompt,
         request_context: dict = {},
@@ -364,7 +364,7 @@ class MarchMadnessAgent(Agent):
             {"content": final_bracket}
         )
         
-        yield TurnEnd(
+        yield RunEnd(
             self.name,
             [{"role": "assistant", "content": final_bracket}],
             thread_context=None,

@@ -90,7 +90,7 @@ Returns metadata about the agent, including its name, purpose, tools, and availa
 POST /<agent_name>/process
 ```
 
-Starts a new agent request/conversation turn.
+Starts a new agent request/conversation run.
 
 *Request Body:*
 ```json
@@ -164,7 +164,7 @@ Retrieves events from a running agent request. Can be used in two modes:
     "payload": "The current weather in New York is 72°F and partly cloudy."
   },
   {
-    "type": "turn_end",
+    "type": "run_end",
     "agent": "Weather Agent",
     "depth": 0,
     "payload": "The current weather in New York is 72°F and partly cloudy."
@@ -304,7 +304,7 @@ When building a client for the Agentic API, you'll need to process various event
 - `tool_call`: Agent is calling a tool with specific arguments
 - `tool_result`: Result returned from a tool call
 - `tool_error`: Error that occurred during a tool call
-- `turn_end`: Final result of the request
+- `run_end`: Final result of the request
 - `wait_for_input`: Agent is waiting for user input to continue
 
 Each event includes:
@@ -348,8 +348,8 @@ async function chatWithAgent(agentName, message) {
         const userInput = prompt(agentEvent.payload.message);
         resumeConversation(agentName, request_id, agentEvent.payload.key, userInput);
         break;
-      case 'turn_end':
-        console.log('Conversation turn complete');
+      case 'run_end':
+        console.log('Conversation run complete');
         eventSource.close();
         break;
     }

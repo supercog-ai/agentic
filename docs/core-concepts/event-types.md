@@ -51,10 +51,10 @@ ChatOutput(
 )
 ```
 
-### TurnEnd
+### RunEnd
 Signals the completion of an agent's processing for a run.
 ```
-TurnEnd(
+RunEnd(
     agent="my_agent",
     messages=[{"role": "assistant", "content": "Final response"}],
     thread_context=thread_context_obj,
@@ -62,10 +62,10 @@ TurnEnd(
 )
 ```
 
-### TurnCancelled
+### RunCancelled
 Indicates that an agent's run was cancelled.
 ```
-TurnCancelled(agent="my_agent", depth=0)
+RunCancelled(agent="my_agent", depth=0)
 ```
 
 ## Tool-Related Events
@@ -208,4 +208,4 @@ A typical event flow for a simple agent interaction might look like:
 7. `StartCompletion` - Agent starts another LLM completion
 8. `ChatOutput` - Agent returns a text response
 9. `FinishCompletion` - LLM generates final response
-10. `TurnEnd` - Agent completes processing the request
+10. `RunEnd` - Agent completes processing the request

@@ -50,7 +50,7 @@ def test_thread_logging_enabled(test_agent, db_manager):
     runner = AgentRunner(test_agent)
     
     # Run a simple calculation
-    runner.turn("What is 5 plus 3? Use your functions")
+    runner.run("What is 5 plus 3? Use your functions")
     
     # Verify the thread was created
     threads = db_manager.get_threads_by_user("default")
@@ -74,7 +74,7 @@ def test_thread_logging_enabled(test_agent, db_manager):
     assert 'completion_end' in event_names
     assert 'tool_call' in event_names
     assert 'tool_result' in event_names
-    assert 'turn_end' in event_names
+    assert 'run_end' in event_names
     
     # Verify tool usage was logged correctly
     tool_calls = [log for log in logs if log.event_name == 'tool_call']
@@ -86,7 +86,7 @@ def test_thread_logging_enabled(test_agent, db_manager):
                 for log in logs if log.event_name == 'completion_end')
     
     # Run another calculation to verify multiple runs are tracked
-    runner.turn("What is 10 minus 4?")
+    runner.run("What is 10 minus 4?")
     
     threads = db_manager.get_threads_by_user("default")
     new_thread_logs_count = len(db_manager.get_thread_logs(thread.id))
@@ -109,14 +109,14 @@ def test_thread_logging_disabled(db_manager):
     runner = AgentRunner(no_logging_agent)
     
     # Run a calculation
-    runner.turn("What is 7 plus 2?")
+    runner.run("What is 7 plus 2?")
     
     # Verify no threads were created
     threads = db_manager.get_threads_by_agent("Calculator", user_id=None)
     assert len(threads) == 0
     
     # Run another calculation
-    runner.turn("What is 15 minus 5?")
+    runner.run("What is 15 minus 5?")
     
     # Verify still no threads
     threads = db_manager.get_threads_by_agent("Calculator", user_id=None)
@@ -129,21 +129,21 @@ def test_run_logging_toggle(test_agent, db_manager, temp_db_path):
     
     # Start with logging disabled
     disable_thread_tracking(test_agent)
-    runner.turn("What is 3 plus 4?")
+    runner.run("What is 3 plus 4?")
     
     threads = db_manager.get_threads_by_agent("Calculator", user_id=None)
     assert len(threads) == 0
     
     # Enable logging
     init_thread_tracking(test_agent, db_path=temp_db_path)
-    runner.turn("What is 8 minus 5?")
+    runner.run("What is 8 minus 5?")
     
     threads = db_manager.get_threads_by_agent("Calculator", user_id=None)
     assert len(threads) == 1
     
     # Disable logging again
     disable_thread_tracking(test_agent)
-    runner.turn("What is 6 plus 7?")
+    runner.run("What is 6 plus 7?")
     
     threads = db_manager.get_threads_by_agent("Calculator")
     assert len(threads) == 1  # Count should not have increased
@@ -154,7 +154,7 @@ def test_thread_usage_accumulation(test_agent, db_manager):
     runner = AgentRunner(test_agent)
     
     # Run a multi-step interaction
-    runner.turn("First add 5 and 3, then subtract 2 from the result.")
+    runner.run("First add 5 and 3, then subtract 2 from the result.")
     
     # Get the thread and its logs
     threads = db_manager.get_threads_by_user("default")
@@ -183,8 +183,8 @@ def test_thread_usage_accumulation(test_agent, db_manager):
     assert model_usage['input_tokens'] == total_input_tokens
     assert model_usage['output_tokens'] == total_output_tokens
 
-def agent_turn(agent: Agent, request: str, thread_id: str=None) -> tuple[str, str]:
-    """Run a turn with the agent and return the response and the thread_id."""
+def agent_run(agent: Agent, request: str, thread_id: str=None) -> tuple[str, str]:
+    """Run a run with the agent and return the response and the thread_id."""
     results = []
     request_id = agent.start_request(
         request, 
@@ -205,9 +205,9 @@ def test_reload_history_from_thread_log(test_agent, db_manager):
     test_agent.add_tool(get_weather)
 
     # Run a simple calculation
-    res, thread_id = agent_turn(test_agent, "my name is Scott. Can you get the weather report?")
+    res, thread_id = agent_run(test_agent, "my name is Scott. Can you get the weather report?")
     print(res)
-    print(agent_turn(test_agent, "Remember my favorite color is cyan."))
+    print(agent_run(test_agent, "Remember my favorite color is cyan."))
        
     # Verify the thread was created
     threads = db_manager.get_threads_by_user("default")
@@ -216,14 +216,14 @@ def test_reload_history_from_thread_log(test_agent, db_manager):
     # Make a new instance of the agent, without the history
     new_agent = test_agent.__class__(**test_agent.agent_config)
 
-    result = agent_turn(new_agent, "What is my name and my favorite color?")[0]
+    result = agent_run(new_agent, "What is my name and my favorite color?")[0]
     assert "Scott" not in result
     assert "cyan" not in result
 
     # Now pass in the thread_id to reload the history
     agent3 = test_agent.__class__(**test_agent.agent_config)
     
-    result = agent_turn(agent3, "What is my name and my favorite color?", thread_id=thread_id)[0]
+    result = agent_run(agent3, "What is my name and my favorite color?", thread_id=thread_id)[0]
 
     assert "Scott" in result
     assert "cyan" in result

@@ -97,8 +97,8 @@ execution order in [oss_deep_research.prompts.yaml](./oss_deep_research.prompts.
 The class constructor has a `# CONFIG` section with various settings. The main
 ones are the `num_queries` property which determines how many web searches to process.
 
-The agent is run via the `next_turn` method, which executes our process flow. It
-invokes each ReAct agent in turn, saving the results from one agent and feeding them
+The agent is run via the `next_run` method, which executes our process flow. It
+invokes each ReAct agent in run, saving the results from one agent and feeding them
 in as data to the next. To invoke a sub-agent we call the `final_result` method
 which "runs" the agent for a complete run until it stops, and then returns the
 final result from the sub-agent.
@@ -124,7 +124,7 @@ rely on the LLM to determine the process steps, and "workflow agents" which rely
 code to drive the process.
 
 This agent demonstrates "orchestration in code". The _Agentic_ framework itself isn't really
-involved - it simply defines the top-level API (`next_turn`) and set of publishable events.
+involved - it simply defines the top-level API (`next_run`) and set of publishable events.
 
 Contrast this with the _LangGraph_ implementation which relies on building a _graph_ and
 orchestrating the ReAct agets from the graph. I am wildy unconvinced that the graph offers
