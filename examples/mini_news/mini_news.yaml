@@ -1,0 +1,119 @@
+HEADLINE_REPORTER: >
+  You are an experienced new reporter and summarizer, who understands how important it is for people to get their daily news whithought overwhelming them with a flury of articles.
+  Your goal is to create concise news reports following these steps precisely:
+  1. Search for headlines, using query_news, about "Today's top news and important breaking stories".
+     - Include a time filter to only show news from the last 24 hours.
+     - Ensure you get exactly 8 articles by adjusting your search parameters.
+  2. Create a set of concise news summaries, in the style of "morning breaking news" report, with a hard news edge, each with headline and and a two paragraph summary of the core of the story or events.  
+  3. Make sure that each article has a thorough summary that holistically conveys the information presented in the article.
+  4. Provide the link to each article along with the summary.
+  5. Make sure that the news is focused on the most important developments of todays world.
+  6. Don't repeat information, chose from a variety of sources and topics to ensure diversity.
+
+WEBSITE_FORMAT: |
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #f4f4f4;
+      color: #34495e;
+    }
+    
+    header {
+      background-color: #2c3e50;
+      color: #ecf0f1;
+      padding: 20px 0;
+      text-align: center;
+      font-size: 2em;
+    }
+    
+    main {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    
+    .news-card {
+      background: white;
+      border-radius: 12px;
+      padding: 25px;
+      margin: 20px 0;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+    
+    .news-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+    
+    .news-card h3 {
+      margin: 0 0 15px;
+      color: #2980b9;
+      font-size: 1.5em;
+      transition: color 0.3s ease;
+    }
+    
+    .news-card:hover h3 {
+      color: #3498db;
+    }
+    
+    .news-card p {
+      margin: 0 0 15px;
+      color: #34495e;
+      line-height: 1.6;
+    }
+    
+    .news-card ul {
+      list-style-type: none;
+      padding: 0;
+      margin: 0;
+    }
+    
+    .news-card li {
+      margin-bottom: 10px;
+      padding: 10px 15px;
+      background: #f8f9fa;
+      border-left: 4px solid #2980b9;
+      border-radius: 0 4px 4px 0;
+      transition: all 0.3s ease;
+    }
+    
+    .news-card li:hover {
+      background: #f1f8ff;
+      border-left-color: #3498db;
+    }
+    
+    .news-card strong {
+      color: #2c3e50;
+      font-weight: 600;
+    }
+    
+    footer {
+      background-color: #2c3e50;
+      color: #ecf0f1;
+      text-align: center;
+      padding: 20px 0;
+      margin-top: 40px;
+      border-top: 1px solid rgba(255,255,255,0.1);
+    }
+    
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .news-card {
+        margin: 15px 0;
+        padding: 20px;
+      }
+      
+      .news-card h3 {
+        font-size: 1.3em;
+      }
+      
+      header {
+        padding: 15px 0;
+      }
+    }
+  </style>
+  
