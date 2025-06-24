@@ -5,6 +5,7 @@ import BackgroundTasks from '@/components/BackgroundTasks';
 import ChatInputForm from '@/components/ChatInputForm';
 import EventLogs from '@/components/EventLogs';
 import MarkdownRenderer from '@/components/MarkdownRenderer';
+import ReasoningDisplay from '@/components/ReasoningDisplay';
 import { AutoScrollArea } from '@/components/ui/auto-scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -237,22 +238,28 @@ const AgentChat: React.FC<AgentChatProps> = ({
                   {msg.role === 'user' ? ( // If user message, show the content as normal
                     <p className="whitespace-pre-wrap">{msg.content}</p>
                   ) : (
-                    !msg.content && msg.inputKeys ? ( // If inputKeys, show the inputKeys as input form
-                      <ChatInputForm 
-                        inputKeys={msg.inputKeys}
-                        resumeValues={msg.resumeValues}
-                        formDisabled={msg.formDisabled}
-                        threadId={currentThreadId || ''}
-                        resumeWithInput={resumeWithInput}
-                        onThreadComplete={onThreadComplete}
-                      />
-                    ) : (
-                      !msg.content && idx === displayMessages.length - 1 ? ( // If no inputKeys and last message is blank, show loading
-                        <CircleDashed className="h-4 w-4 animate-spin flex-shrink-0" />
-                      ) : ( // Default show the content as markdown
-                        <MarkdownRenderer content={msg.content} />
-                      )
-                    )
+                    <>
+                      {!msg.content && msg.inputKeys ? ( // If inputKeys, show the inputKeys as input form
+                        <ChatInputForm 
+                          inputKeys={msg.inputKeys}
+                          resumeValues={msg.resumeValues}
+                          formDisabled={msg.formDisabled}
+                          threadId={currentThreadId || ''}
+                          resumeWithInput={resumeWithInput}
+                          onThreadComplete={onThreadComplete}
+                        />
+                      ) : (
+                        !msg.content && idx === displayMessages.length - 1 ? ( // If no inputKeys and last message is blank, show loading
+                          <CircleDashed className="h-4 w-4 animate-spin flex-shrink-0" />
+                        ) : ( // Default show the content as markdown
+                          <MarkdownRenderer content={msg.content} />
+                        )
+                      )}
+                      {/* Show reasoning display if available */}
+                      {msg.reasoning && (
+                        <ReasoningDisplay reasoning={msg.reasoning} />
+                      )}
+                    </>
                   )}
                 </div>
 

@@ -168,7 +168,8 @@ export function useChat(agentPath: string, agentName: string, currentThreadId: s
               });
             } 
             // Add non-chat output events to the events list
-            else if (uiEvent.type !== AgentEventType.CHAT_OUTPUT || !isBackground) {
+            // Special case: always add reasoning content events, even in background mode
+            else if (!isBackground || uiEvent.type === AgentEventType.REASONING_CONTENT) {
               setEvents(prev => [...prev, uiEvent]);
             }
 
@@ -338,6 +339,44 @@ export function useChat(agentPath: string, agentName: string, currentThreadId: s
     cleanupStream();
   }, [cleanupStream]);
   
+  // Helper function to find reasoning content for a chat output event
+  const findReasoningForChatOutput = (chatOutputIndex: number, allEvents: Ui.Event[]): string | undefined => {
+    // First, look backwards from the chat output event (reasoning may come before chat output)
+    for (let i = chatOutputIndex - 1; i >= 0; i--) {
+      const event = allEvents[i];
+      if (event.type === AgentEventType.REASONING_CONTENT && event.agentName === agentName) {
+        return typeof event.payload === 'string' 
+          ? event.payload 
+          : event.payload?.reasoning_content || event.payload?.content || '';
+      }
+      // Stop looking backwards if we hit another chat output or user message
+      if (event.type === AgentEventType.CHAT_OUTPUT || 
+          event.type === AgentEventType.PROMPT_STARTED || 
+          event.type === AgentEventType.RESUME_WITH_INPUT) {
+        break;
+      }
+    }
+    
+    // If not found backwards, look forwards from the chat output event (reasoning may come after chat output)
+    for (let i = chatOutputIndex + 1; i < allEvents.length; i++) {
+      const event = allEvents[i];
+      if (event.type === AgentEventType.REASONING_CONTENT && event.agentName === agentName) {
+        return typeof event.payload === 'string' 
+          ? event.payload 
+          : event.payload?.reasoning_content || event.payload?.content || '';
+      }
+      // Stop looking forwards if we hit another chat output or user message
+      if (event.type === AgentEventType.CHAT_OUTPUT || 
+          event.type === AgentEventType.PROMPT_STARTED || 
+          event.type === AgentEventType.RESUME_WITH_INPUT ||
+          event.type === AgentEventType.TURN_END) {
+        break;
+      }
+    }
+    
+    return undefined;
+  };
+
   // Derive messages from events for chat display
   const messages = events
     .filter(event => (
@@ -371,6 +410,7 @@ export function useChat(agentPath: string, agentName: string, currentThreadId: s
         return {
           role: 'user' as const,
           content,
+          reasoning: undefined
         };
       } else if (event.type === AgentEventType.WAIT_FOR_INPUT) {
         // Check if there's a PROMPT_STARTED event after this WAIT_FOR_INPUT event
@@ -393,14 +433,20 @@ export function useChat(agentPath: string, agentName: string, currentThreadId: s
           role: 'agent' as const,
           inputKeys: event.payload,
           resumeValues: hasSubmission ? submissionValues : undefined,
-          formDisabled: hasSubmission
+          formDisabled: hasSubmission,
+          reasoning: undefined
         };
       } else {
+        // This is a CHAT_OUTPUT event, check for reasoning content
+        const eventIndexInAllEvents = events.findIndex(e => e === event);
+        const reasoning = findReasoningForChatOutput(eventIndexInAllEvents, events);
+        
         return {
           role: 'agent' as const,
           content: typeof event.payload === 'string'
             ? event.payload
-            : event.payload?.content || ''
+            : event.payload?.content || '',
+          reasoning
         };
       }
     });
@@ -409,7 +455,8 @@ export function useChat(agentPath: string, agentName: string, currentThreadId: s
   if (messages.length > 0 && messages[messages.length - 1].role === 'user') {
     messages.push({
       role: 'agent' as const,
-      content: ''
+      content: '',
+      reasoning: undefined
     });
   }
 
