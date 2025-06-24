@@ -1,12 +1,16 @@
+import json
+from fastapi import HTTPException
 import typer
 import os
 import requests
 import inspect
 from rich.markdown import Markdown
 from rich.console import Console
-from typing import Optional, List
+from typing import Any, Dict, Optional, List
 from .file_cache import file_cache
 from .colors import Colors
+from jose.jwe import decrypt
+from hkdf import Hkdf
 
 import agentic.quiet_warnings
 from agentic.agentic_secrets import agentic_secrets as secrets
@@ -211,8 +215,32 @@ def serve(
     # Create and run the API server
     with Status("[bold green]Setting up API server...", console=console):
         if user_agents:
-            def lookup_user(uuid: str) -> str:
-                return uuid
+            def lookup_user(token: str) -> str:
+
+                # Use workaround to get decrypted key (jwe.decode() and base64.b64decode() doesn't work, and
+                # FastAPI_NextAuth_JWT cannot be used since it needs JWS and default JWT for NextAuth is JWE, not JWS)
+                def __encryption_key(secret: str):
+                    return Hkdf("", bytes(secret, "utf-8")).expand(b"NextAuth.js Generated Encryption Key", 32)
+                
+                def decode_jwe(token: str, secret: str):
+                    decrypted = decrypt(token, __encryption_key(secret))
+
+                    if decrypted:
+                        return json.loads(bytes.decode(decrypted, "utf-8"))
+                    else:
+                        return None
+
+                if not token:
+                    raise HTTPException(status_code=401, detail="Missing JWT token")
+        
+                try:
+                    secret = os.environ["AUTH_SECRET"]
+                    decoded_token = decode_jwe(token, secret)
+                except Exception as e:
+                    raise HTTPException(status_code=401, detail=f"Invalid JWT token: {str(e)}")
+                
+                return decoded_token['sub']
+            
             api_server = AgentAPIServer(agent_instances, port=port, lookup_user=lookup_user)
         else:
             api_server = AgentAPIServer(agent_instances, port=port)
