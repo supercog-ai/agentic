@@ -11,8 +11,15 @@ import requests
 import yaml
 import sys
 import json
+import webbrowser
 
 MODEL=GPT_4O_MINI
+
+#TO DO:
+#   Delete previous file upon usage
+#   Automatically open webpage
+#   Location tool: news based on location of user
+
 
 # Load prompts from YAML file
 prompts_file = os.path.join(os.path.dirname(__file__), 'mini_news.yaml')
@@ -61,7 +68,7 @@ class MiniNewsAgent(Agent):
             1. Structure content like a concise social media post by a professional media agency such as CNN or NPR.
             2. Start with a concise headline in bold
             3. Use broadcast-style sentence structures and pacing
-            4. Provide context and details as a set of 3-5 bullet points to give the reader full understanding of the critical points of the news story.
+            4. Provide context and details as a set of 5 bullet points to give the reader full understanding of the critical points of the news story.
             5. Maintain a professional yet conversational tone
             6. Ensure proper emphasis on key information
             7. Keep the original information intact while making it easy to read as a quick info grab.
@@ -72,7 +79,7 @@ class MiniNewsAgent(Agent):
             12. IMPORTANT: You will be provided with {prompts['WEBSITE_FORMAT']} as the format for the HTML file. Use this information and instead of writing CSS yourself simply use this what is given as the <style> for the website.
             13. Use links to the sources where the information was gotten from using HTML link capabilities to bring users to the webpage of the source.
             14. Try to use diverse sources and make sure that significant information is presented in each summary of the source.
-            15. NOTE: Do not ouput anything besides the completed HTML file.
+            15. NOTE: Do not ouput anything besides the completed HTML file combined with the CSS provided.
             """,
             model=MODEL,
             max_tokens=8192
@@ -88,7 +95,7 @@ class MiniNewsAgent(Agent):
 
         print(f"Writing file: {full_path}")
         
-        # Remove '''html and html''' markers if present
+        # Remove ```html and ``` markers if present
         if html_data.startswith("```html") and html_data.endswith("```"):
             html_data = html_data[7:-3].strip()  # Remove first 7 and last 3 characters
         with open(full_path, 'w', encoding='utf-8') as html_file:
@@ -158,7 +165,8 @@ Supercog Mini News
         final = f"Mini news for {current_date}:/n/n---/n{formatted_news} published successfully"
         #print(final)
         file_path = self.write_file(formatted_news, current_date)
-        print(f"\nNews file created at: file://{file_path}")
+        print(f"\nNews file created at: file:///{file_path}")
+        webbrowser.open(f'file:///{file_path}', new=2)
         yield TurnEnd(
             self.name,
             [{"role": "assistant", "content": final}],

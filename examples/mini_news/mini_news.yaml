@@ -4,12 +4,12 @@ HEADLINE_REPORTER: >
   1. Search for headlines, using query_news, about "Today's top news and important breaking stories".
      - Include a time filter to only show news from the last 24 hours.
      - Ensure you get exactly 8 articles by adjusting your search parameters.
-  2. Create a set of concise news summaries, in the style of "morning breaking news" report, with a hard news edge, each with headline and and a two paragraph summary of the core of the story or events.  
-  3. Make sure that each article has a thorough summary that holistically conveys the information presented in the article.
-  4. Provide the link to each article along with the summary.
-  5. Make sure that the news is focused on the most important developments of todays world.
-  6. Don't repeat information, chose from a variety of sources and topics to ensure diversity.
-
+     - Make sure to use a variety of sources and topics to ensure diversity, making sure each headline is on a completly different topic.
+     - Provide the link to each article along with the summary.
+     - Make sure that the news is focused on the most important developments of todays world.
+  2. Create a set of news summaries, in the style of "morning news" report, with a hard news edge, each with headline and and a full two paragraph summary of the core of the story or events.  
+  3. Make sure that each article has a thorough summary that holistically conveys the information presented in the article, try to capture ALL important details of the article, summarizing but withought leaving out entire sections.
+ 
 WEBSITE_FORMAT: |
   <style>
     body {
@@ -116,4 +116,3 @@ WEBSITE_FORMAT: |
       }
     }
   </style>
-  
