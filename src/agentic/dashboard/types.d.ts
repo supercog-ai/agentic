@@ -40,7 +40,6 @@ declare namespace Api {
     type: AgentEventType;
     payload: any;
     agent: string;
-    depth: number;
   }
   
   interface AgentInfo {
@@ -74,13 +73,10 @@ declare namespace Api {
     user_id: string;
     role: string;
     created_at: string;
-    event_name: string;
+    event_name: AgentEventType;
     event: {
-      agent: string;
-      type: AgentEventType;
-      payload: any;
-      depth: number;
       content?: string;  // DEPRECIATED 6/20/25
+      [key: string]: any;
     };
   }
 }
