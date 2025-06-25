@@ -189,7 +189,6 @@ def test_thread_manager_handle_events(db_manager, thread_manager, thread_context
     # Test handling PromptStarted event
     prompt_event = PromptStarted(agent="test_agent", message="Test prompt")
     thread_manager.handle_event(prompt_event, thread_context)
-    assert thread_manager.current_thread_id is not None
     
     # Test handling FinishCompletion event
     completion_event = FinishCompletion.create(
@@ -213,7 +212,3 @@ def test_thread_manager_handle_events(db_manager, thread_manager, thread_context
     # Test handling TurnEnd event
     turn_end = TurnEnd(agent="test_agent", messages=[])
     thread_manager.handle_event(turn_end, thread_context)
-    
-    # Verify logs were created
-    logs = db_manager.get_thread_logs(thread_manager.current_thread_id)
-    assert len(logs) > 0

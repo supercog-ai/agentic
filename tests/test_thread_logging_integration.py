@@ -82,7 +82,7 @@ def test_thread_logging_enabled(test_agent, db_manager):
     assert tool_calls[0].event['name'] == 'add'
     
     # Verify token usage was tracked
-    assert any('input_tokens' in log.event.get('usage', {}).get(test_agent.model, {})
+    assert any('input_tokens' in log.event.get('usage', {})
                 for log in logs if log.event_name == 'completion_end')
     
     # Run another calculation to verify multiple runs are tracked
@@ -171,8 +171,7 @@ def test_reload_history_from_thread_log(test_agent, db_manager):
 
     # Run a simple calculation
     res, thread_id = agent_turn(test_agent, "my name is Scott. Can you get the weather report?")
-    print(res)
-    print(agent_turn(test_agent, "Remember my favorite color is cyan."))
+    agent_turn(test_agent, "Remember my favorite color is cyan.")
        
     # Verify the thread was created
     threads = db_manager.get_threads_by_user("default")
@@ -192,5 +191,3 @@ def test_reload_history_from_thread_log(test_agent, db_manager):
 
     assert "Scott" in result
     assert "cyan" in result
-
-
