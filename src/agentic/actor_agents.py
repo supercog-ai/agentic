@@ -337,7 +337,13 @@ class ActorBaseAgent:
             if __LEGACY_CTX_VARS_NAME__ in func.__code__.co_varnames:
                 args[__LEGACY_CTX_VARS_NAME__] = thread_context
 
-            events.append(ToolCall(self.name, name, args))
+            events.append(ToolCall(
+                agent=self.name,
+                name=name,
+                arguments=args,
+                depth=self.depth,
+                tool_call_id=tool_call.id
+            ))
 
             # Call the function!!
             raw_result = None
@@ -390,8 +396,13 @@ class ActorBaseAgent:
                     )
                 raw_result = f"Tool error: {name}: {last_three}"
 
-                events.append(ToolError(self.name, name, raw_result, self.depth))
-                # thread_context.error(raw_result)
+                events.append(ToolError(
+                    agent=self.name,
+                    name=name,
+                    error=raw_result,
+                    depth=self.depth,
+                    tool_call_id=tool_call.id
+                ))
 
             # Let tools return additional events to publish
             if isinstance(raw_result, list):
@@ -419,7 +430,14 @@ class ActorBaseAgent:
                 events.append(log_event)
             thread_context.reset_logs()
 
-            events.append(ToolResult(self.name, name, result.value))
+            events.append(ToolResult(
+                agent=self.name,
+                name=name,
+                result=result.value,
+                depth=self.depth,
+                intermediate_result=False,
+                tool_call_id=tool_call.id
+            ))
 
             partial_response.messages.append(
                 {
@@ -463,7 +481,7 @@ class ActorBaseAgent:
             self.debug = actor_message.debug
             self.depth = actor_message.depth
             self.history.append({"role": "user", "content": actor_message.payload})
-            yield PromptStarted(self.name, actor_message.payload, self.depth)
+            yield PromptStarted(self.name, {"content": actor_message.payload}, self.depth)
 
         elif isinstance(actor_message, ResumeWithInput):
             if not self.paused_context:

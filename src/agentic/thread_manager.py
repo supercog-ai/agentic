@@ -10,6 +10,8 @@ from .events import (
 from agentic.common import ThreadContext
 from agentic.db.models import ThreadLog
 from agentic.db.db_manager import DatabaseManager
+from agentic.events import ChatOutput
+from agentic.event_factory import EventFactory
 from agentic.utils.directory_management import get_runtime_filepath
 
 class ThreadManager:
@@ -54,7 +56,7 @@ class ThreadManager:
                 user_id=str(thread_context.get("user") or "default"),
                 role=role,
                 event_name=event.type,
-                event_data=json.loads(event.model_dump_json())
+                event_data=event.payload
             )
         except Exception as e:
             traceback.print_exc()
@@ -94,144 +96,26 @@ def reconstruct_chat_history_from_thread_logs(thread_logs: List[ThreadLog]) -> L
     """
     history = []
     current_assistant_message = None
-    current_tool_calls = []
-    tool_call_counter = 0
     
     for log in thread_logs:
-        event_name = log.event_name
-        event_data = log.event
-        role = log.role
-        
-        # Handle user messages from PromptStarted events
-        if event_name == "prompt_started":
-            content = ""
-            if isinstance(event_data, dict):
-                content = event_data.get("content", "")
-                # Necessary to support db logs that were created with a buggy duel content structure ({content: {content: "prompt"}})
-                if isinstance(content, dict):
-                    content = content.get("content", "")
-            elif isinstance(event_data, str):
-                content = event_data
-            
-            if content:
-                history.append({
-                    "role": "user",
-                    "content": content
-                })
-        
-        # Handle assistant streaming responses from Output events  
-        elif event_name == "chat_output" and role in ["assistant", "system"]:
-            if current_assistant_message is None:
-                current_assistant_message = {
-                    "role": "assistant",
-                    "content": ""
-                }
-            
-            # Extract content from event_data
-            content = ""
-            if isinstance(event_data, dict):
-                content = event_data.get("content", "")
-            elif isinstance(event_data, str):
-                content = event_data
-                
-            if content:
-                current_assistant_message["content"] += content
-        
-        # Handle tool calls
-        elif event_name == "tool_call":
-            tool_call_counter += 1
-            tool_call = {
-                "id": f"call_{tool_call_counter}",
-                "type": "function",
-                "function": {
-                    "name": event_data.get("name", ""),
-                    "arguments": json.dumps(event_data.get("arguments", {})) if isinstance(event_data, dict) else "{}"
-                }
-            }
-            current_tool_calls.append(tool_call)
-            history.append({
-                "role": "assistant",
-                "content": "null",
-                "tool_calls": [tool_call]
-            })
-        
-        # Handle tool results
-        elif event_name == "tool_result":
-            if isinstance(event_data, dict):
-                if event_data.get("is_log") == True:
-                    # Skip log messages
-                    continue
-            # Find the corresponding tool call
-            tool_name = event_data.get("name", "")
-            result = event_data.get("result", "")
-            
-            # Find matching tool call ID
-            call_id = None
-            for tool_call in current_tool_calls:
-                if tool_call["function"]["name"] == tool_name:
-                    call_id = tool_call["id"]
-                    break
-            
-            if call_id is None:
-                continue  # Skip if no matching tool call found
-            
-            history.append({
-                "role": "tool",
-                "tool_call_id": call_id,
-                "content": str(result)
-            })
-        
-        # Handle tool errors (similar to tool results)
-        elif event_name == "tool_error":
-            tool_name = event_data.get("tool_name", "") if isinstance(event_data, dict) else ""
-            error_msg = event_data.get("error", "") if isinstance(event_data, dict) else str(event_data)
-            
-            # Find matching tool call ID
-            call_id = None
-            for tool_call in current_tool_calls:
-                if tool_call["function"]["name"] == tool_name:
-                    call_id = tool_call["id"]
-                    break
-            
-            if call_id is None:
-                call_id = f"call_{tool_name}_{tool_call_counter}"
-            
-            history.append({
-                "role": "tool", 
-                "tool_call_id": call_id,
-                "content": f"Error: {error_msg}"
-            })
-        
-        # Handle completion finish - finalize assistant message
-        elif event_name == "completion_end":
-            if current_assistant_message is not None or current_tool_calls:
-                assistant_msg = current_assistant_message or {"role": "assistant", "content": ""}
-                
-                # Add tool calls if any were made
-                #if current_tool_calls:
-                #    assistant_msg["tool_calls"] = current_tool_calls.copy()
-                
-                # Only add if there's content or tool calls
-                if assistant_msg.get("content") or assistant_msg.get("tool_calls"):
-                    history.append(assistant_msg)
-                
-                # Reset for next message
-                current_assistant_message = None
-                current_tool_calls = []
-        
-        # Handle turn end - ensure any pending assistant message is added
-        elif event_name == "turn_end":
-            if current_assistant_message is not None:
-                history.append(current_assistant_message)
-                current_assistant_message = None
-            
-            # Reset tool calls for next turn
-            current_tool_calls = []
+        event = EventFactory.from_thread_log(log)
+        if event:
+            llm_message = event.to_llm_message()
+            if llm_message:
+                # Compile chat outputs
+                if isinstance(event, ChatOutput):
+                    if current_assistant_message:
+                        current_assistant_message["content"] += llm_message["content"]
+                    else:
+                        current_assistant_message = llm_message
+                else:
+                    if current_assistant_message:
+                        history.append(current_assistant_message)
+                        current_assistant_message = None
+
+                    history.append(llm_message)
     
-    # Handle any remaining assistant message at the end
-    if current_assistant_message is not None:
-        history.append(current_assistant_message)
-    
+    print(history)
     return history
 
 # NOT USED YET

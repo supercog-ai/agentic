@@ -1,12 +1,14 @@
 import typing
 import uuid
 import warnings
+import json
 from datetime import timedelta
 from litellm.types.utils import Message
-from pydantic import BaseModel, ConfigDict, field_serializer
-from typing import  Any, Optional, Dict
+from pydantic import BaseModel, ConfigDict
+from typing import Any, Optional, Dict
 
 from .swarm.types import Result, DebugLevel
+from agentic.db.models import ThreadLog
 
 
 # Shutup stupid pydantic warnings
@@ -21,6 +23,16 @@ class Event(BaseModel):
     model_config = ConfigDict(
         arbitrary_types_allowed=True
     )
+
+    def to_llm_message(self) -> Optional[Message]:
+        """Convert event to LLM message format if applicable"""
+        return None
+
+    @classmethod
+    def from_thread_log(cls, log: 'ThreadLog') -> Optional['Event']:
+        """Create an Event instance from a ThreadLog database record"""
+        # This is the base implementation - subclasses should override
+        return None
 
     def __str__(self) -> str:
         return str(f"[{self.agent}: {self.type}] {self.payload}\n")
@@ -81,16 +93,78 @@ class Prompt(Event):
     def set_message(self, message: str):
         self.payload = message
 
+    @classmethod
+    def from_thread_log(cls, log: 'ThreadLog') -> Optional['Prompt']:
+        """Create a Prompt instance from a ThreadLog database record"""
+        if log.event_name != "prompt":
+            return None
+            
+        event_data = log.event
+        return cls(
+            agent=log.agent_id,
+            message=event_data.get("content", ""),
+            debug=DebugLevel(False),
+            request_context=event_data.get("request_context", {}),
+            depth=event_data.get("depth", 0),
+            request_id=event_data.get("request_id")
+        )
+
 class PromptStarted(Event):
-    def __init__(self, agent: str, message: str, depth: int = 0):
+    def __init__(self, agent: str, message: str|dict, depth: int = 0):
+        if isinstance(message, str):
+            message = {"content": message}
         super().__init__(agent=agent, type="prompt_started", payload=message, depth=depth)
 
     def print(self, debug_level: str):
         return self._indent(str(self))
 
+    def to_llm_message(self) -> Optional[Dict[str, Any]]:
+        """Convert event to LLM message format"""
+        content = self.payload
+        if isinstance(content, dict):
+            content = content.get("content", "")
+            # Handle buggy dual content structure
+            if isinstance(content, dict):
+                content = content.get("content", "")
+        elif not isinstance(content, str):
+            content = str(content)
+            
+        if content:
+            return {
+                "role": "user",
+                "content": content,
+            }
+        return None
+
+    @classmethod
+    def from_thread_log(cls, log: 'ThreadLog') -> Optional['PromptStarted']:
+        """Create a PromptStarted instance from a ThreadLog database record"""
+        if log.event_name != "prompt_started":
+            return None
+            
+        event_data = log.event
+        # Handle the payload which could be a string or dict
+        payload = event_data
+        if isinstance(event_data, dict) and "content" in event_data:
+            payload = event_data["content"]
+            
+        return cls(
+            agent=log.agent_id,
+            message=payload,
+            depth=event_data.get("depth", 0) if isinstance(event_data, dict) else 0
+        )
+
 class ResetHistory(Event):
     def __init__(self, agent: str):
         super().__init__(agent=agent, type="reset_history", payload={})
+
+    @classmethod
+    def from_thread_log(cls, log: 'ThreadLog') -> Optional['ResetHistory']:
+        """Create a ResetHistory instance from a ThreadLog database record"""
+        if log.event_name != "reset_history":
+            return None
+            
+        return cls(agent=log.agent_id)
 
 class Output(Event):
     def __init__(self, agent: str, message: Any, depth: int = 0):
@@ -105,7 +179,29 @@ class Output(Event):
     @property
     def is_output(self):
         return True
+    
+    def to_llm_message(self) -> Optional[Dict[str, Any]]:
+        """Convert event to LLM message format"""
+        message = { "role": "assistant" }
+        if isinstance(self.payload, str):
+            message["content"] = self.payload
+        elif isinstance(self.payload, dict):
+            message["content"] = self.payload.get("content")
+            
+        return message
 
+    @classmethod
+    def from_thread_log(cls, log: 'ThreadLog') -> Optional['Output']:
+        """Create an Output instance from a ThreadLog database record"""
+        if log.event_name != "output":
+            return None
+            
+        event_data = log.event
+        return cls(
+            agent=log.agent_id,
+            message=event_data,
+            depth=event_data.get("depth", 0) if isinstance(event_data, dict) else 0
+        )
 
 class ChatOutput(Output):
     def __init__(self, agent: str, payload: dict, depth: int = 0):
@@ -122,61 +218,160 @@ class ChatOutput(Output):
     def __repr__(self) -> str:
         return repr(self.__dict__)
 
+    def to_llm_message(self) -> Optional[Dict[str, Any]]:
+        """Convert event to LLM message format"""
+        content = ""
+        if isinstance(self.payload, dict):
+            content = self.payload.get("content", "")
+        elif isinstance(self.payload, str):
+            content = self.payload
+            
+        if content:
+            return {
+                "role": "assistant",
+                "content": content,
+            }
+        return None
+
+    @classmethod
+    def from_thread_log(cls, log: 'ThreadLog') -> Optional['ChatOutput']:
+        """Create a ChatOutput instance from a ThreadLog database record"""
+        if log.event_name != "chat_output":
+            return None
+            
+        event_data = log.event
+        return cls(
+            agent=log.agent_id,
+            payload=event_data,
+            depth=event_data.get("depth", 0) if isinstance(event_data, dict) else 0
+        )
+
 
 class ToolCall(Event):
     arguments: dict = {}
+    tool_call_id: str = None
 
-    def __init__(self, agent: str, name: str, arguments: dict, depth: int = 0):
+    def __init__(self, agent: str, name: str, arguments: dict, depth: int = 0, tool_call_id: str = None):
         super().__init__(
             agent=agent,
             type="tool_call",
             payload={
                 "name": name,
-                "arguments": arguments
+                "arguments": arguments,
+                "tool_call_id": tool_call_id
             },
             depth=depth
         )
         self.arguments = arguments
+        self.tool_call_id = tool_call_id
 
     def __str__(self):
-        name = self.payload
+        name = self.payload["name"]
         return "  " * (self.depth + 1) + f"[TOOL: {name} >> ({self.arguments})]\n"
+    
+    def to_llm_message(self) -> Optional[Dict[str, Any]]:
+        """Convert event to LLM message format"""
+        tool_call = {
+            "id": self.tool_call_id or f"call_{id(self)}",
+            "type": "function",
+            "function": {
+                "name": self.payload.get("name", ""),
+                "arguments": json.dumps(self.arguments) if self.arguments else "{}"
+            }
+        }
+        
+        return {
+            "role": "assistant",
+            "content": None,
+            "tool_calls": [tool_call]
+        }
 
+    @classmethod
+    def from_thread_log(cls, log: 'ThreadLog') -> Optional['ToolCall']:
+        """Create a ToolCall instance from a ThreadLog database record"""
+        if log.event_name != "tool_call":
+            return None
+            
+        event_data = log.event
+        return cls(
+            agent=log.agent_id,
+            name=event_data.get("name", ""),
+            arguments=event_data.get("arguments", {}),
+            depth=event_data.get("depth", 0),
+            tool_call_id=event_data.get("tool_call_id")
+        )
 
 class ToolResult(Event):
     result: Any = None
+    tool_call_id: str = None
 
-    def __init__(self, agent: str, name: str, result: Any, depth: int = 0, intermediate_result: bool = False):
+    def __init__(self, agent: str, name: str, result: Any, depth: int = 0, intermediate_result: bool = False, tool_call_id: str = None):
         super().__init__(
             agent=agent,
             type="tool_result",
             payload={
                 "name": name,
                 "result": result,
-                "is_log": intermediate_result
+                "is_log": intermediate_result,
+                "tool_call_id": tool_call_id
             },
             depth=depth,
         )
         self.result = result
+        self.tool_call_id = tool_call_id
 
     def __str__(self):
-        name = self.payload
+        name = self.payload["name"]
         return "  " * (self.depth + 1) + f"[TOOL: {name}] <<\n{self.result}]\n"
+
+    def to_llm_message(self) -> Optional[Dict[str, Any]]:
+        """Convert event to LLM message format"""
+        # Skip log messages
+        if self.payload.get("is_log", False):
+            return None
+            
+        if not self.tool_call_id:
+            return None
+            
+        return {
+            "role": "tool",
+            "tool_call_id": self.tool_call_id,
+            "content": str(self.result)
+        }
+
+    @classmethod
+    def from_thread_log(cls, log: 'ThreadLog') -> Optional['ToolResult']:
+        """Create a ToolResult instance from a ThreadLog database record"""
+        if log.event_name != "tool_result":
+            return None
+            
+        event_data = log.event
+        return cls(
+            agent=log.agent_id,
+            name=event_data.get("name", ""),
+            result=event_data.get("result"),
+            depth=event_data.get("depth", 0),
+            intermediate_result=event_data.get("is_log", False),
+            tool_call_id=event_data.get("tool_call_id")
+        )
 
 class ToolError(Event):
     _error: str
+    tool_call_id: str = None
 
-    def __init__(self, agent: str, name: str, error: str, depth: int = 0):
+    def __init__(self, agent: str, name: str, error: str, depth: int = 0, tool_call_id: str = None):
         super().__init__(
             agent=agent,
             type="tool_error",
             payload={
                 "name": name,
-                "error": error
+                "error": error,
+                "tool_call_id": tool_call_id
             },
             depth=depth
         )
         self._error = error
+        self.tool_call_id = tool_call_id
 
     @property
     def error(self):
@@ -185,10 +380,47 @@ class ToolError(Event):
     def print(self, debug_level: str):
         return str(self._error)
 
+    def to_llm_message(self) -> Optional[Dict[str, Any]]:
+        """Convert event to LLM message format"""
+        if not self.tool_call_id:
+            return None
+            
+        return {
+            "role": "tool",
+            "tool_call_id": self.tool_call_id,
+            "content": {self._error}
+        }
+
+    @classmethod
+    def from_thread_log(cls, log: 'ThreadLog') -> Optional['ToolError']:
+        """Create a ToolError instance from a ThreadLog database record"""
+        if log.event_name != "tool_error":
+            return None
+            
+        event_data = log.event
+        return cls(
+            agent=log.agent_id,
+            name=event_data.get("name", ""),
+            error=event_data.get("error", ""),
+            depth=event_data.get("depth", 0),
+            tool_call_id=event_data.get("tool_call_id")
+        )
+
 
 class StartCompletion(Event):
     def __init__(self, agent: str, depth: int = 0):
         super().__init__(agent=agent, type="completion_start", payload={}, depth=depth)
+
+    @classmethod
+    def from_thread_log(cls, log: 'ThreadLog') -> Optional['StartCompletion']:
+        """Create a StartCompletion instance from a ThreadLog database record"""
+        if log.event_name != "completion_start":
+            return None
+            
+        return cls(
+            agent=log.agent_id,
+            depth=log.event.get("depth", 0) if isinstance(log.event, dict) else 0
+        )
 
 
 class ReasoningContent(Event):
@@ -232,6 +464,19 @@ class ReasoningContent(Event):
         # Always show reasoning content with full formatting
         return self.__str__()
 
+    @classmethod
+    def from_thread_log(cls, log: 'ThreadLog') -> Optional['ReasoningContent']:
+        """Create a ReasoningContent instance from a ThreadLog database record"""
+        if log.event_name != "reasoning_content":
+            return None
+            
+        event_data = log.event
+        return cls(
+            agent=log.agent_id,
+            reasoning_content=event_data.get("reasoning_content", ""),
+            depth=event_data.get("depth", 0)
+        )
+
 
 class FinishCompletion(Event):
     MODEL_KEY: typing.ClassVar[str] = "model"
@@ -242,6 +487,7 @@ class FinishCompletion(Event):
     REASONING_CONTENT_KEY: typing.ClassVar[str] = "reasoning_content"
     usage: dict = {}
     metadata: dict = {}
+    llm_message: Message = None
 
     model_config = ConfigDict(
         arbitrary_types_allowed=True
@@ -250,13 +496,23 @@ class FinishCompletion(Event):
     def __init__(
         self, agent: str, llm_message: Message, usage: dict = {}, metadata: dict = {}, depth: int = 0
     ):
-        super().__init__(agent=agent, type="completion_end", payload=llm_message, depth=depth)
-        self.usage = usage
+        # Serialize usage data before storing in payload
+        serialized_usage = self._serialize_usage(usage)
+        
+        # Create payload with all data
+        payload = {
+            "usage": serialized_usage,
+            "metadata": metadata,
+            "llm_message": llm_message.model_dump() if hasattr(llm_message, 'model_dump') else dict(llm_message)
+        }
+        
+        super().__init__(agent=agent, type="completion_end", payload=payload, depth=depth)
+        self.usage = serialized_usage
         self.metadata = metadata
+        self.llm_message = llm_message
 
-    @field_serializer('usage')
-    def serialize_metadata(self, usage: dict, _info):
-        """Custom serializer for usage to handle timedelta objects"""
+    def _serialize_usage(self, usage: dict) -> dict:
+        """Serialize usage data to handle timedelta objects"""
         serialized = {}
         for key, value in usage.items():
             if isinstance(value, timedelta):
@@ -300,24 +556,54 @@ class FinishCompletion(Event):
 
     @property
     def response(self) -> Message:
-        return self.payload
+        return self.llm_message
 
     @property
     def reasoning_content(self) -> str:
         return self.metadata.get(self.REASONING_CONTENT_KEY, "")
 
     def __str__(self):
-        base_str = f"[{self.agent}] {self.payload}, tokens: {self.usage}"
+        base_str = f"[{self.agent}] {self.llm_message}, tokens: {self.usage}"
         if self.reasoning_content:
             base_str += f"\n[{self.agent}] 🧠 Reasoning: {self.reasoning_content}"
         return base_str
+
+    @classmethod
+    def from_thread_log(cls, log: 'ThreadLog') -> Optional['FinishCompletion']:
+        """Create a FinishCompletion instance from a ThreadLog database record"""
+        if log.event_name != "completion_end":
+            return None
+            
+        event_data = log.event
+        
+        # Extract llm_message from the payload
+        llm_message_data = event_data.get("llm_message", event_data)
+        if isinstance(llm_message_data, dict):
+            llm_message = Message(**llm_message_data)
+        else:
+            llm_message = Message(content=str(llm_message_data), role="assistant")
+        
+        return cls(
+            agent=log.agent_id,
+            llm_message=llm_message,
+            usage=event_data.get("usage", {}),
+            metadata=event_data.get("metadata", {}),
+            depth=event_data.get("depth", 0)
+        )
 
 class TurnEnd(Event):
     def __init__(
         self, agent: str, messages: list, depth: int = 0
     ):
+        messages_json = []
+        for message in messages:
+            if isinstance(message, Message):
+                messages_json.append(message.model_dump())
+            else:
+                messages_json.append(message)
+
         super().__init__(
-            agent=agent, type="turn_end", payload={"messages": messages}, depth=depth
+            agent=agent, type="turn_end", payload={"messages": messages_json}, depth=depth
         )
 
     @property
@@ -344,9 +630,33 @@ class TurnEnd(Event):
             return self._indent(f"[{self.agent}: finished turn]")
         return super().print(debug_level)
 
+    @classmethod
+    def from_thread_log(cls, log: 'ThreadLog') -> Optional['TurnEnd']:
+        """Create a TurnEnd instance from a ThreadLog database record"""
+        if log.event_name != "turn_end":
+            return None
+            
+        event_data = log.event
+        return cls(
+            agent=log.agent_id,
+            messages=event_data.get("messages", []),
+            depth=event_data.get("depth", 0)
+        )
+
 class TurnCancelled(Event):
     def __init__(self, agent: str, depth: int = 0):
         super().__init__(agent=agent, type="turn_cancelled", payload={}, depth=depth)
+
+    @classmethod
+    def from_thread_log(cls, log: 'ThreadLog') -> Optional['TurnCancelled']:
+        """Create a TurnCancelled instance from a ThreadLog database record"""
+        if log.event_name != "turn_cancelled":
+            return None
+            
+        return cls(
+            agent=log.agent_id,
+            depth=log.event.get("depth", 0) if isinstance(log.event, dict) else 0
+        )
 
 class TurnCancelledError(Exception):
     def __init__(self):
@@ -355,6 +665,18 @@ class TurnCancelledError(Exception):
 class SetState(Event):
     def __init__(self, agent: str, payload: Any, depth: int = 0):
         super().__init__(agent=agent, type="set_state", payload=payload, depth=depth)
+
+    @classmethod
+    def from_thread_log(cls, log: 'ThreadLog') -> Optional['SetState']:
+        """Create a SetState instance from a ThreadLog database record"""
+        if log.event_name != "set_state":
+            return None
+            
+        return cls(
+            agent=log.agent_id,
+            payload=log.event,
+            depth=log.event.get("depth", 0) if isinstance(log.event, dict) else 0
+        )
 
 class AddChild(Event):
     handoff: Any = None
@@ -367,6 +689,18 @@ class AddChild(Event):
     def remote_ref(self):
         return self.payload
 
+    @classmethod
+    def from_thread_log(cls, log: 'ThreadLog') -> Optional['AddChild']:
+        """Create an AddChild instance from a ThreadLog database record"""
+        if log.event_name != "add_child":
+            return None
+            
+        event_data = log.event
+        return cls(
+            agent=log.agent_id,
+            remote_ref=event_data.get("remote_ref"),
+            handoff=event_data.get("handoff", False)
+        )
 
 PAUSE_FOR_INPUT_SENTINEL = "__PAUSE4INPUT__"
 PAUSE_FOR_CHILD_SENTINEL = "__PAUSE__CHILD"
@@ -384,6 +718,16 @@ class WaitForInput(Event):
     def request_keys(self) -> dict:
         return self.payload
 
+    @classmethod
+    def from_thread_log(cls, log: 'ThreadLog') -> Optional['WaitForInput']:
+        """Create a WaitForInput instance from a ThreadLog database record"""
+        if log.event_name != "wait_for_input":
+            return None
+            
+        return cls(
+            agent=log.agent_id,
+            request_keys=log.event
+        )
 
 # Sent by the caller with human input
 class ResumeWithInput(Event):
@@ -396,6 +740,19 @@ class ResumeWithInput(Event):
     @property
     def request_keys(self):
         return self.payload
+
+    @classmethod
+    def from_thread_log(cls, log: 'ThreadLog') -> Optional['ResumeWithInput']:
+        """Create a ResumeWithInput instance from a ThreadLog database record"""
+        if log.event_name != "resume_with_input":
+            return None
+            
+        event_data = log.event
+        return cls(
+            agent=log.agent_id,
+            request_keys=event_data.get("request_keys", {}),
+            request_id=event_data.get("request_id")
+        )
 
 class OAuthFlow(Event):
     """Event emitted when OAuth flow needs to be initiated"""
@@ -412,6 +769,20 @@ class OAuthFlow(Event):
             f"OAuth authorization required for {self.payload['tool_name']}.\n"
             f"Please visit: {self.payload['auth_url']}\n"
             "After authorizing, the flow will continue automatically."
+        )
+
+    @classmethod
+    def from_thread_log(cls, log: 'ThreadLog') -> Optional['OAuthFlow']:
+        """Create an OAuthFlow instance from a ThreadLog database record"""
+        if log.event_name != "oauth_flow":
+            return None
+            
+        event_data = log.event
+        return cls(
+            agent=log.agent_id,
+            auth_url=event_data.get("auth_url", ""),
+            tool_name=event_data.get("tool_name", ""),
+            depth=event_data.get("depth", 0)
         )
 
 class OAuthFlowResult(Result):
