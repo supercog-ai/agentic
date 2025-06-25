@@ -55,6 +55,7 @@ class ThreadManager:
                 agent_id=thread_context.agent_name,
                 user_id=str(thread_context.get("user") or "default"),
                 role=role,
+                depth=event.depth,
                 event_name=event.type,
                 event_data=event.payload
             )
@@ -115,7 +116,6 @@ def reconstruct_chat_history_from_thread_logs(thread_logs: List[ThreadLog]) -> L
 
                     history.append(llm_message)
     
-    print(history)
     return history
 
 # NOT USED YET

@@ -74,6 +74,7 @@ declare namespace Api {
     role: string;
     created_at: string;
     event_name: AgentEventType;
+    depth: number;
     event: {
       content?: string;  // DEPRECIATED 6/20/25
       [key: string]: any;

@@ -105,7 +105,7 @@ class Prompt(Event):
             message=event_data.get("content", ""),
             debug=DebugLevel(False),
             request_context=event_data.get("request_context", {}),
-            depth=event_data.get("depth", 0),
+            depth=log.depth,
             request_id=event_data.get("request_id")
         )
 
@@ -151,7 +151,7 @@ class PromptStarted(Event):
         return cls(
             agent=log.agent_id,
             message=payload,
-            depth=event_data.get("depth", 0) if isinstance(event_data, dict) else 0
+            depth=log.depth
         )
 
 class ResetHistory(Event):
@@ -200,7 +200,7 @@ class Output(Event):
         return cls(
             agent=log.agent_id,
             message=event_data,
-            depth=event_data.get("depth", 0) if isinstance(event_data, dict) else 0
+            depth=log.depth
         )
 
 class ChatOutput(Output):
@@ -243,7 +243,7 @@ class ChatOutput(Output):
         return cls(
             agent=log.agent_id,
             payload=event_data,
-            depth=event_data.get("depth", 0) if isinstance(event_data, dict) else 0
+            depth=log.depth
         )
 
 
@@ -297,7 +297,7 @@ class ToolCall(Event):
             agent=log.agent_id,
             name=event_data.get("name", ""),
             arguments=event_data.get("arguments", {}),
-            depth=event_data.get("depth", 0),
+            depth=log.depth,
             tool_call_id=event_data.get("tool_call_id")
         )
 
@@ -350,7 +350,7 @@ class ToolResult(Event):
             agent=log.agent_id,
             name=event_data.get("name", ""),
             result=event_data.get("result"),
-            depth=event_data.get("depth", 0),
+            depth=log.depth,
             intermediate_result=event_data.get("is_log", False),
             tool_call_id=event_data.get("tool_call_id")
         )
@@ -402,7 +402,7 @@ class ToolError(Event):
             agent=log.agent_id,
             name=event_data.get("name", ""),
             error=event_data.get("error", ""),
-            depth=event_data.get("depth", 0),
+            depth=log.depth,
             tool_call_id=event_data.get("tool_call_id")
         )
 
@@ -419,7 +419,7 @@ class StartCompletion(Event):
             
         return cls(
             agent=log.agent_id,
-            depth=log.event.get("depth", 0) if isinstance(log.event, dict) else 0
+            depth=log.depth
         )
 
 
@@ -474,7 +474,7 @@ class ReasoningContent(Event):
         return cls(
             agent=log.agent_id,
             reasoning_content=event_data.get("reasoning_content", ""),
-            depth=event_data.get("depth", 0)
+            depth=log.depth
         )
 
 
@@ -588,7 +588,7 @@ class FinishCompletion(Event):
             llm_message=llm_message,
             usage=event_data.get("usage", {}),
             metadata=event_data.get("metadata", {}),
-            depth=event_data.get("depth", 0)
+            depth=log.depth
         )
 
 class TurnEnd(Event):
@@ -640,7 +640,7 @@ class TurnEnd(Event):
         return cls(
             agent=log.agent_id,
             messages=event_data.get("messages", []),
-            depth=event_data.get("depth", 0)
+            depth=log.depth
         )
 
 class TurnCancelled(Event):
@@ -655,7 +655,7 @@ class TurnCancelled(Event):
             
         return cls(
             agent=log.agent_id,
-            depth=log.event.get("depth", 0) if isinstance(log.event, dict) else 0
+            depth=log.depth
         )
 
 class TurnCancelledError(Exception):
@@ -675,7 +675,7 @@ class SetState(Event):
         return cls(
             agent=log.agent_id,
             payload=log.event,
-            depth=log.event.get("depth", 0) if isinstance(log.event, dict) else 0
+            depth=log.depth
         )
 
 class AddChild(Event):
@@ -782,7 +782,7 @@ class OAuthFlow(Event):
             agent=log.agent_id,
             auth_url=event_data.get("auth_url", ""),
             tool_name=event_data.get("tool_name", ""),
-            depth=event_data.get("depth", 0)
+            depth=log.depth
         )
 
 class OAuthFlowResult(Result):

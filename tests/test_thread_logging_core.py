@@ -68,6 +68,7 @@ def test_log_event(db_manager):
         agent_id="test_agent",
         user_id="test_user",
         role="assistant",
+        depth=0,
         event_name="test_event",
         event_data={"test": "data"}
     )
@@ -129,6 +130,7 @@ def test_get_thread_logs(db_manager):
             agent_id="test_agent",
             user_id="test_user",
             role="assistant",
+            depth=0,
             event_name=f"test_event_{i}",
             event_data={"test": f"data_{i}"}
         )

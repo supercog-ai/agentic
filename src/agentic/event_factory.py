@@ -67,7 +67,7 @@ class EventFactory:
                     agent=log.agent_id,
                     type=event_name,
                     payload=log.event,
-                    depth=log.event.get("depth", 0) if isinstance(log.event, dict) else 0
+                    depth=log.depth,
                 )
                 
         except Exception as e:

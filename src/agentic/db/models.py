@@ -27,4 +27,5 @@ class ThreadLog(SQLModel, table=True):
     created_at: datetime = Field(default_factory=datetime.utcnow)
     event_name: str
     event: Dict = Field(sa_column=Column(JSON))
+    depth: int = Field(default=0)
     version: int = Field(default=1)

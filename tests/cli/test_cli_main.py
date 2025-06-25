@@ -111,6 +111,9 @@ def test_init_runtime_directory(temp_dir):
     # Verify setting was added
     assert settings.get("AGENTIC_RUNTIME_DIR") == str(test_runtime.resolve())
 
+    # Clean up
+    settings.delete_setting("AGENTIC_RUNTIME_DIR")
+
 def test_find_agent_instances(temp_dir, mock_agent):
     """Test finding agent instances in a module"""
     # Create a test module with an agent instance

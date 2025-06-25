@@ -11,7 +11,7 @@ from agentic.db.models import Thread, ThreadLog
 from agentic.utils.directory_management import get_runtime_filepath
 
 # Database migration helper
-# TODO: Remove after migrations are complete
+# TODO: Remove after migrations are complete (07/14/25)
 def _check_and_migrate_database(db_path: str):
     """Check if database migration is needed and perform it if necessary."""
     runtime_dir = Path(db_path).parent
@@ -64,18 +64,42 @@ def _check_and_migrate_database(db_path: str):
                 conn.close()
             raise
 
+# TODO: Remove after migrations are complete (07/14/25)
+def _add_depth_column_if_missing(db_path: str):
+    """Add depth column to thread_logs table if it doesn't exist."""
+    if db_path:
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        
+        # Check if depth column exists
+        cursor.execute("PRAGMA table_info(thread_logs);")
+        columns = [column[1] for column in cursor.fetchall()]
+        
+        if 'depth' not in columns:
+            print("Adding depth column to thread_logs table...")
+            try:
+                cursor.execute("ALTER TABLE thread_logs ADD COLUMN depth INTEGER DEFAULT 0;")
+                conn.commit()
+                print("Depth column added successfully!")
+            except sqlite3.OperationalError as e:
+                print(f"Error adding depth column: {e}")
+        
+        conn.close()
+
 # Database setup and management
 class DatabaseManager:
     def __init__(self, db_path: str = "agent_threads.db"):
         if 'AGENTIC_DATABASE_URL' in os.environ:
             # Use the database URL from environment variable if set
             dburl = os.environ['AGENTIC_DATABASE_URL']
+            _add_depth_column_if_missing(self.db_path)
             self.engine = create_engine(dburl, echo=False)
             self.db_path = None
         else:
             self.db_path = get_runtime_filepath(db_path)
             # Check and perform migration if needed
             _check_and_migrate_database(self.db_path)
+            _add_depth_column_if_missing(self.db_path)
             self.engine = create_engine(f"sqlite:///{self.db_path}", echo=False)
 
         self.create_db_and_tables()
@@ -113,6 +137,7 @@ class DatabaseManager:
                   agent_id: str,
                   user_id: str,
                   role: str,
+                  depth: int,
                   event_name: str,
                   event_data: Dict) -> ThreadLog:
         event_data = make_json_serializable(event_data.copy())
@@ -126,9 +151,10 @@ class DatabaseManager:
                 agent_id=agent_id,
                 user_id=user_id,
                 role=role,
+                depth=depth,
                 created_at=thread_timestamp,
                 event_name=event_name,
-                event=event_data
+                event=event_data,
             )
             session.add(log)
             
