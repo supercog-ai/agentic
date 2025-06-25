@@ -513,13 +513,17 @@ class ActorBaseAgent:
         init_len = len(self.history)
         while len(self.history) - init_len < 50:
             for event in self._yield_completion_steps(request_id):
-                yield event
+                # Wait to yield the FinishCompletion until after tool calls are executed
+                if not isinstance(event, FinishCompletion):
+                    yield event
 
             assert isinstance(event, FinishCompletion)
             response: Message = event.response
             
             self.history.append(response)
             if not response.tool_calls:
+                # Now yield if no tool calls
+                yield event
                 break
 
             partial_response, events = self._execute_tool_calls(
@@ -528,6 +532,9 @@ class ActorBaseAgent:
                 self.thread_context
             )
             yield from events
+            # Now yield since the tool calls were executed
+            yield event
+            
             # Yield to our publisher thread which will send queued events out to the client
             time.sleep(0)
 
