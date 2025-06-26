@@ -40,7 +40,6 @@ declare namespace Api {
     type: AgentEventType;
     payload: any;
     agent: string;
-    depth: number;
   }
   
   interface AgentInfo {
@@ -65,13 +64,6 @@ declare namespace Api {
     updated_at: string;
     initial_prompt: string;
     description: string | null;
-    usage_data: {
-      [model: string]: {
-        input_tokens: number;
-        output_tokens: number;
-        cost: number;
-      };
-    };
   }
   
   interface ThreadLog {
@@ -81,11 +73,11 @@ declare namespace Api {
     user_id: string;
     role: string;
     created_at: string;
-    event_name: string;
+    event_name: AgentEventType;
+    depth: number;
     event: {
-      type: AgentEventType;
-      payload: any;
-      content?: string;
+      content?: string;  // DEPRECIATED 6/20/25
+      [key: string]: any;
     };
   }
 }

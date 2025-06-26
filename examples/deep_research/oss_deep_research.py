@@ -235,8 +235,7 @@ provide feedback to regenerate the report plan:\n
 
         yield TurnEnd(
             self.name,
-            [{"role": "assistant", "content": report}],
-            thread_context=None,
+            [{"role": "assistant", "content": report}]
         )
 
     def process_section(self, section: "Section", index: int, report_context: str = None) -> Generator:

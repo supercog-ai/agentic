@@ -76,8 +76,8 @@ def test_usage_extraction_from_response():
         0  # depth
     )
     
-    assert finish_event.metadata[FinishCompletion.INPUT_TOKENS_KEY] == 150
-    assert finish_event.metadata[FinishCompletion.OUTPUT_TOKENS_KEY] == 75
+    assert finish_event.usage[FinishCompletion.INPUT_TOKENS_KEY] == 150
+    assert finish_event.usage[FinishCompletion.OUTPUT_TOKENS_KEY] == 75
 
 def test_usage_fallback_calculation():
     """Test that token usage falls back to manual calculation when not available in response"""
@@ -107,8 +107,8 @@ def test_usage_fallback_calculation():
             0  # depth
         )
         
-        assert finish_event.metadata[FinishCompletion.INPUT_TOKENS_KEY] == 120
-        assert finish_event.metadata[FinishCompletion.OUTPUT_TOKENS_KEY] == 60
+        assert finish_event.usage[FinishCompletion.INPUT_TOKENS_KEY] == 120
+        assert finish_event.usage[FinishCompletion.OUTPUT_TOKENS_KEY] == 60
 
 def test_empty_response_handling():
     """Test handling of empty response content"""
@@ -191,5 +191,5 @@ def test_real_llm_usage_tracking():
         0  # depth
     )
     
-    assert finish_event.metadata[FinishCompletion.INPUT_TOKENS_KEY] == usage.input_tokens
-    assert finish_event.metadata[FinishCompletion.OUTPUT_TOKENS_KEY] == usage.output_tokens
+    assert finish_event.usage[FinishCompletion.INPUT_TOKENS_KEY] == usage.input_tokens
+    assert finish_event.usage[FinishCompletion.OUTPUT_TOKENS_KEY] == usage.output_tokens
