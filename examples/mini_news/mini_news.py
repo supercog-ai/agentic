@@ -13,12 +13,6 @@ import subprocess
 
 MODEL=GPT_4O_MINI
 
-#TO DO:
-#   Delete previous file upon usage
-#   Automatically open webpage
-#   Location tool: news based on location of user
-
-
 # Load prompts from YAML file
 prompts_file = os.path.join(os.path.dirname(__file__), 'mini_news.yaml')
 try:
@@ -36,7 +30,7 @@ class MiniNewsAgent(Agent):
     def __init__(self, name: str="Mini News Producer", model: str=GPT_4O_MINI):
         super().__init__(
             name,
-            welcome="I am the Mini News Producer. Say 'run' to create and publish a new mini news segment.",
+            welcome="Say 'run' to run the agent.",
             model=model,
         )
         
@@ -113,7 +107,7 @@ class MiniNewsAgent(Agent):
     ) -> Generator[Event, Any, Any]:
         """Main workflow orchestration"""
         
-        print("\n=== Starting Mini News Production Workflow ===")
+        print("\n----------------\n Starting Mini News Production\n----------------")
         print(f"Request received at: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
         
         if request:
@@ -121,8 +115,7 @@ class MiniNewsAgent(Agent):
             print(f"Command received: {command}")
             if command.lower() not in ["run", "create and publish mini news"]:
                 print("Invalid command - requesting correct command")
-                yield ChatOutput(self.name, {"content": "Please say 'run' or 'create and publish mini news' to start."})
-                #yield ChatOutput(self.name, {"content": "Please enter categories of news you are intrested in."})
+                yield ChatOutput(self.name, {"content": "Say 'run' to rerun the agent"})
                 return
 
         # 1. Yield the initial prompt
@@ -160,12 +153,12 @@ class MiniNewsAgent(Agent):
         
         # 4. Format news for website
         print("\n4. Website Formatting")
-        print("   - Applying website-style formatting")
+        print("   -- Applying website-style formatting")
         yield ChatOutput(self.name, {"content": "Formatting news for website..."})
         formatted_news = yield from self.news_formatter.final_result(
-            f"Format this news content for news summaries for a social media style website:\n\n{raw_combined_news}"
+            f"Format this news content for news summaries for a social media style news website:\n\n{raw_combined_news}"
         )
-        print("   ✓ Website formatting complete")
+        print("   --  Website formatting complete")
        
         # Save HTML to file in current directory with date
         current_date = datetime.now().strftime("%Y-%m-%d")
