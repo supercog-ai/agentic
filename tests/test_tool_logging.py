@@ -31,7 +31,7 @@ def parent():
 @pytest.mark.requires_llm
 def test_sync_logging(parent):
     tool_outputs = []
-    for event in parent.next_turn("call sync_function_with_logging"):
+    for event in parent.next_run("call sync_function_with_logging"):
         if isinstance(event, ToolResult):
             tool_outputs.append(event)
 
@@ -40,7 +40,7 @@ def test_sync_logging(parent):
 @pytest.mark.requires_llm
 def test_async_logging(parent):
     tool_outputs = []
-    for event in parent.next_turn("call async_function_with_logging"):
+    for event in parent.next_run("call async_function_with_logging"):
         if isinstance(event, ToolResult):
             tool_outputs.append(event)
 
@@ -51,7 +51,7 @@ def test_async_logging(parent):
 @pytest.mark.requires_llm
 def test_direct_logging(parent):
     tool_outputs = []
-    for event in parent.next_turn("call sync_function_direct_logging"):
+    for event in parent.next_run("call sync_function_direct_logging"):
         if isinstance(event, ToolResult):
             tool_outputs.append(event)
 

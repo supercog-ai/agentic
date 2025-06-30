@@ -1,16 +1,16 @@
 from .swarm.types import DebugLevel
-from .events import TurnEnd
+from .events import RunEnd
 
 class Pipeline:
     """ Pipeline runs its agents in a sequence. 
         The result from each agent is passed as the input to the next agent.
         The result is also put into thread context using the name of the agent as the key.
-        Use 'handle_turn_start' to modify the agent prompt if you don't want it to use the prior result.
+        Use 'handle_run_start' to modify the agent prompt if you don't want it to use the prior result.
     """
     def __init__(self, *agents):
         self.agents = agents
 
-    def next_turn(
+    def next_run(
             self, 
             request: str, 
             continue_result: dict = {}, 
@@ -18,9 +18,9 @@ class Pipeline:
         ):
         thread_context = {}
         for agent in self.agents:
-            for event in agent.next_turn(request, continue_result, debug):
+            for event in agent.next_run(request, continue_result, debug):
                 yield event
-                if isinstance(event, TurnEnd):
+                if isinstance(event, RunEnd):
                     request = event.result
                     thread_context = event.thread_context
 

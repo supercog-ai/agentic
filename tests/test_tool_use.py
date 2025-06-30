@@ -26,8 +26,8 @@ def parent():
     
 @pytest.mark.requires_llm
 def test_tool_use(parent):
-    res = AgentRunner(parent).turn("Please read the story log")
+    res = AgentRunner(parent).run("Please read the story log")
     assert "the parent" in res
 
-    res = AgentRunner(parent).turn("Call the child and ask for its story log")
+    res = AgentRunner(parent).run("Call the child and ask for its story log")
     assert "crazy" in res

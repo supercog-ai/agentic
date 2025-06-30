@@ -9,7 +9,7 @@ from the LLM.
 To show tool calls, you should show `ToolResult` events.
 
 To understand the lifecycle of processing you can observe `PromptStarted`
-and `TurnEnd` events. 
+and `RunEnd` events. 
 
 To track usage you should process `FinishCompletion` events which will contain
 token usage data.
@@ -58,12 +58,12 @@ This allows the caller to ignore sub-agent execution if it prefers.
 
 ## Agent execution flow
 
-When you call agent A, it may execute agent B, plus agent C, and they in turn
+When you call agent A, it may execute agent B, plus agent C, and they in run
 may call other agents.
 
 If you want to observe all events from the entire execution tree, then you should
 implement logic to record the recept of events from each distinct agent, and then
-make sure to wait for the `TurnEnd` message from each one. 
+make sure to wait for the `RunEnd` message from each one. 
 
 ## Agent pipeline
 
@@ -75,7 +75,7 @@ its `depth` as well:
       |                           |                       |
       |         <-- event1 ---    |                       |
       |                           |  ---  *handoff* B ->  |
-      |         <-- turnend: A -- |                       |                
+      |         <-- runend: A -- |                       |                
       |                                                   |
       |         <-- ---------------------- event 2 --     |
 

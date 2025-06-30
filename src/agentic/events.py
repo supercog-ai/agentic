@@ -299,12 +299,12 @@ class FinishCompletion(Event):
             base_str += f"\n[{self.agent}] 🧠 Reasoning: {self.reasoning_content}"
         return base_str
 
-class TurnEnd(Event):
+class RunEnd(Event):
     def __init__(
         self, agent: str, messages: list, thread_context: ThreadContext, depth: int = 0
     ):
         super().__init__(
-            agent=agent, type="turn_end", payload={"messages": messages, "thread_context": thread_context}, depth=depth
+            agent=agent, type="run_end", payload={"messages": messages, "thread_context": thread_context}, depth=depth
         )
 
     @property
@@ -328,16 +328,16 @@ class TurnEnd(Event):
 
     def print(self, debug_level: str):
         if debug_level == "agents":
-            return self._indent(f"[{self.agent}: finished turn]")
+            return self._indent(f"[{self.agent}: finished run]")
         return super().print(debug_level)
 
-class TurnCancelled(Event):
+class RunCancelled(Event):
     def __init__(self, agent: str, depth: int = 0):
-        super().__init__(agent=agent, type="turn_cancelled", payload={}, depth=depth)
+        super().__init__(agent=agent, type="run_cancelled", payload={}, depth=depth)
 
-class TurnCancelledError(Exception):
+class RunCancelledError(Exception):
     def __init__(self):
-        super().__init__(f"Turn cancelled")
+        super().__init__(f"Run cancelled")
 
 class SetState(Event):
     def __init__(self, agent: str, payload: Any, depth: int = 0):

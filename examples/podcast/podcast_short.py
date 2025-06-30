@@ -1,5 +1,5 @@
 from agentic.common import Agent, AgentRunner
-from agentic.events import Event, ChatOutput, Prompt, PromptStarted, TurnEnd
+from agentic.events import Event, ChatOutput, Prompt, PromptStarted, RunEnd
 from agentic.models import GPT_4O_MINI, CLAUDE
 from agentic.tools import GoogleNewsTool, TavilySearchTool, TextToSpeechTool
 import os
@@ -187,7 +187,7 @@ class PodcastAgent(Agent):
             print(f"\n   ✗ Error in publication process: {str(e)}")
             raise
 
-    def next_turn(
+    def next_run(
         self,
         request: str|Prompt,
         request_context: dict = {},
@@ -332,7 +332,7 @@ Audio file: {audio_filename}
                 }
             )
 
-            yield TurnEnd(
+            yield RunEnd(
                 self.name,
                 [{"role": "assistant", "content": f"Podcast episode {episode_id} published successfully"}],
                 thread_context=None,

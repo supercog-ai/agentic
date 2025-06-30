@@ -3,7 +3,7 @@ import { mutate } from 'swr';
 
 import { useThreadLogs } from '@/hooks/useAgentData';
 import { AgentEventType, agenticApi } from '@/lib/api';
-import { convertFromUTC, isUserTurn } from '@/lib/utils';
+import { convertFromUTC, isUserRun } from '@/lib/utils';
 
 /**
  * Custom hook for handling agent prompt submission and event streaming
@@ -176,8 +176,8 @@ export function useChat(agentPath: string, agentName: string, currentThreadId: s
             // Update the lastEventType reference
             lastEventTypeRef.current = event.type;
             
-            // Handle turn end
-            if (isUserTurn(agentName, event)) {
+            // Handle run end
+            if (isUserRun(agentName, event)) {
               cleanup();
               if (onComplete) onComplete();
               resolve();
@@ -415,7 +415,7 @@ export function useChat(agentPath: string, agentName: string, currentThreadId: s
       } else if (event.type === AgentEventType.WAIT_FOR_INPUT) {
         // Check if there's a PROMPT_STARTED event after this WAIT_FOR_INPUT event
         // This would contain the user's form submission
-        // This is built around deep_researcher. It may need an OR resumeWithInput according to how the next_turn in deep_research is handled. 
+        // This is built around deep_researcher. It may need an OR resumeWithInput according to how the next_run in deep_research is handled. 
         const promptStartedIndex = filteredEvents.findIndex((e, i) => 
           i > index && 
           (

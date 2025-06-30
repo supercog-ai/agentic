@@ -18,7 +18,7 @@ from agentic.db.db_manager import DatabaseManager
 from agentic.events import (
     ToolResult,
     ToolError,
-    TurnEnd,
+    RunEnd,
     StartCompletion,
     FinishCompletion,
 )
@@ -292,7 +292,7 @@ class AgentAPIServer:
         ):
             """Stream a request response"""
             def render_events():
-                for event in agent.next_turn(request.prompt):
+                for event in agent.next_run(request.prompt):
                     yield str(event)
             return EventSourceResponse(render_events())
         
@@ -386,7 +386,7 @@ class AgentAPIServer:
             # elif isinstance(event, ChatOutput):
             #     if self.debug.debug_llm() or self.debug.debug_agents():
             #         print(str(event), end="")        
-            elif isinstance(event, TurnEnd):
+            elif isinstance(event, RunEnd):
                 return self.debug.debug_agents()
             elif isinstance(event, (StartCompletion, FinishCompletion)):
                 return self.debug.debug_llm()
