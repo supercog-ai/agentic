@@ -1,17 +1,15 @@
 from agentic.common import Agent, AgentRunner
 from agentic.events import Event, ChatOutput, Prompt, PromptStarted, TurnEnd
-from agentic.models import GPT_4O_MINI, CLAUDE
+from agentic.models import GPT_4O_MINI
+from agentic.tools import GoogleNewsTool, OpenAIWebSearchTool, ImageGeneratorTool
 
-from agentic.tools import GoogleNewsTool, TavilySearchTool, OpenAIWebSearchTool
-from agentic.tools import GoogleNewsTool, TavilySearchTool, TextToSpeechTool
 import os
 from datetime import datetime
 from typing import Generator, Any
-import requests
 import yaml
 import sys
-import json
 import webbrowser
+import subprocess
 
 MODEL=GPT_4O_MINI
 
@@ -45,7 +43,7 @@ class MiniNewsAgent(Agent):
         # Initialize tools
         self.news_tool = GoogleNewsTool()
         self.search_tool = OpenAIWebSearchTool()
-        self.search_tool2 = TavilySearchTool()
+        self.image_tool = ImageGeneratorTool()
         
         # Initialize file attributes
         self.filename = ""
@@ -57,32 +55,35 @@ class MiniNewsAgent(Agent):
             instructions=prompts['HEADLINE_REPORTER'],
             model=MODEL,
             max_tokens=8192,
-            tools=[self.news_tool, self.search_tool]
+            tools=[self.news_tool, self.search_tool, self.image_tool]
         )
 
         # Initialize news formatter agent
         self.news_formatter = Agent(
             name="News Formatter",
-            instructions=f"""
-            You are an expert broadcast news editorm and webite desiner. Your role is to format news content into brief and easily comprehendable snipits in an HTML format, following these guidelines:
-            1. Structure content like a concise social media post by a professional media agency such as CNN or NPR.
-            2. Start with a concise headline in bold
-            3. Use broadcast-style sentence structures and pacing
-            4. Provide context and details as a set of 5 bullet points to give the reader full understanding of the critical points of the news story.
-            5. Maintain a professional yet conversational tone
-            6. Ensure proper emphasis on key information
-            7. Keep the original information intact while making it easy to read as a quick info grab.
-            8. It should not say anything that is not related to the news.
-            9. Your output should be in the form of an HTML file that creates a visually apealling setting for the news that is being presented.
-            10. Do not use CSS as the formating will already be provided.
-            11. Make sure to only do the HTML portion of the file.
-            12. IMPORTANT: You will be provided with {prompts['WEBSITE_FORMAT']} as the format for the HTML file. Use this information and instead of writing CSS yourself simply use this what is given as the <style> for the website.
-            13. Use links to the sources where the information was gotten from using HTML link capabilities to bring users to the webpage of the source.
-            14. Try to use diverse sources and make sure that significant information is presented in each summary of the source.
-            15. NOTE: Do not ouput anything besides the completed HTML file combined with the CSS provided.
-            """,
+            instructions=f'''You are a professional broadcast news editor and HTML formatter. Your task is to convert the provided news content into clean, readable, and visually appealing HTML. Follow these instructions carefully:
+            1. For each news item:
+                - Start with a **bold headline**.
+                - Generate a uniue and relevant image using the image generation tool that captures the essence of the news story.
+                - Present the story as **five concise bullet points** that summarize all key facts.
+                - Use broadcast-style tone: professional, clear, and engaging.
+            2. Maintain the **original story’s accuracy and details**.
+            3. Each bullet point should be a complete sentence, delivering one important idea.
+            4. Include an **HTML link to the source article** at the end of each story, using standard `<a href>` formatting.
+            5. DO NOT fabricate or infer content — only use what was summarized.
+            6. The final output must be a complete HTML document using the provided CSS (in `{prompts['WEBSITE_FORMAT']}`).
+                - DO NOT add your own CSS or `<style>` tags.
+                - DO NOT output anything besides the final HTML file.
+            7. The goal is to replicate a modern digital newsroom’s headline feed (e.g., CNN, NPR, AP).
+            8. For each news item, generate an image to match the article.
+            9. When generating images:
+                - Use the image generation tool to create a unique and relevant image for each news story.
+                - The image should capture the essence of the news story with a photo realistic style.
+                - Ensure the image is appropriate for the news content and audience.
+            ''',
             model=MODEL,
-            max_tokens=8192
+            max_tokens=8192,
+            tools=[self.image_tool]
         )
 
     def write_file(self, html_data: str, current_date: str):
@@ -121,11 +122,12 @@ class MiniNewsAgent(Agent):
             if command.lower() not in ["run", "create and publish mini news"]:
                 print("Invalid command - requesting correct command")
                 yield ChatOutput(self.name, {"content": "Please say 'run' or 'create and publish mini news' to start."})
+                #yield ChatOutput(self.name, {"content": "Please enter categories of news you are intrested in."})
                 return
 
         # 1. Yield the initial prompt
-        print("\n1. Initializing News Snips production...")
-        yield PromptStarted(self.name, {"content": "Starting News Snips production..."})
+        print("\n1. Initializing Mini News production...")
+        yield PromptStarted(self.name, {"content": "Starting Mini News production..."})
 
         # 2. Generate Headline News
         print("\n2. Headline News Generation")
@@ -140,14 +142,20 @@ class MiniNewsAgent(Agent):
         print("\n3. News Combination")
         print("   - Combining all news segments")
         yield ChatOutput(self.name, {"content": "Combining news segments..."})
-        raw_combined_news = f"""
-Supercog Mini News Report
+        raw_combined_news = headline_news
+        
+        f"""
+        Supercog Mini News Report
 
-Headline News:
-{headline_news}
+        Headline News:
+        {headline_news}
 
-Supercog Mini News
-"""
+        Supercog Mini News
+        """
+
+        
+        print(f"\n-----------\nRaw combined news: {raw_combined_news}\n")
+
         print("   ✓ News segments combined")
         
         # 4. Format news for website
@@ -166,7 +174,19 @@ Supercog Mini News
         #print(final)
         file_path = self.write_file(formatted_news, current_date)
         print(f"\nNews file created at: file:///{file_path}")
-        webbrowser.open(f'file:///{file_path}', new=2)
+        
+        # Only open in browser on Mac systems
+        import platform
+        if platform.system() == 'Darwin':  # Darwin is the system name for Mac OS
+            webbrowser.open(f'file:///{file_path}', new=2)
+        elif platform.system() == 'Linux':
+            subprocess.Popen(['python', '-m', 'http.server', '8080'], cwd='/home/sheat/src/supercog/agentic/examples/mini_news')
+            # Remove 'agentic/' prefix and handle Windows path separators
+            relative_path = file_path.replace('/home/sheat/src/supercog/agentic/examples/mini_news/', '')
+            webbrowser.open(f'http://localhost:8080/{relative_path}', new=2)
+        else:
+            print(f"\nDETECTED SYSTEM: {platform.system()}")
+            print("\nUnable to open file in browser. Please open the file manually.")
         yield TurnEnd(
             self.name,
             [{"role": "assistant", "content": final}],
