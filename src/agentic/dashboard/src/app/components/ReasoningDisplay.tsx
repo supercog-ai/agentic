@@ -1,6 +1,7 @@
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import React, { useState } from 'react';
 
+import MarkdownRenderer from '@/components/MarkdownRenderer';
 import { Button } from '@/components/ui/button';
 
 interface ReasoningDisplayProps {
@@ -31,8 +32,8 @@ const ReasoningDisplay: React.FC<ReasoningDisplayProps> = ({ reasoning }) => {
       </Button>
       
       {isExpanded && (
-        <div className="mt-2 text-sm text-muted-foreground bg-muted/30 rounded-md p-3 whitespace-pre-wrap">
-          {reasoning}
+        <div className="mt-2 text-sm text-muted-foreground bg-muted/30 rounded-md p-3">
+          <MarkdownRenderer content={reasoning} />
         </div>
       )}
     </div>
