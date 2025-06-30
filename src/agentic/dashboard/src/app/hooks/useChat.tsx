@@ -406,7 +406,11 @@ export function useChat(agentPath: string, agentName: string, currentThreadId: s
     });
 
   // Add a agent message to the end if the last message is from the user. This allows use to show a loading state.
-  if (messages.length > 0 && messages[messages.length - 1].role === 'user' && events[events.length - 1]?.type !== AgentEventType.TURN_END) {
+  if (
+      messages.length > 0 &&
+      messages[messages.length - 1].role === 'user' &&
+      !(events[events.length - 1]?.type === AgentEventType.TURN_END && events[events.length - 1]?.agentName === agentName)
+    ) {
     messages.push({
       role: 'agent' as const,
       content: ''
