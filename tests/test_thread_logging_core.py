@@ -51,7 +51,6 @@ def test_create_thread(db_manager):
     assert thread.description == "Test description"
     assert isinstance(thread.created_at, datetime)
     assert isinstance(thread.updated_at, datetime)
-    assert thread.usage_data == {}
     assert thread.thread_metadata == {}
 
 def test_log_event(db_manager):
@@ -69,6 +68,7 @@ def test_log_event(db_manager):
         agent_id="test_agent",
         user_id="test_user",
         role="assistant",
+        depth=0,
         event_name="test_event",
         event_data={"test": "data"}
     )
@@ -94,13 +94,11 @@ def test_update_thread(db_manager):
     updated_thread = db_manager.update_thread(
         thread_id=thread.id,
         description="Updated description",
-        usage_data={"model": "test-model", "tokens": 100},
         thread_metadata={"key": "value"}
     )
     
     assert updated_thread is not None
     assert updated_thread.description == "Updated description"
-    assert updated_thread.usage_data == {"model": "test-model", "tokens": 100}
     assert updated_thread.thread_metadata == {"key": "value"}
     assert updated_thread.updated_at > thread.updated_at
 
@@ -132,6 +130,7 @@ def test_get_thread_logs(db_manager):
             agent_id="test_agent",
             user_id="test_user",
             role="assistant",
+            depth=0,
             event_name=f"test_event_{i}",
             event_data={"test": f"data_{i}"}
         )
@@ -190,7 +189,6 @@ def test_thread_manager_handle_events(db_manager, thread_manager, thread_context
     # Test handling PromptStarted event
     prompt_event = PromptStarted(agent="test_agent", message="Test prompt")
     thread_manager.handle_event(prompt_event, thread_context)
-    assert thread_manager.current_thread_id is not None
     
     # Test handling FinishCompletion event
     completion_event = FinishCompletion.create(
@@ -212,15 +210,5 @@ def test_thread_manager_handle_events(db_manager, thread_manager, thread_context
     thread_manager.handle_event(tool_result, thread_context)
     
     # Test handling TurnEnd event
-    turn_end = TurnEnd(agent="test_agent", messages=[], thread_context=thread_context)
+    turn_end = TurnEnd(agent="test_agent", messages=[])
     thread_manager.handle_event(turn_end, thread_context)
-    
-    # Verify logs were created
-    logs = db_manager.get_thread_logs(thread_manager.current_thread_id)
-    assert len(logs) > 0
-    
-    # Verify usage data was tracked
-    thread = db_manager.get_thread(thread_manager.current_thread_id)
-    assert "test-model" in thread.usage_data
-    assert thread.usage_data["test-model"]["input_tokens"] == 10
-    assert thread.usage_data["test-model"]["output_tokens"] == 20

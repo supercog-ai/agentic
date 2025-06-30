@@ -203,22 +203,22 @@ class RayAgentRunner:
     ):
         costs = dict[str, Modelcost]()
         for comp in completions:
-            if comp.metadata["model"] not in costs:
-                costs[comp.metadata["model"]] = Modelcost(
-                    comp.metadata["model"], 0, 0, 0, 0, 0
+            if comp.usage["model"] not in costs:
+                costs[comp.usage["model"]] = Modelcost(
+                    comp.usage["model"], 0, 0, 0, 0, 0
                 )
-            mc = costs[comp.metadata["model"]]
+            mc = costs[comp.usage["model"]]
             mc.calls += 1
-            mc.cost += comp.metadata["cost"] * 100
-            aggregator.total_cost += comp.metadata["cost"] * 100
-            mc.inputs += comp.metadata["input_tokens"]
-            mc.outputs += comp.metadata["output_tokens"]
+            mc.cost += comp.usage["cost"] * 100
+            aggregator.total_cost += comp.usage["cost"] * 100
+            mc.inputs += comp.usage["input_tokens"]
+            mc.outputs += comp.usage["output_tokens"]
             aggregator.context_size += (
-                comp.metadata["input_tokens"] + comp.metadata["output_tokens"]
+                comp.usage["input_tokens"] + comp.usage["output_tokens"]
             )
-            if "elapsed_time" in comp.metadata:
+            if "elapsed_time" in comp.usage:
                 try:
-                    mc.time += comp.metadata["elapsed_time"].total_seconds()
+                    mc.time += comp.usage["elapsed_time"].total_seconds()
                 except:
                     pass
         values_list = list(costs.values())

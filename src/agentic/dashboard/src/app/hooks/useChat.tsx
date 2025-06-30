@@ -40,7 +40,7 @@ export function useChat(agentPath: string, agentName: string, currentThreadId: s
       // First convert all logs to Ui.Event format
       const eventsFromLogs: Ui.Event[] = threadLogs.map(log => ({
         type: log.event_name,
-        payload: log.event.content || log.event,
+        payload: log.event.content || log.event.payload || log.event,
         agentName: log.agent_id,
         timestamp: convertFromUTC(log.created_at),
       }));
@@ -452,7 +452,11 @@ export function useChat(agentPath: string, agentName: string, currentThreadId: s
     });
 
   // Add a agent message to the end if the last message is from the user. This allows use to show a loading state.
-  if (messages.length > 0 && messages[messages.length - 1].role === 'user') {
+  if (
+      messages.length > 0 &&
+      messages[messages.length - 1].role === 'user' &&
+      !(events[events.length - 1]?.type === AgentEventType.TURN_END && events[events.length - 1]?.agentName === agentName)
+    ) {
     messages.push({
       role: 'agent' as const,
       content: '',

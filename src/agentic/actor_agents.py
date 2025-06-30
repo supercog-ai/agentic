@@ -337,7 +337,13 @@ class ActorBaseAgent:
             if __LEGACY_CTX_VARS_NAME__ in func.__code__.co_varnames:
                 args[__LEGACY_CTX_VARS_NAME__] = thread_context
 
-            events.append(ToolCall(self.name, name, args))
+            events.append(ToolCall(
+                agent=self.name,
+                name=name,
+                arguments=args,
+                depth=self.depth,
+                tool_call_id=tool_call.id
+            ))
 
             # Call the function!!
             raw_result = None
@@ -390,8 +396,13 @@ class ActorBaseAgent:
                     )
                 raw_result = f"Tool error: {name}: {last_three}"
 
-                events.append(ToolError(self.name, name, raw_result, self.depth))
-                # thread_context.error(raw_result)
+                events.append(ToolError(
+                    agent=self.name,
+                    name=name,
+                    error=raw_result,
+                    depth=self.depth,
+                    tool_call_id=tool_call.id
+                ))
 
             # Let tools return additional events to publish
             if isinstance(raw_result, list):
@@ -419,7 +430,14 @@ class ActorBaseAgent:
                 events.append(log_event)
             thread_context.reset_logs()
 
-            events.append(ToolResult(self.name, name, result.value))
+            events.append(ToolResult(
+                agent=self.name,
+                name=name,
+                result=result.value,
+                depth=self.depth,
+                intermediate_result=False,
+                tool_call_id=tool_call.id
+            ))
 
             partial_response.messages.append(
                 {
@@ -463,7 +481,7 @@ class ActorBaseAgent:
             self.debug = actor_message.debug
             self.depth = actor_message.depth
             self.history.append({"role": "user", "content": actor_message.payload})
-            yield PromptStarted(self.name, actor_message.payload, self.depth)
+            yield PromptStarted(self.name, {"content": actor_message.payload}, self.depth)
 
         elif isinstance(actor_message, ResumeWithInput):
             if not self.paused_context:
@@ -495,13 +513,17 @@ class ActorBaseAgent:
         init_len = len(self.history)
         while len(self.history) - init_len < 50:
             for event in self._yield_completion_steps(request_id):
-                yield event
+                # Wait to yield the FinishCompletion until after tool calls are executed
+                if not isinstance(event, FinishCompletion):
+                    yield event
 
             assert isinstance(event, FinishCompletion)
             response: Message = event.response
             
             self.history.append(response)
             if not response.tool_calls:
+                # Now yield if no tool calls
+                yield event
                 break
 
             partial_response, events = self._execute_tool_calls(
@@ -510,6 +532,9 @@ class ActorBaseAgent:
                 self.thread_context
             )
             yield from events
+            # Now yield since the tool calls were executed
+            yield event
+            
             # Yield to our publisher thread which will send queued events out to the client
             time.sleep(0)
 
@@ -556,7 +581,6 @@ class ActorBaseAgent:
             self.name,
             # result_model gets applied when TurnEnd is processed. We dont want to alter the the text response in history
             deepcopy(self.history[init_len:]),
-            self.thread_context,
             self.depth
         )
         self.paused_context = None
