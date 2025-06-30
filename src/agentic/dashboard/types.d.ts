@@ -97,6 +97,7 @@ declare namespace Ui {
     inputKeys?: Record<string, string>;
     resumeValues?: Record<string, string>;
     formDisabled?: boolean;
+    reasoning?: string;
   }
 
   interface Event {
