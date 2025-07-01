@@ -2,6 +2,7 @@ import unittest
 import os
 from datetime import datetime
 from unittest.mock import patch, mock_open
+
 from mini_news import MiniNewsAgent
 
 
@@ -30,7 +31,7 @@ class TestMiniNewsAgent(unittest.TestCase):
             content = f.read()
         
         # Verify the content
-        self.assertIn("<style>", content)
+        self.assertIn("<div class='news-item'>", content)
         self.assertIn(self.test_html, content)
         
         # Clean up
