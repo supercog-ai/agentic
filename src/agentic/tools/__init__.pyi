@@ -1,4 +1,3 @@
-from .a2a_tool import A2ATool
 from .airbnb_calendar_tool import AirbnbCalendarTool
 from .auth_rest_api_tool import AuthorizedRestApiTool
 from .automatic_tools import AutomaticTools
@@ -29,7 +28,6 @@ from .unit_test_tool import UnitTestingTool
 from .weather_tool import WeatherTool
 
 __all__ = [
-    "A2ATool",
     "AirbnbCalendarTool",
     "AuthorizedRestApiTool",
     "AutomaticTools",
