@@ -63,7 +63,7 @@ def test_a2a_tool_initialization():
     assert len(a2a_tool.registered_agents) == 0
     assert len(a2a_tool.active_conversations) == 0
 
-
+@pytest.mark.requires_llm
 def test_agent_registration():
     """Test agent registration functionality"""
     a2a_tool = A2ATool()
@@ -87,7 +87,7 @@ def test_agent_registration():
     assert a2a_tool.registered_agents["test_agent"].name == "test_agent"
     assert a2a_tool.registered_agents["test_agent"].description == "A test agent for testing"
 
-
+@pytest.mark.requires_llm
 def test_list_available_agents():
     """Test listing available agents"""
     a2a_tool = A2ATool()
@@ -107,7 +107,7 @@ def test_list_available_agents():
     assert "agent1: First test agent" in result
     assert "agent2: Second test agent" in result
 
-
+@pytest.mark.requires_llm
 def test_get_agent_info():
     """Test getting agent information"""
     a2a_tool = A2ATool()
@@ -175,7 +175,7 @@ def test_call_nonexistent_agent():
     assert "not found" in result
     assert "Available agents:" in result
 
-
+@pytest.mark.requires_llm
 def test_handoff_functionality():
     """Test handoff to agent functionality"""
     a2a_tool = A2ATool()
@@ -222,7 +222,7 @@ def test_a2a_tool_get_tools():
     for expected_tool in expected_tools:
         assert expected_tool in tool_names, f"Expected tool {expected_tool} not found in {tool_names}"
 
-
+@pytest.mark.requires_llm
 def test_agent_reference_model():
     """Test AgentReference model functionality"""
     from agentic.tools.a2a_tool import AgentReference
