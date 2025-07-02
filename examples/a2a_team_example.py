@@ -44,8 +44,8 @@ coordinator = Agent(
     name="Team Coordinator",
     welcome="""Hello! I'm the Team Coordinator. I manage a team of specialist agents including:
     
-🌤️  Weather Specialist - For weather information and forecasts
-📰 News Specialist - For current events and news analysis
+- 🌤️  Weather Specialist - For weather information and forecasts
+- 📰 News Specialist - For current events and news analysis
 
 I can help you by:
 - Delegating tasks to the appropriate specialist

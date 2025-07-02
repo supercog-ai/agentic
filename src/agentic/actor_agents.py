@@ -51,6 +51,8 @@ from agentic.events import (
     ChatOutput,
     ToolCall,
     ToolResult,
+    SubAgentCall,
+    SubAgentResult,
     TurnCancelledError,
     StartCompletion,
     FinishCompletion,
@@ -306,6 +308,9 @@ class ActorBaseAgent:
 
         for tool_call in tool_calls:
             name = tool_call.function.name
+            is_subagent_call = False  # Initialize for this tool call
+            target_agent = ""  # Initialize target agent name
+            
             # handle missing tool case, skip to next tool
             if name not in function_map:
                 debug_print(
@@ -337,13 +342,25 @@ class ActorBaseAgent:
             if __LEGACY_CTX_VARS_NAME__ in func.__code__.co_varnames:
                 args[__LEGACY_CTX_VARS_NAME__] = thread_context
 
-            events.append(ToolCall(
-                agent=self.name,
-                name=name,
-                arguments=args,
-                depth=self.depth,
-                tool_call_id=tool_call.id
-            ))
+            # Check if this is a subagent call (includes both call_agent and handoff_to_agent)
+            is_subagent_call = (
+                name in ["call_agent", "handoff_to_agent"] and 
+                'target_agent' in args and 'message' in args
+            )
+            
+            if is_subagent_call:
+                # Extract target agent name from arguments (prefer display name if available)
+                target_agent = args.get('_target_agent_display_name', args.get('target_agent', 'Unknown Agent'))
+                message = args.get('message', str(args))
+                events.append(SubAgentCall(self.name, target_agent, message, self.depth))
+            else:
+                events.append(ToolCall(
+                    agent=self.name,
+                    name=name,
+                    arguments=args,
+                    depth=self.depth,
+                    tool_call_id=tool_call.id
+                ))
 
             # Call the function!!
             raw_result = None
@@ -430,14 +447,18 @@ class ActorBaseAgent:
                 events.append(log_event)
             thread_context.reset_logs()
 
-            events.append(ToolResult(
-                agent=self.name,
-                name=name,
-                result=result.value,
-                depth=self.depth,
-                intermediate_result=False,
-                tool_call_id=tool_call.id
-            ))
+            # Check if this was a subagent call to emit appropriate result event
+            if is_subagent_call:
+                events.append(SubAgentResult(self.name, target_agent, result.value, self.depth))
+            else:
+                events.append(ToolResult(
+                    agent=self.name,
+                    name=name,
+                    result=result.value,
+                    depth=self.depth,
+                    intermediate_result=False,
+                    tool_call_id=tool_call.id
+                ))
 
             partial_response.messages.append(
                 {

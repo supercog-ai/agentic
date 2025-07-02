@@ -112,9 +112,12 @@ class A2ATool(BaseAgenticTool):
                 context=context or {}
             )
             
+            # Get agent display name for better logging
+            agent_display_name = agent_ref.agent_instance.name if hasattr(agent_ref.agent_instance, 'name') else target_agent
+            
             # Log the call
             if thread_context:
-                thread_context.log(f"[A2A] {current_agent} calling {target_agent}: {message}")
+                thread_context.log(f"[A2A] {current_agent} calling {agent_display_name}: {message}")
             
             # Call the target agent
             result = self._execute_agent_call(agent_ref, request, thread_context)
@@ -154,9 +157,12 @@ class A2ATool(BaseAgenticTool):
                 context=context or {}
             )
             
+            # Get agent display name for better logging  
+            agent_display_name = agent_ref.agent_instance.name if hasattr(agent_ref.agent_instance, 'name') else target_agent
+            
             # Log the handoff
             if thread_context:
-                thread_context.log(f"[A2A] {current_agent} handing off to {target_agent}: {message}")
+                thread_context.log(f"[A2A] {current_agent} handing off to {agent_display_name}: {message}")
             
             # Execute handoff (agent takes over)
             result = self._execute_agent_handoff(agent_ref, request, thread_context)
@@ -228,7 +234,7 @@ Available for: {'Control transfer' if agent_ref.handoff else 'Task delegation'}"
             
             return A2AResponse(
                 source_agent=thread_context.agent_name if thread_context else "Unknown",
-                target_agent=agent_ref.name,
+                target_agent=agent.name if hasattr(agent, 'name') else agent_ref.name,
                 result=response_text,
                 success=True
             )

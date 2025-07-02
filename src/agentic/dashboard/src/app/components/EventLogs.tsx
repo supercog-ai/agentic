@@ -30,6 +30,7 @@ const EVENT_TYPES: Record<string, AgentEventType[]> = {
   INPUT: [AgentEventType.PROMPT, AgentEventType.PROMPT_STARTED, AgentEventType.RESUME_WITH_INPUT],
   COMPLETION: [AgentEventType.COMPLETION_START, AgentEventType.COMPLETION_END, AgentEventType.REASONING_CONTENT],
   OUTPUT: [AgentEventType.CHAT_OUTPUT, AgentEventType.OUTPUT],
+  SUBAGENTS: [AgentEventType.SUBAGENT_CALL, AgentEventType.SUBAGENT_RESULT],
   TOOLS: [AgentEventType.TOOL_CALL, AgentEventType.TOOL_RESULT, AgentEventType.TOOL_ERROR],
   TURN_COMPLETION: [AgentEventType.WAIT_FOR_INPUT, AgentEventType.TURN_END, AgentEventType.TURN_CANCELLED],
   STATE_MANAGEMENT: [AgentEventType.SET_STATE, AgentEventType.ADD_CHILD, AgentEventType.RESET_HISTORY],
@@ -41,6 +42,7 @@ const EventLogs: React.FC<EventLogsProps> = ({ events, onClose, className = '' }
     INPUT: true,
     COMPLETION: true,
     OUTPUT: true,
+    SUBAGENTS: true,
     TOOLS: true,
     TURN_COMPLETION: true,
     STATE_MANAGEMENT: true,
@@ -102,6 +104,28 @@ const EventLogs: React.FC<EventLogsProps> = ({ events, onClose, className = '' }
       );
     }
     
+    if (event.type === AgentEventType.SUBAGENT_CALL) {
+      const targetAgent = event.payload?.target_agent || 'Unknown Agent';
+      const message = event.payload?.message || 'No message provided';
+      return (
+        <div className="whitespace-pre-wrap">
+          <span className="text-emerald-600 dark:text-emerald-400 font-medium">→ {targetAgent}: </span>
+          <span>{message}</span>
+        </div>
+      );
+    }
+    
+    if (event.type === AgentEventType.SUBAGENT_RESULT) {
+      const sourceAgent = event.payload?.source_agent || 'Unknown Agent';
+      const result = event.payload?.result || 'No result provided';
+      return (
+        <div className="whitespace-pre-wrap">
+          <span className="text-emerald-700 dark:text-emerald-300 font-medium">← {sourceAgent}: </span>
+          <MarkdownRenderer content={result} />
+        </div>
+      );
+    }
+    
     if (event.type === AgentEventType.REASONING_CONTENT) {
       const content = typeof event.payload === 'string' 
         ? event.payload 
@@ -157,6 +181,10 @@ const EventLogs: React.FC<EventLogsProps> = ({ events, onClose, className = '' }
       case AgentEventType.PROMPT:
       case AgentEventType.RESUME_WITH_INPUT:
         return 'text-green-500';
+      case AgentEventType.SUBAGENT_CALL:
+        return 'text-emerald-500';
+      case AgentEventType.SUBAGENT_RESULT:
+        return 'text-emerald-600';
       case AgentEventType.TOOL_CALL:
         return 'text-amber-500';
       case AgentEventType.TOOL_RESULT:
