@@ -1,8 +1,38 @@
 import pytest
+from unittest.mock import patch, MagicMock
 from agentic.common import Agent, AgentRunner
 from agentic.tools.a2a_tool import A2ATool
 from agentic.events import SubAgentCall, SubAgentResult
 from agentic.models import GPT_4O_MINI
+
+
+
+@pytest.fixture(autouse=True) 
+def mock_database():
+    """Mock only the thread/agent database components to prevent database access in tests"""
+    with patch('agentic.thread_manager.DatabaseManager') as mock_db1, \
+         patch('agentic.actor_agents.DatabaseManager') as mock_db2, \
+         patch('agentic.db.db_manager.DatabaseManager') as mock_db3:
+        
+        # Configure all database manager mocks to avoid file system access
+        mock_db1.return_value.get_threads_by_agent.return_value = []
+        mock_db1.return_value.get_thread_logs.return_value = []
+        mock_db1.return_value.create_thread.return_value = None
+        mock_db1.return_value.log_event.return_value = None
+        
+        mock_db2.return_value.get_threads_by_agent.return_value = []
+        mock_db2.return_value.get_thread_logs.return_value = []
+        mock_db2.return_value.create_thread.return_value = None
+        mock_db2.return_value.log_event.return_value = None
+        
+        mock_db3.return_value.get_threads_by_agent.return_value = []
+        mock_db3.return_value.get_thread_logs.return_value = []
+        mock_db3.return_value.create_thread.return_value = None
+        mock_db3.return_value.log_event.return_value = None
+        
+        with patch('agentic.thread_manager.init_thread_tracking') as mock_thread:
+            mock_thread.return_value = ("test_thread_id", lambda x, y: None)
+            yield mock_db1
 
 
 @pytest.fixture
