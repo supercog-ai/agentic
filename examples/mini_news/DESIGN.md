@@ -54,7 +54,7 @@
 1. **Headline News Reporter**
    - Role: News aggregation and summarization
    - Tools: Google News Tool, Web Search Tool
-   - Model: GPT-4
+   - Model: GPT-4o-mini
    - Responsibilities:
      - Article selection
      - Headline generation
@@ -64,7 +64,7 @@
 2. **News Formatter**
    - Role: HTML generation and formatting
    - Tools: Image Generator
-   - Model: GPT-4
+   - Model: GPT-4o-mini
    - Responsibilities:
      - HTML formatting
      - Image generation
