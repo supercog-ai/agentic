@@ -22,6 +22,8 @@ from agentic.events import (
     StartCompletion,
     ToolCall,
     ToolResult,
+    SubAgentCall,
+    SubAgentResult,
     TurnEnd,
     WaitForInput,
     ToolError,
@@ -88,6 +90,8 @@ class RayAgentRunner:
             return self.debug != ""
         elif isinstance(event, (ToolCall, ToolResult)):
             return self.debug.debug_tools()
+        elif isinstance(event, (SubAgentCall, SubAgentResult)):
+            return self.debug.debug_agents() or self.debug.debug_tools()
         elif isinstance(event, PromptStarted):
             return self.debug.debug_llm() or self.debug.debug_agents()
         elif isinstance(event, TurnEnd):

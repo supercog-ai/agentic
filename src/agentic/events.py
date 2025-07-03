@@ -355,6 +355,48 @@ class ToolResult(Event):
             tool_call_id=event_data.get("tool_call_id")
         )
 
+
+class SubAgentCall(Event):
+    arguments: dict = {}
+    target_agent: str = ""
+
+    def __init__(self, agent: str, target_agent: str, message: str, depth: int = 0):
+        super().__init__(
+            agent=agent,
+            type="subagent_call",
+            payload={
+                "target_agent": target_agent,
+                "message": message
+            },
+            depth=depth
+        )
+        self.target_agent = target_agent
+        self.arguments = {"message": message}
+
+    def __str__(self):
+        return "  " * (self.depth + 1) + f"[SUBAGENT CALL: {self.agent} → {self.target_agent}] {self.payload['message'][:50]}...\n"
+
+
+class SubAgentResult(Event):
+    result: Any = None
+    source_agent: str = ""
+
+    def __init__(self, agent: str, source_agent: str, result: Any, depth: int = 0):
+        super().__init__(
+            agent=agent,
+            type="subagent_result",
+            payload={
+                "source_agent": source_agent,
+                "result": result
+            },
+            depth=depth,
+        )
+        self.result = result
+        self.source_agent = source_agent
+
+    def __str__(self):
+        return "  " * (self.depth + 1) + f"[SUBAGENT RESULT: {self.source_agent} → {self.agent}] {str(self.result)[:100]}...\n"
+
 class ToolError(Event):
     _error: str
     tool_call_id: str = None

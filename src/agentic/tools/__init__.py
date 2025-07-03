@@ -3,6 +3,7 @@ __path__ = __import__('pkgutil').extend_path(__path__, __name__)
 
 # Mapping of tool names to their source modules
 _TOOL_MAPPING = {
+    "A2ATool": "a2a_tool",
     "AirbnbCalendarTool": "airbnb_calendar_tool",
     "AuthorizedRestApiTool": "auth_rest_api_tool",
     "AutomaticTools": "automatic_tools",
@@ -34,6 +35,7 @@ _TOOL_MAPPING = {
 }
 
 __all__ = [
+    "A2ATool",
     "AirbnbCalendarTool",
     "AuthorizedRestApiTool",
     "AutomaticTools",
