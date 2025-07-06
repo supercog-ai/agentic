@@ -32,6 +32,7 @@ _TOOL_MAPPING = {
     "TextToSpeechTool": "text_to_speech_tool",
     "UnitTestingTool": "unit_test_tool",
     "WeatherTool": "weather_tool",
+    "GeolocationTool": "geolocation_tool",
 }
 
 __all__ = [
@@ -64,6 +65,7 @@ __all__ = [
     "TextToSpeechTool",
     "UnitTestingTool",
     "WeatherTool",
+    "GeolocationTool"
 ]
 
 # Tool cache to avoid repeated imports

@@ -70,6 +70,10 @@ duckduckgo = [
     "duckduckgo-search==8.0.1",
 ]
 
+geolocation = [
+    "tzlocal==5.3.1",
+]
+
 github = [
     "gitpython==3.1.44",
 ]
@@ -109,7 +113,7 @@ text-to-speech = [
 ]
 
 all-tools = [
-    "agentic-framework[airbnb,browser-use,database,duckduckgo,github,google-news,image-generator,imap,mcp,meeting-baas,playwright,text-to-speech]",
+    "agentic-framework[airbnb,browser-use,database,duckduckgo,geolocation,github,google-news,image-generator,imap,mcp,meeting-baas,playwright,text-to-speech]",
 ]
 
 all = [
