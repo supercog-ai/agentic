@@ -1,10 +1,10 @@
+# A simple agent to demonstrate the Geolocation tool.
+
 from agentic.tools import GeolocationTool
-
 from agentic.common import Agent, AgentRunner
-from agentic.models import GPT_4O_MINI, LMSTUDIO_QWEN
-# This is the "hello world" agent example. A simple agent with a tool for getting weather reports.
+from agentic.models import GPT_4O_MINI
 
-MODEL=GPT_4O_MINI # try locally with LMSTUDIO_QWEN
+MODEL=GPT_4O_MINI
 
 agent = Agent(
     name="Geolocation Agent",
@@ -16,6 +16,9 @@ agent = Agent(
         "location": "What is the location of the user?",
         "time": "What is the time in the user's location?",
         "timezone": "What is the timezone of the user?",
+        "isp": "What is my ISP?",
+        "ip": "What is my IP address?",
+        "gps": "What are my gps coordinates in (latitude, longitude) format?"
     }
 )
 
