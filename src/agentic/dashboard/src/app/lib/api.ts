@@ -12,6 +12,8 @@ export enum AgentEventType {
   RESET_HISTORY = 'reset_history',
   RESUME_WITH_INPUT = 'resume_with_input',
   SET_STATE = 'set_state',
+  SUBAGENT_CALL = 'subagent_call',
+  SUBAGENT_RESULT = 'subagent_result',
   TOOL_CALL = 'tool_call',
   TOOL_ERROR = 'tool_error',
   TOOL_RESULT = 'tool_result',
