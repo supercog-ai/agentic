@@ -135,9 +135,7 @@ class MiniNewsAgent(Agent):
         print("\n3. News Combination")
         print("   - Combining all news segments")
         yield ChatOutput(self.name, {"content": "Combining news segments..."})
-        raw_combined_news = headline_news
-        
-        f"""
+        raw_combined_news = f"""
         Supercog Mini News Report
 
         Headline News:
