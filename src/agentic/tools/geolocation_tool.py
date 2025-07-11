@@ -35,16 +35,16 @@ class GeolocationTool(BaseAgenticTool):
         ]
 
 
-    async def get_time(self) -> Dict[str, str]:
+    async def get_time(self) -> str:
         """ Returns the current time of the client. """ 
         try:
             current_time = datetime.datetime.now()    
-            return current_time.isoformat(),
+            return current_time.isoformat()
 
         except Exception as e:
             raise Exception(f"Failed to get current time: {str(e)}")
 
-    async def get_timezone(self) -> Dict[str, str]:
+    async def get_timezone(self) -> str:
         """
         Get the current timezone information based on the user's location.
         
@@ -60,7 +60,7 @@ class GeolocationTool(BaseAgenticTool):
         except Exception as e:
             raise Exception(f"Failed to get timezone information: {str(e)}")
 
-    async def get_ip_and_location(self) -> Dict[str, str]:
+    async def get_ip_and_location(self) -> str:
         """
         Get the current geographical location based on the user's public IP address.
         
@@ -106,9 +106,7 @@ class GeolocationTool(BaseAgenticTool):
             Service Provider: {service_provider}
             """
 
-        except requests.exceptions.RequestException as e:
-            print(f"An error occurred with the network request: {e}")
-        except KeyError:
-            print("Could not parse the expected data from the API response.")
         except Exception as e:
-            print(f"An unexpected error occurred: {e}")
+            error_msg = f"An error occurred while getting location: {str(e)}"
+            print(error_msg)
+            return error_msg
