@@ -119,7 +119,7 @@ def geocode(address: str):
             "key" : f"{api_key}"
         }
 
-        with httpx.AsyncClient() as client:
+        with httpx.Client() as client:
             response = client.post(
                 "https://maps.googleapis.com/maps/api/geocode/json",
                 params=params,
