@@ -31,7 +31,8 @@ class GeolocationTool(BaseAgenticTool):
         return [
             self.get_time,
             self.get_timezone,
-            self.get_ip_and_location,
+            self.get_ip,
+            self.get_location,
         ]
 
 
@@ -59,20 +60,15 @@ class GeolocationTool(BaseAgenticTool):
 
         except Exception as e:
             raise Exception(f"Failed to get timezone information: {str(e)}")
-
-    async def get_ip_and_location(self) -> str:
+    
+    async def get_ip(self) -> str:
         """
-        Get the current geographical location based on the user's public IP address.
+        Get the current public IP address of the client.
         
         Returns:
-            Geolocation data as a string in the following format:
-                City: {city}
-                Region: {region}
-                Country: {country}
-                Coordinates (Lat, Lon): {loc}
-                Timezone: {timezone}
-                IP: {public_ip}
-                ISP: {org}
+            Public IP address as a string.
+
+        Use: if agent is being run locally then the ip adress will match the users location, otherwise the user can provide an ip to get location data.
         """
         try:
             # Step 1: Get the public IP address
@@ -80,11 +76,47 @@ class GeolocationTool(BaseAgenticTool):
             ip_response = requests.get('https://api.ipify.org?format=json')
             ip_response.raise_for_status()  # Raise an exception for bad status codes
             ip_data = ip_response.json()
-            public_ip = ip_data['ip']
+            public_ip = ip_data['ip'] 
+
+            return f"""
+            IP: {public_ip}
+            """
+
+        except Exception as e:
+            error_msg = f"An error occurred while getting ip: {str(e)}"
+            print(error_msg)
+            return error_msg
+
+    async def get_location(self, ip: Optional[str] = None) -> str:
+        """
+        Get the current geographical location based on the user's public IP address.
+        
+        Args:
+            ip: Optional IP address. If not provided, gets the current machine's IP.
             
-            # Step 2: Get the location based on the IP address
+        Returns:
+            Geolocation data as a string in the following format:
+                City: {city}
+                Region: {region}
+                Country: {country}
+                Coordinates (Lat, Lon): {loc}
+                Timezone: {timezone}
+                IP: {ip}
+                ISP: {org}
+        """
+        try:
+            # If no IP provided, get the current machine's IP
+            if ip is None:
+                ip = await self.get_ip()
+                # Extract just the IP address from the formatted string
+                if ip.strip().startswith('IP:'):
+                    ip = ip.strip().split(':', 1)[1].strip()
+                if ip.startswith('An error occurred'):
+                    return ip  # Return the error message
+            
+            # Get the location based on the IP address
             # We use ipinfo.io, which provides a free geolocation API.
-            location_response = requests.get(f'https://ipinfo.io/{public_ip}/json')
+            location_response = requests.get(f'https://ipinfo.io/{ip}/json')
             location_response.raise_for_status()
             location_data = location_response.json()
 
@@ -102,7 +134,7 @@ class GeolocationTool(BaseAgenticTool):
             Country: {country}
             Coordinates (Lat, Lon): {loc}
             Timezone: {timezone}
-            IP: {public_ip}
+            IP: {ip}
             Service Provider: {service_provider}
             """
 
