@@ -10,6 +10,8 @@ declare namespace Api {
   type ResetHistory = 'reset_history';
   type ResumeWithInput = 'resume_with_input';
   type SetState = 'set_state';
+  type SubAgentCall = 'subagent_call';
+  type SubAgentResult = 'subagent_result';
   type ToolCall = 'tool_call';
   type ToolError = 'tool_error';
   type ToolResult = 'tool_result';
@@ -29,6 +31,8 @@ declare namespace Api {
     | ResetHistory
     | ResumeWithInput
     | SetState
+    | SubAgentCall
+    | SubAgentResult
     | ToolCall
     | ToolError
     | ToolResult
