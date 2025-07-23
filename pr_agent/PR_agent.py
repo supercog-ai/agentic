@@ -5,6 +5,9 @@ from agentic.common import Agent, AgentRunner
 from agentic.models import GPT_4O_MINI # model
 
 from dotenv import load_dotenv
+import openai
+import requests
+import os
 
 
 load_dotenv()  # This loads variables from .env into os.environ
