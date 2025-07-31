@@ -28,6 +28,7 @@ jobs:
           git diff > PRChanges.patch
       - name: Run pr review agent
         run: |
-          uv run pr_agent/PR_agent.py
+          uv run pr_agent/test_files/mock_pr_agent.py
+#uv run pr_agent/PR_agent.py  
         env: 
           super_secret: ${{ secrets.PRAgentOpenAIKey }}
