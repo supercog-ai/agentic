@@ -32,3 +32,4 @@ jobs:
 #uv run pr_agent/PR_agent.py  
         env: 
           OPENAI_API_KEY: ${{ secrets.PRAgentOpenAIKey }}
+          PR_ID: ${{ github.event.pull_request.number }}
