@@ -12,14 +12,15 @@ jobs:
     steps:
       - name: Check out the repository to the runner
         uses: actions/checkout@v4
-      - name: Install the latest version of uv
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: "pyproject.toml"
+      - name: Install uv
         uses: astral-sh/setup-uv@v6
+        
       - name: Setup agentic
         run: |
-          uv venv  --python 3.12
-          source .venv/bin/activate
-          
-          # For Linux or Windows
           uv pip install -e "./agentic[all,dev]" --extra-index-url https://download.pytorch.org/whl/cpu --index-strategy unsafe-first-match
       - name: Prepare changes for agent
         run: |
