@@ -1,5 +1,5 @@
 from agentic.common import Agent
-from agentic.models import GPT_4O_MINI # model
+from agentic.models import CLAUDE
 
 agent = Agent(
     name="PR Summary Agent",
@@ -64,7 +64,7 @@ Additional Notes:
 Be precise, helpful, and technically insightful. Keep your tone professional and collaborative, as your output will be seen by developers during code review.
     """,
     
-    model=GPT_4O_MINI, # model
+    model=CLAUDE, # model
 )
 
 # Main to use the agent on the test files
