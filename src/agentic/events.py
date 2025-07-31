@@ -2,6 +2,7 @@ import typing
 import uuid
 import warnings
 import json
+from pprint import pformat
 from datetime import timedelta
 from litellm.types.utils import Message
 from pydantic import BaseModel, ConfigDict
@@ -35,7 +36,11 @@ class Event(BaseModel):
         return None
 
     def __str__(self) -> str:
-        return str(f"[{self.agent}: {self.type}] {self.payload}\n")
+        if isinstance(self.payload, dict):
+            payload_str = pformat(self.payload, indent=2)
+        else:
+            payload_str = str(self.payload)
+        return str(f"[{self.agent}: {self.type}] {payload_str}\n")
 
     def print(self, debug_level: str):
         return str(self)

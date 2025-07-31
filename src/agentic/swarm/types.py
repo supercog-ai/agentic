@@ -119,11 +119,12 @@ class ThreadContext:
         caller_frame = inspect.currentframe().f_back
         caller_name = inspect.getframeinfo(caller_frame).function
         event = ToolResult(self.agent_name, caller_name, result=" ".join(map(str, args)), intermediate_result=True)
+        # The _event_queue is passed from the outer caller, so that we can publish events "immediately".
+        # But we also send them to the normal log so that we can remember to stored them.
         if self._event_queue:
             self._event_queue.put(event)
             time.sleep(0)
-        else:
-            self._log_queue.append(event)
+        self._log_queue.append(event)
         return event
     
     def get_logs(self):
