@@ -16,7 +16,6 @@ jobs:
         uses: astral-sh/setup-uv@v6
       - name: Setup agentic
         run: |
-          git clone git@github.com:supercog-ai/agentic.git
           uv venv  --python 3.12
           source .venv/bin/activate
           
