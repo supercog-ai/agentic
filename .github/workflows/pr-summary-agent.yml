@@ -1,0 +1,34 @@
+name: PR Summary Agent
+
+on:
+  pull_request:
+    types: [opened, reopened]
+    branches:
+    - main
+jobs:
+  run-pr-agent:
+    name: run PR Summary Agent
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository to the runner
+        uses: actions/checkout@v4
+      - name: Install the latest version of uv
+        uses: astral-sh/setup-uv@v6
+      - name: Setup agentic
+        run: |
+          git clone git@github.com:supercog-ai/agentic.git
+          uv venv  --python 3.12
+          source .venv/bin/activate
+          
+          # For Linux or Windows
+          uv pip install -e "./agentic[all,dev]" --extra-index-url https://download.pytorch.org/whl/cpu --index-strategy unsafe-first-match
+      - name: Prepare changes for agent
+        run: |
+          cd agentic
+          git diff > PRChanges.patch
+      - name: Run pr review agent
+        run: |
+          uv run pr_agent/test_files/mock_pr_agent.py
+#uv run pr_agent/PR_agent.py  
+        env: 
+          super_secret: ${{ secrets.PRAgentOpenAIKey }}
