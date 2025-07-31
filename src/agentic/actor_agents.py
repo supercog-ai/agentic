@@ -404,13 +404,14 @@ class ActorBaseAgent:
                 tb_list = traceback.format_exception(type(e), e, e.__traceback__)
                 # Join all lines and split them to get individual lines
                 full_traceback = "".join(tb_list).strip().split("\n")
-                # Get the last 3 lines (or all if less than 3)
+                # Get the last 5 lines (or all if less than 5)
                 if self.debug.debug_all():
                     last_three = full_traceback
                 else:
                     last_three = (
-                        full_traceback[-3:] if len(full_traceback) >= 3 else full_traceback
+                        full_traceback[-5:] if len(full_traceback) >= 5 else full_traceback
                     )
+                last_three = "\n".join(last_three)
                 raw_result = f"Tool error: {name}: {last_three}"
 
                 events.append(ToolError(
@@ -1497,7 +1498,11 @@ class BaseAgentProxy:
             if isinstance(event, TurnEnd):
                 event = self._process_turn_end(event)
 
-            yield event
+            if isinstance(event, ToolResult) and event.payload['is_log'] == True:
+                pass # don't yield log events, they should have been short-ciruit published directly
+                     # into the event queue
+            else:
+                yield event
 
             if hasattr(event, "agent") and event.agent != self.name:
                 # skipping event with wrong agent name
