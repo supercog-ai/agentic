@@ -31,4 +31,4 @@ jobs:
           uv run pr_agent/test_files/mock_pr_agent.py
 #uv run pr_agent/PR_agent.py  
         env: 
-          super_secret: ${{ secrets.PRAgentOpenAIKey }}
+          OPENAI_API_KEY: ${{ secrets.PRAgentOpenAIKey }}
