@@ -1,6 +1,6 @@
 [project]
 name = "agentic-framework"
-version = "0.3.8"
+version = "0.3.9"
 description = "An opinionated framework for building sophisticated AI Agents"
 readme = "README.md"
 requires-python = ">=3.11,<3.13"
