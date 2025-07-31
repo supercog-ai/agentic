@@ -8,6 +8,7 @@ from .database_tool import DatabaseTool
 from .duckduckgo import DuckDuckGoTool
 from .example_tool import ExampleTool
 from .file_download import FileDownloadTool
+from .geolocation_tool import GeolocationTool
 from .github_tool import GithubTool
 from .google_news import GoogleNewsTool
 from .human_interrupt import HumanInterruptTool
@@ -40,6 +41,7 @@ __all__ = [
     "ExampleTool",
     "FileDownloadTool",
     "GithubTool",
+    "GeolocationTool",
     "GoogleNewsTool",
     "HumanInterruptTool",
     "ImageGeneratorTool",
