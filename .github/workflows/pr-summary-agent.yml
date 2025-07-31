@@ -24,9 +24,10 @@ jobs:
           uv pip install -e "./agentic[all,dev]" --extra-index-url https://download.pytorch.org/whl/cpu --index-strategy unsafe-first-match
       - name: Prepare changes for agent
         run: |
+          cd agentic
           git diff > PRChanges.patch
       - name: Run pr review agent
         run: |
-          uv run agent.py
+          uv run pr_agent/PR_agent.py
         env: 
           super_secret: ${{ secrets.PRAgentOpenAIKey }}
