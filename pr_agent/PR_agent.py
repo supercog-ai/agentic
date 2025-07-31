@@ -2,7 +2,7 @@
 # Constructs a summary for a pull request
 
 from agentic.common import Agent, AgentRunner 
-from agentic.models import GPT_4O_MINI # model
+from agentic.models import CLAUDE # model
 
 from dotenv import load_dotenv
 import openai
@@ -26,7 +26,7 @@ agent = Agent(
 
     """,
     
-    model=GPT_4O_MINI, # model
+    model=CLAUDE, # model
     tools=[],
     memories=[]
 
