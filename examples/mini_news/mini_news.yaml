@@ -1,0 +1,159 @@
+HEADLINE_REPORTER: >
+ You are an experienced news reporter and summarizer. Your job is to find and summarize exactly 8 **current** and **topically diverse** news stories, following these steps:
+
+  1. Use `query_news` to find articles about "today's top news and important breaking stories" with a **time filter of the last 24 hours**.
+  2. Adjust your query as needed to ensure you find exactly 8 articles from a **diverse set of topics** (e.g., politics, technology, health, science, global affairs, economics, society, climate).
+  3. For each article:
+    - Use a **credible news source** (no blogs or opinion pieces).
+    - Include the **exact link** to the article that your summary is based on. Verify that the link matches the story content. Be sure that the link is specific to the exact article.
+    - If the article is not accessible, skip it and choose another.
+  4. For each selected article:
+    - Write a concise and clear **headline**.
+    - Write a **two-paragraph summary** that:
+      - Presents the core events or issues.
+      - Includes all critical details without skipping sections.
+      - Has the tone and clarity of a morning news digest.
+  5. Output should be a list of 8 items, each with:
+    - Headline
+    - Verified link
+    - Two-paragraph summary
+
+WEBSITE_FORMAT: |
+  <style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+
+  body {
+    font-family: 'Inter', sans-serif;
+    margin: 0;
+    padding: 20px;
+    background: linear-gradient(to bottom right, #f5f7fa, #e4ecf5);
+    color: #2c3e50;
+  }
+
+  header {
+    background: linear-gradient(to right, #2c3e50, #34495e);
+    color: #ecf0f1;
+    padding: 25px 0;
+    text-align: center;
+    font-size: 2.5em;
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    letter-spacing: 1px;
+  }
+
+  main {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 30px 20px;
+  }
+
+  .news-card {
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 16px;
+    padding: 20px;
+    margin: 25px 0;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    transition: all 0.4s ease;
+    backdrop-filter: blur(6px);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    animation: fadeInUp 0.5s ease forwards;
+    opacity: 0;
+  }
+
+  .news-image {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  .news-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+  }
+
+  .news-card h3 {
+    margin: 0 0 15px;
+    color: #2980b9;
+    font-size: 1.7em;
+    transition: color 0.3s ease;
+  }
+
+  .news-card:hover h3 {
+    color: #1abc9c;
+  }
+
+  .news-card p {
+    margin: 0 0 18px;
+    color: #2c3e50;
+    line-height: 1.7;
+    font-size: 1.05em;
+  }
+
+  .news-card ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .news-card li {
+    margin-bottom: 12px;
+    padding: 12px 18px;
+    background: #f1f3f5;
+    border-left: 4px solid #2980b9;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+  }
+
+  .news-card li:hover {
+    background: #eaf6ff;
+    border-left-color: #1abc9c;
+  }
+
+  .news-card strong {
+    color: #2c3e50;
+    font-weight: 600;
+  }
+
+  footer {
+    background: linear-gradient(to right, #2c3e50, #34495e);
+    color: #ecf0f1;
+    text-align: center;
+    padding: 25px 0;
+    margin-top: 60px;
+    font-size: 1em;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.05);
+  }
+
+  /* Animation */
+  @keyframes fadeInUp {
+    from {
+      transform: translateY(30px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    .news-card {
+      margin: 15px 0;
+      padding: 20px;
+    }
+
+    .news-card h3 {
+      font-size: 1.4em;
+    }
+
+    header {
+      padding: 18px 0;
+      font-size: 2em;
+    }
+  }
+  </style>
