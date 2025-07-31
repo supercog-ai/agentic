@@ -92,7 +92,7 @@ class DatabaseManager:
         if 'AGENTIC_DATABASE_URL' in os.environ:
             # Use the database URL from environment variable if set
             dburl = os.environ['AGENTIC_DATABASE_URL']
-            _add_depth_column_if_missing(self.db_path)
+            _add_depth_column_if_missing(db_path)
             self.engine = create_engine(dburl, echo=False)
             self.db_path = None
         else:
@@ -106,6 +106,16 @@ class DatabaseManager:
 
     def create_db_and_tables(self):
         SQLModel.metadata.create_all(self.engine)
+        # Check if ThreadLog table is missing the 'depth' column and add it if necessary
+        with self.get_session() as session:
+            try:
+                # Use text() for raw SQL queries in SQLModel/SQLAlchemy
+                from sqlalchemy import text
+                session.exec(text("ALTER TABLE thread_logs ADD COLUMN depth INTEGER DEFAULT 0;"))
+                session.commit()
+            except Exception as e:
+                # Rollback the transaction on error
+                session.rollback()
 
     def get_session(self) -> Session:
         return Session(self.engine)

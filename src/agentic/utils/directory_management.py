@@ -19,7 +19,11 @@ def get_runtime_directory():
         if not runtime_dir.exists():
             # Get the agentic package directory path
             import agentic
-            agentic_dir = os.path.dirname(os.path.dirname(os.path.abspath(agentic.__file__)))
+            try:
+                agentic_dir = os.path.dirname(os.path.dirname(os.path.abspath(agentic.__file__)))
+            except:
+                # Will fail when running from "pip install -e"
+                agentic_dir = "."
             
             # Create runtime directory path
             runtime_dir = os.path.join(agentic_dir, "runtime")
