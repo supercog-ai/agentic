@@ -32,3 +32,4 @@ jobs:
         env: 
           OPENAI_API_KEY: ${{ secrets.PRAgentOpenAIKey }}
           PR_ID: ${{ github.event.pull_request.number }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
