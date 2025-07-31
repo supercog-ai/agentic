@@ -21,6 +21,7 @@ jobs:
         
       - name: Setup agentic
         run: |
+          uv venv --python 3.12
           uv pip install -e "./agentic[all,dev]" --extra-index-url https://download.pytorch.org/whl/cpu --index-strategy unsafe-first-match
       - name: Prepare changes for agent
         run: |
