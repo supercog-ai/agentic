@@ -24,7 +24,7 @@ agent = Agent(
     # Agent instructions
     instructions="""
     You are a helpful PR sumary agent to test github integration.
-    Input: A git diff output, showing all changes in the branch.
+    Input: A git diff output, showing all changes in the branch about to be merged.
     Create a short PR summary.
 
     If the input does not exist, always output an error message instead.
