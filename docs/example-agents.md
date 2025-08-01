@@ -119,6 +119,15 @@ The [GitHub Agent](https://github.com/supercog-ai/agentic/blob/main/examples/git
 
 The agent maintains context about recently viewed repositories and has built-in memory to improve interactions. This example demonstrates how to create tools that integrate with external APIs and services, while providing a natural language interface to complex systems.
 
+## Study Guide Agent
+The [Study Guide Agent](https://github.com/supercog-ai/agentic/blob/main/examples/study/study_guide.py) demonstrates using the RAG tool to provide an agent with additional context. The agent helps the user study content using knowledge from a RAG index. It has 3 main features:
+
+- Test Prep: The agent creates a set of short answer questions and evaluates the user's answers
+- Study Buddy: The agent converses with the user about the source document and suggests further readings
+- Multiple Choice Quiz: The agent generates a multiple choice quiz and an answer key using content in the documents.
+
+The Study Guide Agent shows the strength of using RAG in agent deployment, using specific knowledge from provided documents instead of inaccurate, general knowledge. It demonstrates how Agentic can be used to create agents specific to a user's data and knowledge.
+
 ## Next Steps
 
 - Learn more about the [Tools](./tools//tool-library/index.md) that power these agents - each tool has a basic demo agent you can run
