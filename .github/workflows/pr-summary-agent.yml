@@ -35,3 +35,41 @@ jobs:
           PR_ID: ${{ github.event.pull_request.number }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           UV_SYSTEM_PYTHON: 1
+
+name: PR Summary Agent
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches:
+    - main
+jobs:
+  run-pr-agent:
+    permissions: write-all
+    name: run PR Summary Agent
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository to the runner
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        
+      - name: Run agent
+        run: |
+          uv venv --python 3.12
+          uv pip install -e "../PR_code_review-agent[all,dev]" --extra-index-url https://download.pytorch.org/whl/cpu --index-strategy unsafe-first-match
+          git diff --merge-base HEAD^1 HEAD > PRChanges.patch
+          cat PRChanges.patch
+          uv run pr_agent/test_files/mock_pr_agent.py
+          
+#uv run pr_agent/PR_agent.py  
+
+        env: 
+          OPENAI_API_KEY: ${{ secrets.PRAgentOpenAIKey }}
+          PR_ID: ${{ github.event.pull_request.number }}
+          GITHUB_API_KEY: ${{ secrets.GITHUB_TOKEN }}
+          REPO_OWNER: supercog-ai
+          REPO_NAME: PR_code_review-agent
