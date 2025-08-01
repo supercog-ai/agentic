@@ -2,8 +2,16 @@ from agentic.tools.rag_tool import RAGTool
 
 from agentic.common import Agent, AgentRunner
 from agentic.models import GPT_4O_MINI
-# This is the "hello world" agent example. A simple agent with a tool for getting weather reports.
-
+"""
+    This is a study guide agent designed to help the user study material in a RAG store.
+    The agent has 3 study modes: 
+        Test Prep, where the agent creates a set of short answer questions and evaluates the user's answers
+        Study Buddy, where it converses with the user about the source document and suggests further readings
+        Multiple Choice Quiz, where it generates a multiple choice quiz and an answer key about the content in the documents.
+        
+    Documents must be added to agentic/examples/study/docs/ and must be .txt or .pdf files.
+    Documents are added to RAG index on startup, files already indexed will be skipped.
+"""
 MODEL=GPT_4O_MINI 
 
 agent = Agent(
@@ -60,8 +68,6 @@ agent = Agent(
 
     * Be directly based on retrieved content.
     * Include 1 correct and 3 plausible distractor answers.
-    
-    * Provide an **answer key with explanations** and references to the source content **AFTER** the quiz. Always put this answer key after the questions.
     
     Important Reminders
 
