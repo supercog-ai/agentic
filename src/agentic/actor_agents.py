@@ -132,6 +132,8 @@ class ActorBaseAgent:
     result_model: Type[BaseModel]|None = None,
     # Reasoning support
     reasoning_effort: str = None  # Can be "low", "medium", "high" or None
+    reasoning_tools: list[str] = None  # Can include "websearch" for web search support
+    web_search_context_size: str = "medium"  # Web search context size: "low", "medium", "high"
 
     model_config = ConfigDict(
         arbitrary_types_allowed=True
@@ -176,12 +178,24 @@ class ActorBaseAgent:
         completion_params = {
             "model": model_override or self.model,
             "messages": messages,
-            "temperature": 0.0,  # Will be adjusted if reasoning is enabled
             "tools": tools or None,
             "tool_choice": self.tool_choice,
             "stream": stream,
             "stream_options": {"include_usage": True},
         }
+        
+        # Check if we should add temperature parameter
+        # Some models like OpenAI search preview models don't accept temperature
+        model_name = model_override or self.model
+        is_web_search_model = (
+            "search-preview" in model_name.lower() or
+            (self.reasoning_tools and "websearch" in self.reasoning_tools)
+        )
+        
+        if not is_web_search_model:
+            completion_params["temperature"] = 0.0  # Will be adjusted if reasoning is enabled
+        else:
+            debug_print(self.debug.debug_all(), f"Skipping temperature parameter for web search model: {model_name}")
         if self.result_model:
             completion_params["response_format"] = self.result_model
 
@@ -210,11 +224,34 @@ class ActorBaseAgent:
             debug_print(self.debug.debug_all(), f"Added reasoning_effort={self.reasoning_effort} to completion params")
             
             # Anthropic requires temperature=1 when reasoning is enabled
-            if "anthropic" in model_name.lower():
+            # But only set it if the model accepts temperature parameter
+            if "anthropic" in model_name.lower() and not is_web_search_model:
                 completion_params["temperature"] = 1.0
                 debug_print(self.debug.debug_all(), f"Set temperature=1.0 for Anthropic reasoning model")
         elif self.reasoning_effort and not supports_reasoning:
             debug_print(self.debug.debug_all(), f"Model {model_name} does not support reasoning. Skipping reasoning_effort parameter.")
+
+        # Add web search support if enabled
+        if self.reasoning_tools and "websearch" in self.reasoning_tools:
+            # Check if model supports web search with fallback for older LiteLLM versions
+            supports_web_search = True  # Default to True and let LiteLLM handle parameter validation
+            try:
+                if hasattr(litellm, 'supports_web_search'):
+                    supports_web_search = litellm.supports_web_search(model=model_name)
+                    debug_print(self.debug.debug_all(), f"Model supports web search: {supports_web_search}")
+                else:
+                    debug_print(self.debug.debug_all(), f"LiteLLM version does not have supports_web_search function, assuming support")
+            except Exception as e:
+                debug_print(self.debug.debug_all(), f"Error checking web search support: {e}, assuming support")
+                supports_web_search = True
+            
+            if supports_web_search:
+                completion_params["web_search_options"] = {
+                    "search_context_size": self.web_search_context_size
+                }
+                debug_print(self.debug.debug_all(), f"Added web_search_options with context_size={self.web_search_context_size} to completion params")
+            else:
+                debug_print(self.debug.debug_all(), f"Model {model_name} does not support web search. Skipping web search option.")
 
         # Add any special parameters needed for specific model types
         completion_params.update(get_special_model_params(completion_params["model"]))
@@ -1027,6 +1064,8 @@ class BaseAgentProxy:
         mock_settings: dict = None,
         prompts: Optional[dict[str, str]] = None,
         reasoning_effort: str = None,
+        reasoning_tools: list[str] = None,
+        web_search_context_size: str = "medium",
     ):
         self.name = name
         self.welcome = welcome or f"Hello, I am {name}."
@@ -1035,6 +1074,8 @@ class BaseAgentProxy:
         self.cancelled = False
         self.mock_settings = mock_settings
         self.reasoning_effort = reasoning_effort
+        self.reasoning_tools = reasoning_tools or []
+        self.web_search_context_size = web_search_context_size
         
         # Find template path if not provided
         from agentic.utils.template import find_template_path
@@ -1613,6 +1654,8 @@ class RayAgentProxy(BaseAgentProxy):
             "result_model": self.result_model,
             "prompts": self.prompts,
             "reasoning_effort": self.reasoning_effort,
+            "reasoning_tools": self.reasoning_tools,
+            "web_search_context_size": self.web_search_context_size,
             # Functions will be added when creating instances
         }
         _AGENT_REGISTRY.append(self)
@@ -1636,6 +1679,8 @@ class RayAgentProxy(BaseAgentProxy):
                     "handle_turn_start": self._handle_turn_start,
                     "result_model": self.result_model,
                     "reasoning_effort": self.reasoning_effort,
+                    "reasoning_tools": self.reasoning_tools,
+                    "web_search_context_size": self.web_search_context_size,
                 },
             ),
         )
@@ -1735,6 +1780,8 @@ class LocalAgentProxy(BaseAgentProxy):
             "prompts": self.prompts,
             "db_path": self.db_path,
             "reasoning_effort": self.reasoning_effort,
+            "reasoning_tools": self.reasoning_tools,
+            "web_search_context_size": self.web_search_context_size,
             # Functions will be added when creating instances
         }
         _AGENT_REGISTRY.append(self)
@@ -1758,6 +1805,8 @@ class LocalAgentProxy(BaseAgentProxy):
                     "handle_turn_start": self._handle_turn_start,
                     "result_model": self.result_model,
                     "reasoning_effort": self.reasoning_effort,
+                    "reasoning_tools": self.reasoning_tools,
+                    "web_search_context_size": self.web_search_context_size,
                 },
             ),
         )        
