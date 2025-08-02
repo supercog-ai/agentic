@@ -4,6 +4,7 @@ from agentic.actor_agents import DebugLevel
 from agentic.agentic_secrets import agentic_secrets
 from agentic.models import GPT_4O_MINI
 
+@pytest.mark.requires_llm
 def test_web_search_agent_creation():
     """Test that we can create an agent with web search enabled"""
     agent = Agent(
@@ -19,6 +20,7 @@ def test_web_search_agent_creation():
     assert agent.web_search_context_size == "medium"
     assert agent.model == "openai/gpt-4o-search-preview"
 
+@pytest.mark.requires_llm
 def test_web_search_context_sizes():
     """Test different web search context sizes"""
     # Test low context
@@ -51,6 +53,7 @@ def test_web_search_context_sizes():
     )
     assert agent_high.web_search_context_size == "high"
 
+@pytest.mark.requires_llm
 def test_web_search_default_context_size():
     """Test that default context size is medium when not specified"""
     agent = Agent(
@@ -62,6 +65,7 @@ def test_web_search_default_context_size():
     )
     assert agent.web_search_context_size == "medium"
 
+@pytest.mark.requires_llm
 def test_agent_without_web_search():
     """Test that agents without web search still work normally"""
     agent = Agent(
@@ -74,6 +78,7 @@ def test_agent_without_web_search():
     assert agent.reasoning_tools == []
     assert agent.web_search_context_size == "medium"  # Should still have default value
 
+@pytest.mark.requires_llm
 def test_web_search_with_multiple_reasoning_tools():
     """Test agent with multiple reasoning tools including websearch"""
     agent = Agent(
