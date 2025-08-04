@@ -3,7 +3,7 @@ from agentic.common import Agent, AgentRunner, ThreadContext
 from agentic.events import Event, ChatOutput, WaitForInput, Prompt, PromptStarted, TurnEnd, ResumeWithInput
 from agentic.models import GPT_4O_MINI # model (using GPT for testing)
 from pydantic import BaseModel, Field
-from src.agentic.tools.rag_tool import RAGTool
+from agentic.tools.rag_tool import RAGTool
 import ast
 
 class CodeSection(BaseModel):
