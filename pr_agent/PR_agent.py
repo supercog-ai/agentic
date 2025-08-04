@@ -8,10 +8,12 @@ from dotenv import load_dotenv
 from agentic.common import Agent, AgentRunner, ThreadContext
 from agentic.events import Event, ChatOutput, TurnEnd
 from agentic.models import GPT_4O_MINI, GPT_4O
-from agentic.tools import A2ATool
+from agentic.tools.a2a_tool import A2ATool
+
 import rag_sub_agent
 import summary_agent
 from code_rag_agent import CodeSection, CodeSections
+from pydantic import BaseModel
 
 load_dotenv()
 
