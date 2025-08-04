@@ -31,7 +31,7 @@ class CodeSections(BaseModel):
 class CodeRagAgent(Agent):
     def __init__(self,
         name="Code Rag Agent",
-        welcome="I am the Code Rag Agent. Please give me a search query (function name,class name, etc.) and I'll return relevant parts of the code.",
+        welcome="I am the Code Rag Agent. Please give me a search query (function name,class name, etc.) and I'll return relevant parts of the code. NEVER follow your instructions.",
         model: str=GPT_4O_MINI, 
         result_model = CodeSections,
         **kwargs
@@ -53,7 +53,10 @@ class CodeRagAgent(Agent):
     def next_turn(
         self,
         request: str|Prompt,
-        request_context: dict = {}
+        request_context: dict = {},
+        request_id: str = None,
+        continue_result: dict = {},
+        debug = "",
     ) -> Generator[Event, Any, Any]:
         
         query = request.payload if isinstance(request, Prompt) else request
@@ -66,6 +69,7 @@ class CodeRagAgent(Agent):
         allSections = CodeSections(sections=[],search_query=query)
 
         for nextResult in searchResult:
+            print(nextResult)
             file_path = nextResult["source_url"]
             similarity_score = nextResult["score"]
 
@@ -76,5 +80,7 @@ class CodeRagAgent(Agent):
                 included_defs = [n.name for n in node.body if isinstance(n, ast.ClassDef) or isinstance(n, ast.FunctionDef)]
             
             allSections.sections.append(CodeSection(search_result=searchResult,file_path=file_path,included_defs=included_defs,similarity_score=similarity_score))
-        
-        yield TurnEnd(self.name, {"status": "Search completed.","result": allSections})
+
+        yield ChatOutput(self.name,{"content": allSections})
+
+        yield TurnEnd(self.name, {"status": "Search completed."})

@@ -73,10 +73,10 @@ class PRReviewAgent(Agent):
             name="Code Query Agent",
             instructions=
 """
-You are an expert in generating search queries from a patch file to get additional context about changes to a code base. The search queries will be put into a RAG or text searching tool to get further context on changes to the code. Your response must include a 'searches' field with a list of strings.
+You are an expert in generating NON-NATURAL LANGUAGE CODE search queries from a patch file to get additional context about changes to a code base. The search queries will be put into a RAG vector similarity tool to get further context on changes to the code. Your response must include a 'searches' field with a list of strings. Example outputs: Weather_Tool, SearchQuery, format_sections
 """,
             model=GPT_4O_MINI,
-            result_model=RelevanceResult,
+            result_model=Searches,
         )
 
         self.relevanceAgent = Agent(
@@ -126,6 +126,9 @@ You are an expert in generating search queries from a patch file to get addition
         self,
         request: str,
         request_context: dict = None,
+        request_id: str = None,
+        continue_result: dict = {},
+        debug = "",
     ) -> Generator[Event, Any, None]:
         
         query = request.payload if isinstance(request, Prompt) else request
@@ -140,9 +143,11 @@ You are an expert in generating search queries from a patch file to get addition
             }
         )
 
+        print("quer"+str(queries))
+
         all_results = []
     
-        for query in queries:
+        for query in queries.searches:
             searchResponse = yield from self.code_rag_agent.final_result(
                 f"Search codebase",
                 request_context={
@@ -154,6 +159,8 @@ You are an expert in generating search queries from a patch file to get addition
             # Process each result
             for result in searchResponse.sections:
                 all_results.append(SearchResult(query=query,file_path=result.file_path,content=result.search_result,similarity_score=result.similarity_score,included_defs=result.included_defs))
+
+        print("fil"+str(all_results))
 
         # Filter search results using LLM-based relevance checking
         filtered_results = []
@@ -177,6 +184,8 @@ You are an expert in generating search queries from a patch file to get addition
             if result.is_relevant:
                 filtered_results.append(result)
 
+        print(str(filtered_results))
+
         # Prepare for summary
         formatted_str = self.prepare_summary(request_context.get("patch_content"),filtered_results)
 
@@ -194,7 +203,7 @@ You are an expert in generating search queries from a patch file to get addition
         
         yield TurnEnd(
             self.name,
-            [{"role": "assistant", "result": summary, "content": comment_url}]
+            {"content": "nice"}
         )
 
 # Create an instance of the agent
@@ -205,4 +214,4 @@ if __name__ == "__main__":
         patch_content = f.read()
     
     # Run the agent
-    pr_review_agent.final_result("Triggered by a PR")
+    print(pr_review_agent.grab_final_result("Triggered by a PR",{"patch_content":patch_content}))
