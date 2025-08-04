@@ -1,7 +1,8 @@
 from agentic.common import Agent
 from agentic.models import CLAUDE
 
-agent = Agent(
+class SummaryAgent(Agent):
+    def __init__(self,
     name="PR Summary Agent",
 
     # Agent instructions
@@ -25,17 +26,17 @@ Add any relevant observations, concerns, or questions that could help the author
 Input Format:
 The following data will be passed to you, clearly delimited:
 
-Comment
-<original user comment>
-
-Patch file
-<patch file contents>
+<Patch file>
+(patch file contents)
+</Patch File>
 
 <file_name_1.extension>
-<file contents>
+(file contents)
+</file_name_1.extension>
 
 <file_name_2.extension>
-<file contents>
+(file contents)
+</file_name_2.extension>
 
 ... (additional files providing context)
 You must use all relevant data available to infer meaning and context behind the code changes. However, do not generate feedback on files unless they appear in the patch file.
@@ -65,7 +66,15 @@ Be precise, helpful, and technically insightful. Keep your tone professional and
     """,
     
     model=CLAUDE, # model
-)
+    **kwargs
+    ):
+        super().__init__(
+            name=name, 
+            instructions=instructions,
+            model=model,
+            **kwargs
+        )
+
 
 # Main to use the agent on the test files
 if __name__ == "__main__":

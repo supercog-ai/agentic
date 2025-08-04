@@ -10,13 +10,13 @@ class CodeSection(BaseModel):
     search_result: str = Field(
         description="Part returned from search.",
     )
-    file_name: str = Field(
-        description="Name of the file this code belongs to."
+    file_path: str = Field(
+        description="Path of the file this code belongs to."
     )
     included_defs: list[str] = Field(
         description="Classes and functions defined in this file."
     )
-    similarity_score: int = Field(
+    similarity_score: float = Field(
         desciption="Similarity score returned from vector search."
     )
 
@@ -53,30 +53,28 @@ class CodeRagAgent(Agent):
     def next_turn(
         self,
         request: str|Prompt,
+        request_context: dict = {}
     ) -> Generator[Event, Any, Any]:
         
         query = request.payload if isinstance(request, Prompt) else request
         yield PromptStarted(query, {"query": query})
 
-        searchResult = self.ragTool.search_knowledge_index(query=query,limit=5)
+        searchQuery = request_context.get("query")
+
+        searchResult = self.ragTool.search_knowledge_index(query=searchQuery,limit=5)
 
         allSections = CodeSections(sections=[],search_query=query)
 
         for nextResult in searchResult:
-            filename = nextResult["filename"]
+            file_path = nextResult["source_url"]
             similarity_score = nextResult["score"]
 
             # Only works with Python files
             included_defs = []
-            with open(filename) as file:
+            with open(file_path) as file:
                 node = ast.parse(file.read)
                 included_defs = [n.name for n in node.body if isinstance(n, ast.ClassDef) or isinstance(n, ast.FunctionDef)]
             
-            allSections.sections.append(CodeSection(search_result=searchResult,file_name=filename,included_defs=included_defs,similarity_score=similarity_score))
-
-        yield ChatOutput(
-            self.name,
-            {"content": allSections}
-        )
+            allSections.sections.append(CodeSection(search_result=searchResult,file_path=file_path,included_defs=included_defs,similarity_score=similarity_score))
         
-        yield TurnEnd(self.name, {"status": "Search completed."})
+        yield TurnEnd(self.name, {"status": "Search completed.","result": allSections})
