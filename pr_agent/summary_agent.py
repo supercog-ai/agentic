@@ -93,4 +93,3 @@ if __name__ == "__main__":
     context += "\n\nweather_tool.py\n"
     with open("PR_code_review-agent/pr_agent/test_files/weather_tool_copy.txt", "r") as file:
         context += file.read()
-    print(agent << context)

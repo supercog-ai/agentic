@@ -122,25 +122,6 @@ You are an expert in generating search queries from a patch file to get addition
         response.raise_for_status()
         return response.json().get("html_url")
 
-    async def process_patch(self, patch_content: str) -> Dict[str, Any]:
-        """Process patch file through the entire workflow"""
-        
-        # 3. Filter results using LLM
-        filtered_results = await self.filter_relevant_results(search_results, patch_content)
-        
-        # 5. Generate summary
-        summary = await self.generate_summary(patch_content, code_sections)
-        
-        # 6. Post to GitHub
-        comment_url = await self.post_to_github(summary)
-        
-        return {
-            "search_queries": queries,
-            "num_code_sections": len(code_sections.sections),
-            "summary": summary,
-            "github_comment_url": comment_url
-        }
-
     def next_turn(
         self,
         request: str,
