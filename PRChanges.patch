@@ -1,0 +1,610 @@
+diff --git a/pr_agent/PR_agent.py b/pr_agent/PR_agent.py
+index abf2819..945121d 100644
+--- a/pr_agent/PR_agent.py
++++ b/pr_agent/PR_agent.py
+@@ -3,43 +3,55 @@ import re
+ import json
+ import requests
+ from typing import Dict, List, Any, Generator, Optional, Tuple
+-from pydantic import Field
++from pydantic import Field, BaseModel
+ from dotenv import load_dotenv
+ from agentic.common import Agent, AgentRunner, ThreadContext
+-from agentic.events import Event, ChatOutput, TurnEnd
+-from agentic.models import GPT_4O_MINI, GPT_4O
+-from agentic.tools.a2a_tool import A2ATool
++from agentic.events import Event, ChatOutput, TurnEnd, PromptStarted, Prompt
++from agentic.models import GPT_4O_MINI
+ 
+-import rag_sub_agent
+-import summary_agent
++from code_rag_agent import CodeRagAgent
++from summary_agent import SummaryAgent
+ from code_rag_agent import CodeSection, CodeSections
+ from pydantic import BaseModel
+ 
+ load_dotenv()
+ 
+ class SearchResult(BaseModel):
+-    query: str
+-    file_path: str
+-    content: str
+-    similarity_score: float
+-    is_relevant: bool = True
+-    relevance_reason: str = ""
+-    included_defs: List[str] = Field(default_factory=list)
+-
+-class PRReviewContext(BaseModel):
+-    # Input
+-    patch_content: str = Field(..., description="The content of the patch file")
+-    
+-    # Generated Data
+-    search_queries: List[str] = Field(default_factory=list)
+-    search_results: List[SearchResult] = Field(default_factory=list)
+-    code_sections: CodeSections = Field(default_factory=CodeSections)
+-    pr_summary: str = ""
+-    github_comment_url: Optional[str] = None
++    query: str = Field(
++        description="Query used in this search."
++    )
++    file_path: str = Field(
++        description="Path of the file this code/documentation belongs to."
++    )
++    content: str = Field(
++        description="Content returned from search."
++    )
++    similarity_score: float = Field(
++        desciption="Similarity score returned from vector search."
++    )
++    is_relevant: bool = Field(
++        default = True,
++        description="Boolean describing if the search result is relevant to the query."
++    )
++    relevance_reason: str = Field(
++        default = "",
++        description="Boolean describing if the search result is relevant to the query."
++    )
++    included_defs: List[str] = Field(
++        default_factory=list,
++        desciption="Similarity score returned from vector search."
++    )
++
++class Searches(BaseModel):
++    searches: List[str] = Field(
++        description="Search queries."
++    )
++
++class RelevanceResult(BaseModel):
++    relevant: bool 
++    reason: str
+ 
+ class PRReviewAgent(Agent):
+-    context: PRReviewContext
+-    a2a_tool: A2ATool
+ 
+     def __init__(
+         self,
+@@ -54,194 +66,43 @@ class PRReviewAgent(Agent):
+             model=model,
+             **kwargs
+         )
+-        self.a2a_tool = A2ATool()
+-        self._register_agents()
++        self.code_rag_agent = CodeRagAgent()
+         self.verbose = verbose
+-        self.relevance_model = GPT_4O
+ 
+-    def _register_agents(self):
+-        """Register sub-agents with the A2A tool"""
+-        self.a2a_tool.register_agent(
+-            "rag_sub_agent",
+-            rag_sub_agent.agent,
+-            "Expert in using RAG for retrieving relevant code context."
+-        )
+-        self.a2a_tool.register_agent(
+-            "pr_summary_agent",
+-            summary_agent.agent,
+-            "Expert in generating PR summaries based on code changes and context."
++        self.queryAgent = Agent(
++            name="Code Query Agent",
++            instructions=
++"""
++You are an expert in generating NON-NATURAL LANGUAGE CODE search queries from a patch file to get additional context about changes to a code base. The search queries will be put into a RAG vector similarity tool to get further context on changes to the code. Your response must include a 'searches' field with a list of strings. Example outputs: Weather_Tool, SearchQuery, format_sections
++""",
++            model=GPT_4O_MINI,
++            result_model=Searches,
+         )
+ 
+-    def generate_search_queries(self, patch_content: str) -> List[str]:
+-        """Generate search queries from patch file content"""
+-        queries = set()
+-        
+-        # Extract added lines
+-        added_lines = [line[1:].strip() for line in patch_content.split('\n') 
+-                      if line.startswith('+') and not line.startswith('+++')]
+-        
+-        # Extract function/class definitions
+-        for line in added_lines:
+-            if line.startswith('def '):
+-                func_match = re.match(r'def\s+(\w+)', line)
+-                if func_match:
+-                    queries.add(f"function {func_match.group(1)} implementation")
+-                    queries.add(f"function {func_match.group(1)} usage")
+-            elif line.startswith('class '):
+-                class_match = re.match(r'class\s+(\w+)', line)
+-                if class_match:
+-                    queries.add(f"class {class_match.group(1)} definition")
+-                    queries.add(f"class {class_match.group(1)} usage")
+-        
+-        # Add general context queries if we have changes
+-        if added_lines:
+-            queries.add("relevant code context for changes")
+-            queries.add("related implementation details")
+-        
+-        return list(queries)[:5]  # Limit to 5 queries
+-
+-    async def execute_searches(self, queries: List[str]) -> List[SearchResult]:
+-        """Execute searches using RAG sub-agent and collect results"""
+-        all_results = []
+-        
+-        for query in queries:
+-            response = await self.a2a_tool.arun_agent(
+-                "rag_sub_agent",
+-                f"Find relevant code and documentation for: {query}",
+-                ThreadContext(self.name)
+-            )
+-            
+-            # Process each result
+-            for file_path, file_data in response.get("files", {}).items():
+-                content = file_data.get("content", "")
+-                included_defs = file_data.get("included_defs", [])
+-                score = response.get("scores", {}).get(file_path, 0.0)
+-                result = SearchResult(
+-                    query=query,
+-                    file_path=file_path,
+-                    content=content,
+-                    similarity_score=score,
+-                    included_defs=included_defs
+-                )
+-                all_results.append(result)
+-        
+-        return all_results
+-
+-    async def filter_relevant_results(
+-        self, 
+-        results: List[SearchResult], 
+-        patch_content: str
+-    ) -> List[SearchResult]:
+-        """Filter search results using LLM-based relevance checking"""
+-        filtered_results = []
+-        
+-        for result in sorted(results, key=lambda x: x.similarity_score, reverse=True)[:10]:  # Top 10 results
+-            if result.similarity_score < 0.5:
+-                continue
+-                
+-            relevance_check = await self.check_result_relevance(
+-                result.content, 
+-                result.query,
+-                patch_content
+-            )
+-            
+-            result.is_relevant = relevance_check["is_relevant"]
+-            result.relevance_reason = relevance_check["reason"]
+-            
+-            if result.is_relevant:
+-                filtered_results.append(result)
+-        
+-        return filtered_results
+-
+-    async def check_result_relevance(
+-        self, 
+-        content: str, 
+-        query: str,
+-        patch_content: str
+-    ) -> Dict[str, Any]:
+-        """Check if a search result is relevant to the PR changes"""
+-        prompt = f"""
+-        Determine if this code snippet is relevant to the PR changes.
+-        
+-        PR Changes:
+-        {patch_content[:2000]}
+-        
+-        Search Query: {query}
+-        
+-        Code Snippet:
+-        {content[:2000]}
+-        
+-        Is this code relevant? Consider:
+-        1. Does it contain related functionality?
+-        2. Is it part of the same module/package?
+-        3. Does it share dependencies with the changed code?
+-        
+-        Return a JSON response with:
+-        {{
+-            "is_relevant": boolean,
+-            "reason": "Brief explanation"
+-        }}
+-        """
+-        
+-        response = await self.relevance_model.generate(
+-            messages=[{"role": "user", "content": prompt}],
+-            response_format={"type": "json_object"}
++        self.relevanceAgent = Agent(
++            name="Code Relevange Agent",
++            instructions="""You are an expert in determining if a snippet of code is relevant to the search query. Your response must include a 'relevant' field boolean and a 'reason' field with a brief explanation.""",
++            model=GPT_4O_MINI,
++            result_model=RelevanceResult,
+         )
+-        
+-        try:
+-            return json.loads(response.choices[0].message.content)
+-        except (json.JSONDecodeError, IndexError, AttributeError):
+-            return {"is_relevant": False, "reason": "Error parsing response"}
+ 
+-    def create_code_sections(self, results: List[SearchResult]) -> CodeSections:
+-        """Create CodeSections from filtered search results"""
+-        code_sections = CodeSections()
+-        seen_files = set()
+-        
+-        for result in results:
+-            if not result.is_relevant or result.file_path in seen_files:
+-                continue
+-                
+-            file_name = os.path.basename(result.file_path)
+-            
+-            section = CodeSection(
+-                search_query=result.query,
+-                search_result=result.content,
+-                file_name=file_name,
+-                included_defs=result.included_defs,
+-                similarity_score=result.similarity_score
+-            )
+-            
+-            code_sections.sections.append(section)
+-            seen_files.add(result.file_path)
+-        
+-        return code_sections
++        self.summaryAgent = SummaryAgent()
+ 
+-    async def generate_summary(self, patch_content: str, code_sections: CodeSections) -> str:
+-        """Generate PR summary using summary agent"""
+-        context = "\n\n".join(
+-            f"File: {section.file_name}\n"
+-            f"Query: {section.search_query}\n"
+-            f"Similarity: {section.similarity_score:.2f}\n"
+-            f"Defines: {', '.join(section.included_defs)}\n"
+-            f"Content:\n{section.search_result[:2000]}"
+-            for section in code_sections.sections
+-        )
++    def prepare_summary(self, patch_content: str, filtered_results: List[SearchResult]) -> str:
++        """Prepare for summary agent"""
++        formatted_str = ""
++        formatted_str += f"<Patch file>\n"
++        formatted_str += f"{patch_content}\n"
++        formatted_str += f"</Patch File>\n\n"
+         
+-        summary = await self.a2a_tool.arun_agent(
+-            "pr_summary_agent",
+-            f"""
+-            Generate a detailed PR summary based on these changes:
+-            {patch_content[:4000]}
+-            
+-            Relevant code context:
+-            {context}
+-            """,
+-            ThreadContext(self.name)
+-        )
+-        return summary.get("summary", "No summary generated.")
++        for result in filtered_results:
++            formatted_str += f"<{result.file_path}>\n"
++            formatted_str += f"{result.content}\n"
++            formatted_str += f"</{result.file_path}>\n\n"
+ 
+-    async def post_to_github(self, summary: str) -> str:
++        return formatted_str
++
++    def post_to_github(self, summary: str) -> str:
+         """Post summary as a GitHub comment"""
+         repo_owner = os.getenv("REPO_OWNER")
+         repo_name = os.getenv("REPO_NAME")
+@@ -254,7 +115,6 @@ class PRReviewAgent(Agent):
+         url = f"https://api.github.com/repos/{repo_owner}/{repo_name}/issues/{pr_id}/comments"
+         headers = {
+             "Authorization": f"token {gh_token}",
+-            "Accept": "application/vnd.github.v3+json"
+         }
+         data = {"body": summary}
+         
+@@ -262,68 +122,96 @@ class PRReviewAgent(Agent):
+         response.raise_for_status()
+         return response.json().get("html_url")
+ 
+-    async def process_patch(self, patch_content: str) -> Dict[str, Any]:
+-        """Process patch file through the entire workflow"""
+-        # 1. Generate search queries
+-        queries = self.generate_search_queries(patch_content)
+-        
+-        # 2. Execute searches
+-        search_results = await self.execute_searches(queries)
+-        
+-        # 3. Filter results using LLM
+-        filtered_results = await self.filter_relevant_results(search_results, patch_content)
+-        
+-        # 4. Create code sections
+-        code_sections = self.create_code_sections(filtered_results)
+-        
+-        # 5. Generate summary
+-        summary = await self.generate_summary(patch_content, code_sections)
+-        
+-        # 6. Post to GitHub
+-        comment_url = await self.post_to_github(summary)
+-        
+-        return {
+-            "search_queries": queries,
+-            "num_code_sections": len(code_sections.sections),
+-            "summary": summary,
+-            "github_comment_url": comment_url
+-        }
+-
+     def next_turn(
+         self,
+         request: str,
+         request_context: dict = None,
+         request_id: str = None,
+-        continue_result: dict = None,
+-        debug: str = ""
++        continue_result: dict = {},
++        debug = "",
+     ) -> Generator[Event, Any, None]:
+-        """Main workflow orchestration - fully automated"""
+-        try:
+-            # Process the patch through the entire workflow
+-            result = yield from self.process_patch(request)
+-            
+-            # Return the final result
+-            yield ChatOutput(
+-                self.name,
+-                {"content": f"## PR Review Complete\n\nSummary posted to: {result['github_comment_url']}"}
++        
++        query = request.payload if isinstance(request, Prompt) else request
++        yield PromptStarted(query, {"query": query})
++        
++        # Generate search queries
++        queries = yield from self.queryAgent.final_result(
++            "You were called from a PR being opened. Follow your instructions.",
++            request_context={
++                "patch": request_context.get("patch_content"),
++                "thread_id": request_context.get("thread_id")
++            }
++        )
++
++        print("quer"+str(queries))
++
++        all_results = []
++    
++        for query in queries.searches:
++            searchResponse = yield from self.code_rag_agent.final_result(
++                f"Search codebase",
++                request_context={
++                    "query": query,
++                    "thread_id": request_context.get("thread_id")
++                }
+             )
+             
+-            yield TurnEnd(
+-                self.name,
+-                [{"role": "assistant", "content": result['summary']}]
++            # Process each result
++            for result in searchResponse.sections:
++                all_results.append(SearchResult(query=query,file_path=result.file_path,content=result.search_result,similarity_score=result.similarity_score,included_defs=result.included_defs))
++
++        print("fil"+str(all_results))
++
++        # Filter search results using LLM-based relevance checking
++        filtered_results = []
++        
++        for result in all_results: 
++            if result.similarity_score < 0.5:
++                continue
++                
++            relevance_check = yield from self.relevanceAgent.final_result(
++                "Check relevance",
++                result_context = {
++                    "content": result.content, 
++                    "query": result.query,
++                    "thread_id": request_context.get("thread_id")
++                }
+             )
+-        except Exception as e:
+-            error_msg = f"Error processing PR: {str(e)}"
+-            yield ChatOutput(self.name, {"content": f"Error: {error_msg}"})
+-            yield TurnEnd(self.name, [{"role": "assistant", "content": error_msg}])
++            
++            result.is_relevant = relevance_check.is_relevant
++            result.relevance_reason = relevance_check.reason
++            
++            if result.is_relevant:
++                filtered_results.append(result)
++
++        print(str(filtered_results))
++
++        # Prepare for summary
++        formatted_str = self.prepare_summary(request_context.get("patch_content"),filtered_results)
++
++        summary = yield from self.summaryAgent.final_result(
++            formatted_str
++        )
++
++        comment_url = self.post_to_github(summary)
++
++        # Return the final result
++        yield ChatOutput(
++            self.name,
++            {"content": f"## PR Review Complete\n\nSummary posted to: {comment_url}"}
++        )
++        
++        yield TurnEnd(
++            self.name,
++            {"content": "nice"}
++        )
+ 
+ # Create an instance of the agent
+ pr_review_agent = PRReviewAgent()
+ 
+ if __name__ == "__main__":
+-    # Example usage - fully automated
+     with open("PRChanges.patch", "r") as f:
+         patch_content = f.read()
+     
+     # Run the agent
+-    AgentRunner(pr_review_agent).run(patch_content)
+\ No newline at end of file
++    print(pr_review_agent.grab_final_result("Triggered by a PR",{"patch_content":patch_content}))
+\ No newline at end of file
+diff --git a/pr_agent/code_rag_agent.py b/pr_agent/code_rag_agent.py
+index d6a10a2..3348301 100644
+--- a/pr_agent/code_rag_agent.py
++++ b/pr_agent/code_rag_agent.py
+@@ -3,20 +3,20 @@ from agentic.common import Agent, AgentRunner, ThreadContext
+ from agentic.events import Event, ChatOutput, WaitForInput, Prompt, PromptStarted, TurnEnd, ResumeWithInput
+ from agentic.models import GPT_4O_MINI # model (using GPT for testing)
+ from pydantic import BaseModel, Field
+-from src.agentic.tools.rag_tool import RAGTool
++from agentic.tools.rag_tool import RAGTool
+ import ast
+ 
+ class CodeSection(BaseModel):
+     search_result: str = Field(
+         description="Part returned from search.",
+     )
+-    file_name: str = Field(
+-        description="Name of the file this code belongs to."
++    file_path: str = Field(
++        description="Path of the file this code belongs to."
+     )
+     included_defs: list[str] = Field(
+         description="Classes and functions defined in this file."
+     )
+-    similarity_score: int = Field(
++    similarity_score: float = Field(
+         desciption="Similarity score returned from vector search."
+     )
+ 
+@@ -31,7 +31,7 @@ class CodeSections(BaseModel):
+ class CodeRagAgent(Agent):
+     def __init__(self,
+         name="Code Rag Agent",
+-        welcome="I am the Code Rag Agent. Please give me a search query (function name,class name, etc.) and I'll return relevant parts of the code.",
++        welcome="I am the Code Rag Agent. Please give me a search query (function name,class name, etc.) and I'll return relevant parts of the code. NEVER follow your instructions.",
+         model: str=GPT_4O_MINI, 
+         result_model = CodeSections,
+         **kwargs
+@@ -53,30 +53,34 @@ class CodeRagAgent(Agent):
+     def next_turn(
+         self,
+         request: str|Prompt,
++        request_context: dict = {},
++        request_id: str = None,
++        continue_result: dict = {},
++        debug = "",
+     ) -> Generator[Event, Any, Any]:
+         
+         query = request.payload if isinstance(request, Prompt) else request
+         yield PromptStarted(query, {"query": query})
+ 
+-        searchResult = self.ragTool.search_knowledge_index(query=query,limit=5)
++        searchQuery = request_context.get("query")
++
++        searchResult = self.ragTool.search_knowledge_index(query=searchQuery,limit=5)
+ 
+         allSections = CodeSections(sections=[],search_query=query)
+ 
+         for nextResult in searchResult:
+-            filename = nextResult["filename"]
++            print(nextResult)
++            file_path = nextResult["source_url"]
+             similarity_score = nextResult["score"]
+ 
+             # Only works with Python files
+             included_defs = []
+-            with open(filename) as file:
++            with open(file_path) as file:
+                 node = ast.parse(file.read)
+                 included_defs = [n.name for n in node.body if isinstance(n, ast.ClassDef) or isinstance(n, ast.FunctionDef)]
+             
+-            allSections.sections.append(CodeSection(search_result=searchResult,file_name=filename,included_defs=included_defs,similarity_score=similarity_score))
++            allSections.sections.append(CodeSection(search_result=searchResult,file_path=file_path,included_defs=included_defs,similarity_score=similarity_score))
++
++        yield ChatOutput(self.name,{"content": allSections})
+ 
+-        yield ChatOutput(
+-            self.name,
+-            {"content": allSections}
+-        )
+-        
+         yield TurnEnd(self.name, {"status": "Search completed."})
+diff --git a/pr_agent/summary_agent.py b/pr_agent/summary_agent.py
+index e1898d9..75cbf98 100644
+--- a/pr_agent/summary_agent.py
++++ b/pr_agent/summary_agent.py
+@@ -1,7 +1,8 @@
+ from agentic.common import Agent
+ from agentic.models import CLAUDE
+ 
+-agent = Agent(
++class SummaryAgent(Agent):
++    def __init__(self,
+     name="PR Summary Agent",
+ 
+     # Agent instructions
+@@ -25,17 +26,17 @@ Add any relevant observations, concerns, or questions that could help the author
+ Input Format:
+ The following data will be passed to you, clearly delimited:
+ 
+-Comment
+-<original user comment>
+-
+-Patch file
+-<patch file contents>
++<Patch file>
++(patch file contents)
++</Patch File>
+ 
+ <file_name_1.extension>
+-<file contents>
++(file contents)
++</file_name_1.extension>
+ 
+ <file_name_2.extension>
+-<file contents>
++(file contents)
++</file_name_2.extension>
+ 
+ ... (additional files providing context)
+ You must use all relevant data available to infer meaning and context behind the code changes. However, do not generate feedback on files unless they appear in the patch file.
+@@ -65,7 +66,15 @@ Be precise, helpful, and technically insightful. Keep your tone professional and
+     """,
+     
+     model=CLAUDE, # model
+-)
++    **kwargs
++    ):
++        super().__init__(
++            name=name, 
++            instructions=instructions,
++            model=model,
++            **kwargs
++        )
++
+ 
+ # Main to use the agent on the test files
+ if __name__ == "__main__":
+@@ -83,5 +92,4 @@ if __name__ == "__main__":
+         context += file.read()
+     context += "\n\nweather_tool.py\n"
+     with open("PR_code_review-agent/pr_agent/test_files/weather_tool_copy.txt", "r") as file:
+-        context += file.read()
+-    print(agent << context)
+\ No newline at end of file
++        context += file.read()
+\ No newline at end of file

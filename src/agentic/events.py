@@ -656,6 +656,7 @@ class TurnEnd(Event):
     def result(self):
         """Safe result access with fallback"""
         try:
+            print(self.agent,self.messages)
             return self.messages[-1]["content"] if self.messages else "No response generated"
         except (IndexError, KeyError):
             return "Error: Malformed response"

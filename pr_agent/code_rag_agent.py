@@ -81,6 +81,4 @@ class CodeRagAgent(Agent):
             
             allSections.sections.append(CodeSection(search_result=searchResult,file_path=file_path,included_defs=included_defs,similarity_score=similarity_score))
 
-        yield ChatOutput(self.name,{"content": allSections})
-
-        yield TurnEnd(self.name, {"status": "Search completed."})
+        yield TurnEnd(self.name, [{"content": allSections}])

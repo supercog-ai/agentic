@@ -136,9 +136,8 @@ You are an expert in generating NON-NATURAL LANGUAGE CODE search queries from a 
         
         # Generate search queries
         queries = yield from self.queryAgent.final_result(
-            "You were called from a PR being opened. Follow your instructions.",
+            request_context.get("patch_content"),
             request_context={
-                "patch": request_context.get("patch_content"),
                 "thread_id": request_context.get("thread_id")
             }
         )
