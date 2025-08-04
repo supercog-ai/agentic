@@ -81,7 +81,7 @@ You are an expert in generating NON-NATURAL LANGUAGE CODE search queries from a 
 
         self.relevanceAgent = Agent(
             name="Code Relevange Agent",
-            instructions="""You are an expert in determining if a snippet of code is relevant to the search query. Your response must include a 'relevant' field boolean and a 'reason' field with a brief explanation.""",
+            instructions="""You are an expert in determining if a snippet of code or documentation is needed to determine the purpose of a code change from the patch file. Your response must include a 'relevant' field boolean and a 'reason' field with a brief explanation.""",
             model=GPT_4O_MINI,
             result_model=RelevanceResult,
         )
@@ -146,7 +146,7 @@ You are an expert in generating NON-NATURAL LANGUAGE CODE search queries from a 
 
         all_results = []
     
-        for query in queries.searches:
+        for query in queries.searches[:10]:
             searchResponse = yield from self.code_rag_agent.final_result(
                 f"Search codebase",
                 request_context={
@@ -169,15 +169,10 @@ You are an expert in generating NON-NATURAL LANGUAGE CODE search queries from a 
                 continue
                 
             relevance_check = yield from self.relevanceAgent.final_result(
-                "Check relevance",
-                result_context = {
-                    "content": result.content, 
-                    "query": result.query,
-                    "thread_id": request_context.get("thread_id")
-                }
+                f"<Patch File>\n{request_context.get("patch_content")}\n</Patch File>\n\n<Content>{result.content}</Content><Query>{result.query}</Query>"
             )
             
-            result.is_relevant = relevance_check.is_relevant
+            result.is_relevant = relevance_check.relevant
             result.relevance_reason = relevance_check.reason
             
             if result.is_relevant:
