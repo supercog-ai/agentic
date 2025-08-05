@@ -1,5 +1,6 @@
 from agentic.common import Agent
 from agentic.models import CLAUDE
+from agentic.models import GPT_4O_MINI # model (using GPT for testing)
 
 class SummaryAgent(Agent):
     def __init__(self,
@@ -64,8 +65,8 @@ Use the provided file contents only to gain context for understanding the change
 
 Be constructive, concise, and clear in your feedback.
     """,
-    
-    model=CLAUDE, # model
+    model=GPT_4O_MINI,
+    #model=CLAUDE, # model
     **kwargs
     ):
         super().__init__(

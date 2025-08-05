@@ -73,7 +73,7 @@ class PRReviewAgent(Agent):
             name="Code Query Agent",
             instructions=
 """
-You are an expert in generating NON-NATURAL LANGUAGE CODE search queries from a patch file to get additional context about changes to a code base. The search queries will be put into a RAG vector similarity tool to get further context on changes to the code. Your response must include a 'searches' field with a list of strings. Example outputs: Weather_Tool, SearchQuery, format_sections
+You are an expert in generating NON-NATURAL LANGUAGE CODE search queries from a patch file to get additional context about changes to a code base. Your response must include a 'searches' field with a list of strings. Example outputs: Weather_Tool, SearchQuery, format_sections
 """,
             model=GPT_4O_MINI,
             result_model=Searches,
@@ -107,7 +107,7 @@ You are an expert in generating NON-NATURAL LANGUAGE CODE search queries from a 
         repo_owner = os.getenv("REPO_OWNER")
         repo_name = os.getenv("REPO_NAME")
         pr_id = os.getenv("PR_ID")
-        gh_token = os.getenv("GITHUB_TOKEN")
+        gh_token = os.getenv("GITHUB_API_KEY")
         
         if not all([repo_owner, repo_name, pr_id, gh_token]):
             raise ValueError("Missing required GitHub configuration")
@@ -171,6 +171,8 @@ You are an expert in generating NON-NATURAL LANGUAGE CODE search queries from a 
             relevance_check = yield from self.relevanceAgent.final_result(
                 f"<Patch File>\n{request_context.get("patch_content")}\n</Patch File>\n\n<Content>{result.content}</Content><Query>{result.query}</Query>"
             )
+
+            print(relevance_check)
             
             result.is_relevant = relevance_check.relevant
             result.relevance_reason = relevance_check.reason
@@ -192,12 +194,12 @@ You are an expert in generating NON-NATURAL LANGUAGE CODE search queries from a 
         # Return the final result
         yield ChatOutput(
             self.name,
-            {"content": f"## PR Review Complete\n\nSummary posted to: {comment_url}"}
+            [{"content": f"## PR Review Complete\n\nSummary posted to: {comment_url}"}]
         )
         
         yield TurnEnd(
             self.name,
-            {"content": "nice"}
+            [{"content": summary}]
         )
 
 # Create an instance of the agent
