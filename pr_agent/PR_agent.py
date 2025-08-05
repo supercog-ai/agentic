@@ -156,7 +156,7 @@ You are an expert in generating NON-NATURAL LANGUAGE CODE search queries from a 
             )
             
             # Process each result
-            for result in searchResponse.sections:
+            for result in searchResponse.sections.values():
                 all_results.append(SearchResult(query=query,file_path=result.file_path,content=result.search_result,similarity_score=result.similarity_score,included_defs=result.included_defs))
 
         print("fil"+str(all_results))

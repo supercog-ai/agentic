@@ -57,6 +57,9 @@ def read_file(file_path: str, mime_type: str|None = None) -> tuple[str, str]:
                 return text, mime_type
         elif mime_type == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
             return pd.read_excel(file_path).to_csv(), mime_type
+        elif mime_type == "text/x-python":
+            with open(file_path,"r") as f:
+                return f.read(), mime_type
         else:
             return textract.process(file_path).decode('utf-8'), mime_type
     except Exception as e:

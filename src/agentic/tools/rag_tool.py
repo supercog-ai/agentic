@@ -44,6 +44,8 @@ class RAGTool(BaseAgenticTool):
         # Construct the RAG tool. You can pass a list of files and we will ensure that
         # they are added to the index on startup. Paths can include glob patterns also,
         # like './docs/*.md'.
+        # Enable recursive (**.md) glob patterns with recursive = True
+
         self.default_index = default_index
         self.index_paths = index_paths
         if self.index_paths:

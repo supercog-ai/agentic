@@ -21,7 +21,7 @@ class CodeSection(BaseModel):
     )
 
 class CodeSections(BaseModel):
-    sections: List[CodeSection] = Field(
+    sections: dict[str,CodeSection] = Field(
         description="Sections of the codebase returned from the search.",
     )
     search_query: str = Field(
@@ -46,7 +46,8 @@ class CodeRagAgent(Agent):
 
         self.ragTool = RAGTool(
                 default_index="codebase",
-                index_paths=["../*.md","../*.py"],
+                index_paths=["../**/*.py","../**/*.md"],
+                recursive=True
             )
         
 
@@ -65,24 +66,28 @@ class CodeRagAgent(Agent):
         searchQuery = request_context.get("query")
 
         searchResult = self.ragTool.search_knowledge_index(query=searchQuery,limit=5)
-
-        allSections = CodeSections(sections=[],search_query=query)
+        
+        allSections = CodeSections(sections={},search_query=query)
 
         for nextResult in searchResult:
-            print(nextResult)
             file_path = nextResult["source_url"]
-            similarity_score = nextResult["distance"] if nextResult["distance"] else 0
-            content = nextResult["content"]
+            if file_path in allSections.sections:
+                print("Duplicate ",file_path)
+            else:
+                print(nextResult)
+                
+                similarity_score = nextResult["distance"] if nextResult["distance"] else 0
+                content = nextResult["content"]
 
-            # Only works with Python files
-            included_defs = []
-            try:
-                with open(file_path) as file:
-                    node = ast.parse(file.read())
-                    included_defs = [n.name for n in node.body if isinstance(n, ast.ClassDef) or isinstance(n, ast.FunctionDef)]
-            except:
+                # Only works with Python files
                 included_defs = []
+                try:
+                    with open(file_path) as file:
+                        node = ast.parse(file.read())
+                        included_defs = [n.name for n in node.body if isinstance(n, ast.ClassDef) or isinstance(n, ast.FunctionDef)]
+                except:
+                    included_defs = []
 
-            allSections.sections.append(CodeSection(search_result=content,file_path=file_path,included_defs=included_defs,similarity_score=similarity_score))
+                allSections.sections[file_path] = CodeSection(search_result=content,file_path=file_path,included_defs=included_defs,similarity_score=similarity_score)
 
         yield TurnEnd(self.name, [{"content": allSections}])
