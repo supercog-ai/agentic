@@ -25,7 +25,7 @@ jobs:
           uv pip install -e "../PR_code_review-agent[all,dev]" --extra-index-url https://download.pytorch.org/whl/cpu --index-strategy unsafe-first-match
           git diff --merge-base HEAD^1 HEAD > PRChanges.patch
           cat PRChanges.patch
-          uv run pr_agent/test_files/mock_pr_agent.py
+          uv run pr_agent/PR_agent.py
           
 #uv run pr_agent/PR_agent.py  
 
