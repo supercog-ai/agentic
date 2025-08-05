@@ -14,6 +14,7 @@ from agentic.utils.rag_helper import (
     init_embedding_model,
     init_chunker,
     rag_index_file,
+    rag_index_multiple_files,
 )
 
 from agentic.utils.summarizer import generate_document_summary
@@ -53,8 +54,11 @@ class RAGTool(BaseAgenticTool):
             if default_index not in list_collections(client):
                 create_collection(client, default_index, VectorDistances.COSINE)
             for path in index_paths:
-                for file_path in [path] if path.startswith("http") else glob.glob(path, recursive=recursive):
-                    rag_index_file(file_path, self.default_index, client=client, ignore_errors=True)
+                if path.startswith("http"):
+                    rag_index_file(path, self.default_index, client=client, ignore_errors=True)
+                else:
+                    file_paths = glob.glob(path, recursive=recursive)
+                    rag_index_multiple_files(file_paths, self.default_index, client=client, ignore_errors=True)
 
     def get_tools(self) -> List[Callable]:
         return [

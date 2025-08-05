@@ -29,14 +29,6 @@ class SearchResult(BaseModel):
     similarity_score: float = Field(
         desciption="Similarity score returned from vector search."
     )
-    is_relevant: bool = Field(
-        default = True,
-        description="Boolean describing if the search result is relevant to the query."
-    )
-    relevance_reason: str = Field(
-        default = "",
-        description="Boolean describing if the search result is relevant to the query."
-    )
     included_defs: List[str] = Field(
         default_factory=list,
         desciption="Similarity score returned from vector search."
@@ -49,7 +41,6 @@ class Searches(BaseModel):
 
 class RelevanceResult(BaseModel):
     relevant: bool 
-    reason: str
 
 class PRReviewAgent(Agent):
 
@@ -81,7 +72,7 @@ You are an expert in generating NON-NATURAL LANGUAGE CODE search queries from a 
 
         self.relevanceAgent = Agent(
             name="Code Relevange Agent",
-            instructions="""You are an expert in determining if a snippet of code or documentation is needed to determine the purpose of a code change from the patch file. Your response must include a 'relevant' field boolean and a 'reason' field with a brief explanation.""",
+            instructions="""You are an expert in determining if a snippet of code or documentation is directly relevant to a query. Your response must include a 'relevant' field boolean.""",
             model=GPT_4O_MINI,
             result_model=RelevanceResult,
         )
@@ -142,10 +133,10 @@ You are an expert in generating NON-NATURAL LANGUAGE CODE search queries from a 
             }
         )
 
-        print("quer"+str(queries))
+        print("queries: "+str(queries))
 
-        all_results = []
-    
+        # RAG queries
+        all_results = {}
         for query in queries.searches[:10]:
             searchResponse = yield from self.code_rag_agent.final_result(
                 f"Search codebase",
@@ -156,34 +147,33 @@ You are an expert in generating NON-NATURAL LANGUAGE CODE search queries from a 
             )
             
             # Process each result
-            for result in searchResponse.sections.values():
-                all_results.append(SearchResult(query=query,file_path=result.file_path,content=result.search_result,similarity_score=result.similarity_score,included_defs=result.included_defs))
+            for key, result in searchResponse.sections.items():
+                if not key in all_results:
+                    all_results[key] = SearchResult(query=query,file_path=result.file_path,content=result.search_result,similarity_score=result.similarity_score,included_defs=result.included_defs)
 
-        print("fil"+str(all_results))
+        print("all: "+str(all_results))
 
         # Filter search results using LLM-based relevance checking
         filtered_results = []
-        
-        for result in all_results: 
-            if result.similarity_score < 0.5:
-                continue
+        for result in all_results.values(): 
+            
+            try:
+                relevance_check = yield from self.relevanceAgent.final_result(
+                    f"<Patch File>\n{request_context.get("patch_content")}\n</Patch File>\n\n<Content>{result.content}</Content><Query>{result.query}</Query>"
+                )
                 
-            relevance_check = yield from self.relevanceAgent.final_result(
-                f"<Patch File>\n{request_context.get("patch_content")}\n</Patch File>\n\n<Content>{result.content}</Content><Query>{result.query}</Query>"
-            )
+                if relevance_check.relevant:
+                    filtered_results.append(result)
+            except Exception as e:
+                # LLM error
+                print(e)
 
-            print(relevance_check)
-            
-            result.is_relevant = relevance_check.relevant
-            result.relevance_reason = relevance_check.reason
-            
-            if result.is_relevant:
-                filtered_results.append(result)
-
-        print(str(filtered_results))
+        print("filtered: ",str(filtered_results))
 
         # Prepare for summary
         formatted_str = self.prepare_summary(request_context.get("patch_content"),filtered_results)
+
+        print(formatted_str)
 
         summary = yield from self.summaryAgent.final_result(
             formatted_str

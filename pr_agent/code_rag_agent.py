@@ -71,10 +71,8 @@ class CodeRagAgent(Agent):
 
         for nextResult in searchResult:
             file_path = nextResult["source_url"]
-            if file_path in allSections.sections:
-                print("Duplicate ",file_path)
-            else:
-                print(nextResult)
+            if not file_path in allSections.sections:
+                #print(nextResult)
                 
                 similarity_score = nextResult["distance"] if nextResult["distance"] else 0
                 content = nextResult["content"]
@@ -89,5 +87,7 @@ class CodeRagAgent(Agent):
                     included_defs = []
 
                 allSections.sections[file_path] = CodeSection(search_result=content,file_path=file_path,included_defs=included_defs,similarity_score=similarity_score)
+            #else:
+                #print("Skipping Duplicate: ",file_path)
 
         yield TurnEnd(self.name, [{"content": allSections}])
