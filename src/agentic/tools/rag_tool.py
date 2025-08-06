@@ -14,6 +14,7 @@ from agentic.utils.rag_helper import (
     init_embedding_model,
     init_chunker,
     rag_index_file,
+    rag_index_multiple_files,
 )
 
 from agentic.utils.summarizer import generate_document_summary
@@ -38,11 +39,13 @@ class RAGTool(BaseAgenticTool):
     def __init__(
         self,
         default_index: str = "knowledge_base",
-        index_paths: list[str] = []
+        index_paths: list[str] = [],
+        recursive: bool = False
     ):
         # Construct the RAG tool. You can pass a list of files and we will ensure that
         # they are added to the index on startup. Paths can include glob patterns also,
         # like './docs/*.md'.
+        # Enable recursive './**/*.md' glob patterns with recursive = True
         self.default_index = default_index
         self.index_paths = index_paths
         if self.index_paths:
@@ -50,8 +53,11 @@ class RAGTool(BaseAgenticTool):
             if default_index not in list_collections(client):
                 create_collection(client, default_index, VectorDistances.COSINE)
             for path in index_paths:
-                for file_path in [path] if path.startswith("http") else glob.glob(path):
-                    rag_index_file(file_path, self.default_index, client=client, ignore_errors=True)
+                if path.startswith("http"):
+                    rag_index_file(path, self.default_index, client=client, ignore_errors=True)
+                else:
+                    file_paths = glob.glob(path, recursive=recursive)
+                    rag_index_multiple_files(file_paths, self.default_index, client=client, ignore_errors=True)
 
     def get_tools(self) -> List[Callable]:
         return [
