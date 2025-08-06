@@ -10,6 +10,7 @@ from agentic.events import Event, ChatOutput, TurnEnd, PromptStarted, Prompt
 from agentic.models import GPT_4O_MINI
 
 from code_rag_agent import CodeRagAgent
+from git_grep_agent import GitGrepAgent
 from summary_agent import SummaryAgent
 from code_rag_agent import CodeSection, CodeSections
 from pydantic import BaseModel
@@ -57,6 +58,7 @@ class PRReviewAgent(Agent):
             model=model,
             **kwargs
         )
+        self.git_grep_agent = GitGrepAgent()
         self.code_rag_agent = CodeRagAgent()
         self.verbose = verbose
 
@@ -134,6 +136,33 @@ You are an expert in generating NON-NATURAL LANGUAGE CODE search queries from a 
         )
 
         print("queries: "+str(queries))
+
+
+
+        # # Git-Grep queries
+        # all_results = {}
+        # for query in queries.searches[:10]:
+        #     searchResponse = yield from self.git_grep_agent.final_result(
+        #         f"Search codebase with git grep",
+        #         request_context={
+        #             "query": query,
+        #             "thread_id": request_context.get("thread_id")
+        #         }
+        #     )
+            
+        #     # Process each result
+        #     # grep_response.sections is a list of CodeSection objects
+        #     for result in searchResponse.sections:
+        #         if result.file_path not in all_results:
+        #             all_results[result.file_path] = SearchResult(
+        #                 query=query,
+        #                 file_path=result.file_path,
+        #                 content=result.search_result,
+        #                 similarity_score=result.similarity_score,
+        #                 included_defs=result.included_defs
+        #     )
+
+
 
         # RAG queries
         all_results = {}
