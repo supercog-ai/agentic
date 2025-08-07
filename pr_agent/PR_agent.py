@@ -234,7 +234,7 @@ You are an expert in generating code search queries from a patch file to get add
 
 if __name__ == "__main__":#
     # Change to PRChangesTest.patch for testing
-    with open("PRChangesTest.patch", "r") as f:
+    with open("PRChanges.patch", "r") as f:
         patch_content = f.read()
 
     # Create an instance of the agent
