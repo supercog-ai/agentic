@@ -140,7 +140,7 @@ You are an expert in generating code search queries from a patch file to get add
         yield PromptStarted(query, {"query": query})
         
         # Generate search queries
-        queries = yield from self.queryAgent.grab_final_result(
+        queries = yield from self.queryAgent.final_result(
             request_context.get("patch_content"),
             request_context={
                 "thread_id": request_context.get("thread_id")

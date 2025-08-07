@@ -41,7 +41,7 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.PRAgentOpenAIKey }}
           PR_ID: ${{ github.event.pull_request.number }}
           GITHUB_API_KEY: ${{ secrets.GITHUB_TOKEN }}
-          REPO_OWNER: supercog-ai
+          REPO_OWNER: BrandonwLii
           REPO_NAME: agentic
       
       - name: Update weaviate cache
