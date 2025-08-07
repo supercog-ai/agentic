@@ -141,7 +141,7 @@ You are an expert in generating code search queries from a patch file to get add
         
         # Generate search queries
         queries = yield from self.queryAgent.final_result(
-            request_context.get("patch_content"),
+            #request_context.get("patch_content"),
             request_context={
                 "thread_id": request_context.get("thread_id")
             }
