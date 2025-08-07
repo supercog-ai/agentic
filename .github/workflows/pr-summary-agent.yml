@@ -24,7 +24,6 @@ jobs:
         uses: dawidd6/action-download-artifact@v11
         with:
           github_token: ${{secrets.GITHUB_TOKEN}}
-          workflow: pr-summary-agent.yml
           name: weaviate
           if_no_artifact_found: warn
           path: /home/runner/.cache/weaviate
