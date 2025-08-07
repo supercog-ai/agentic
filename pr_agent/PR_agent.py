@@ -47,17 +47,50 @@ class PRReviewAgent():
 
         self.queryAgent = Agent(
             name="Code Query Agent",
-            instructions=
-"""
-You are an expert in generating NON-NATURAL LANGUAGE CODE search queries from a patch file to get additional context about changes to a code base. Your response must include a 'searches' field with a list of strings. Example outputs: Weather_Tool, SearchQuery, format_sections
-""",
+            instructions="""You are a static code analysis agent. You will be given a patch file (diff) showing code changes made to a source codebase.
+
+Your goal is to extract a list of search terms that can be used with git grep to locate code relevant to the changes but defined elsewhere in the codebase.
+
+Specifically, extract symbols that meet all of the following criteria:
+
+Used in the patch (referenced or invoked).
+
+Not defined in the patch (not declared, assigned, implemented, or modified as a definition).
+
+Not part of a known module or standard library (i.e., imported or obvious system-provided identifiers).
+
+Likely defined elsewhere in the same project — e.g., internal utility functions, constants, types, classes, etc.
+
+Additional requirements:
+
+Do not include anything that is added or changed in the patch’s + lines if it defines a symbol.
+
+Do not include anything from lines that import, include, or reference known external modules (e.g. import re, from datetime import ..., #include <stdlib.h>, etc.).
+
+Skip overly broad or generic patterns. Only include identifiers that are likely unique enough to help pinpoint related code.
+
+Output the result as a JSON array of string patterns suitable for use with git grep, such as:
+
+Be strict: if a symbol was defined in the patch, do not include it.""",
             model=GPT_4O_MINI,
             result_model=Searches,
         )
 
         self.relevanceAgent = Agent(
             name="Code Relevance Agent",
-            instructions="""You are an expert in determining if a snippet of code or documentation is directly relevant to a query. Your response must include a 'relevant' field boolean.""",
+            instructions="""You are a code analysis agent. You will be given two inputs:
+
+A patch file (diff) representing changes made to one or more source code files.
+
+A single excerpt of text that was returned from git grep, which includes a matching line of text and its file path.
+
+Your task is to determine whether the excerpt is relevant to the changes in the patch. Relevance is defined by either of the following:
+
+The file path in the excerpt matches (exactly or closely) any file modified in the patch.
+
+The content of the excerpt is conceptually or semantically related to the code changes in the patch (e.g., it references a function, variable, or concept that was added, modified, or removed).
+
+Be conservative: if there's insufficient evidence for relevance, return false.""",
             model=GPT_4O_MINI,
             result_model=RelevanceResult,
         )
@@ -102,6 +135,8 @@ You are an expert in generating NON-NATURAL LANGUAGE CODE search queries from a 
     def generate(self, patch_content: str) -> str:
         # Generate search queries
         queries = self.queryAgent << patch_content
+        print(str(queries))
+        return
 
         # Git-Grep queries
         all_results = {}
