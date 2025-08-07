@@ -91,7 +91,7 @@ def prepare_document_metadata(
     
     # Generate document ID from filename
     metadata["document_id"] = hashlib.sha256(
-        metadata["filename"].encode()
+        str(Path(file_path)).encode()
     ).hexdigest()
     
     return metadata
@@ -155,7 +155,7 @@ def rag_index_file(
     client: WeaviateClient|None = None,
     ignore_errors: bool = False,
     distance_metric: VectorDistances = VectorDistances.COSINE,
-):
+) -> str:
     """Index a file using configurable Weaviate Embedded and chunking parameters"""
 
     console = Console()
@@ -186,10 +186,10 @@ def rag_index_file(
         
         if status == "unchanged":
             console.print(f"[yellow]⏩ Document '{metadata['filename']}' unchanged[/yellow]")
-            return
+            return metadata["document_id"]
         elif status == "duplicate":
             console.print(f"[yellow]⚠️ Content already exists under different filename[/yellow]")
-            return
+            return metadata["document_id"]
         elif status == "changed":
             console.print(f"[yellow]🔄 Updating changed document '{metadata['filename']}'[/yellow]")
             collection.data.delete_many(
@@ -233,7 +233,7 @@ def rag_index_file(
     finally:
         if client and client_created:
             client.close()
-    return "indexed"
+    return metadata["document_id"]
 
 def rag_index_multiple_files(
     file_paths: List[str],
@@ -244,11 +244,13 @@ def rag_index_multiple_files(
     client: WeaviateClient|None = None,
     ignore_errors: bool = False,
     distance_metric: VectorDistances = VectorDistances.COSINE,
-):
+) -> List[str]:
     """Index a file using configurable Weaviate Embedded and chunking parameters"""
 
     console = Console()
     client_created = False
+
+    documents_indexed = []
     try:
         with Status("[bold green]Initializing Weaviate..."):
             if client is None:
@@ -276,9 +278,11 @@ def rag_index_multiple_files(
             
             if status == "unchanged":
                 console.print(f"[yellow]⏩ Document '{metadata['filename']}' unchanged[/yellow]")
+                documents_indexed.append(metadata["document_id"])
                 continue
             elif status == "duplicate":
                 console.print(f"[yellow]⚠️ Content already exists under different filename[/yellow]")
+                documents_indexed.append(metadata["document_id"])
                 continue
             elif status == "changed":
                 console.print(f"[yellow]🔄 Updating changed document '{metadata['filename']}'[/yellow]")
@@ -318,12 +322,13 @@ def rag_index_multiple_files(
                         },
                         vector=vector
                     )
-                
-        console.print(f"[bold green]✅ Indexed {len(chunks)} chunks in {index_name}")
+            
+            documents_indexed.append(metadata["document_id"])
+            console.print(f"[bold green]✅ Indexed {len(chunks)} chunks in {index_name}")
     finally:
         if client and client_created:
             client.close()
-    return "indexed"
+    return documents_indexed
 
 def delete_document_from_index(
     collection: Any,

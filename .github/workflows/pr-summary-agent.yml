@@ -18,7 +18,17 @@ jobs:
 
       - name: Install uv
         uses: astral-sh/setup-uv@v6
-        
+
+      - name: Download weaviate cache
+        id: download-artifact
+        uses: dawidd6/action-download-artifact@v11
+        with:
+          github_token: ${{secrets.GITHUB_TOKEN}}
+          workflow: pr-summary-agent.yml
+          name: weaviate
+          if_no_artifact_found: warn
+          path: /home/runner/.cache/weaviate
+
       - name: Run agent
         run: |
           uv venv --python 3.12
@@ -33,3 +43,9 @@ jobs:
           GITHUB_API_KEY: ${{ secrets.GITHUB_TOKEN }}
           REPO_OWNER: supercog-ai
           REPO_NAME: PR_code_review-agent
+      
+      - name: Update weaviate cache
+        uses: actions/upload-artifact@v4
+        with:
+          name: weaviate
+          path: /home/runner/.cache/weaviate
