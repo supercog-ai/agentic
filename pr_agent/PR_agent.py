@@ -5,11 +5,9 @@ from pydantic import Field, BaseModel
 from dotenv import load_dotenv
 from agentic.common import Agent
 from agentic.models import GPT_4O_MINI
-import multiprocessing
 from git_grep_agent import GitGrepAgent
 from summary_agent import SummaryAgent
 from pydantic import BaseModel
-from agentic.swarm.types import ThreadContext, DebugLevel
 
 load_dotenv()
 
@@ -135,8 +133,6 @@ Be conservative: if there's insufficient evidence for relevance, return false.""
     def generate(self, patch_content: str) -> str:
         # Generate search queries
         queries = self.queryAgent << patch_content
-        print(str(queries))
-        return
 
         # Git-Grep queries
         all_results = {}
