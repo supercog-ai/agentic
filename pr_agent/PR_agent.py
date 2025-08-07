@@ -140,7 +140,7 @@ You are an expert in generating code search queries from a patch file to get add
         yield PromptStarted(query, {"query": query})
         
         # Generate search queries
-        queries = yield from self.queryAgent.final_result(
+        queries = yield from self.queryAgent.grab_final_result(
             request_context.get("patch_content"),
             request_context={
                 "thread_id": request_context.get("thread_id")
@@ -152,7 +152,7 @@ You are an expert in generating code search queries from a patch file to get add
         # RAG and Git-Grep queries 
         all_results = {}
         for query in queries.searches[:10]:
-            searchResponse = yield from self.code_rag_agent.final_result(
+            searchResponse = yield from self.code_rag_agent.grab_final_result(
                 f"Search codebase",
                 request_context={
                     "query": query,
@@ -165,7 +165,7 @@ You are an expert in generating code search queries from a patch file to get add
                 if not file in all_results:
                     all_results[file] = SearchResult(query=query,file_path=result.file_path,content=result.search_result,similarity_score=result.similarity_score,included_defs=result.included_defs)
             
-            searchResponse = yield from self.git_grep_agent.final_result(
+            searchResponse = yield from self.git_grep_agent.grab_final_result(
                 f"Search codebase with git grep",
                 request_context={
                     "query": query,
@@ -194,7 +194,7 @@ You are an expert in generating code search queries from a patch file to get add
             
             try:
                 relevance_check = yield from self.relevanceAgent.final_result(
-                    f"<Patch File>\n{request_context.get("patch_content")}\n</Patch File>\n\n<Content>{result.content}</Content><Query>{result.query}</Query>"
+                    f"<Patch File>\n{request_context.get('patch_content')}\n</Patch File>\n\n<Content>{result.content}</Content><Query>{result.query}</Query>"
                 )
                 
                 if relevance_check.relevant:
