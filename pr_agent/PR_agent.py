@@ -70,7 +70,7 @@ class PRReviewAgent(Agent):
             name="Code Query Agent",
             instructions=
 """
-You are an expert in generating code search queries from a patch file to get additional context about changes to a code base. Your response must include a 'searches' field with a list of strings. Example outputs: Weather_Tool, SearchQuery, format_sections
+You are an expert in generating code search queries from a patch file to get additional context about changes to a code base. Your response must include a 'searches' field with a list of strings. Example outputs: ["Weather_Tool", "SearchQuery", "format_sections"]
 """,
             model=GPT_4O_MINI,
             result_model=Searches,
