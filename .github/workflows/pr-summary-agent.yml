@@ -31,7 +31,7 @@ jobs:
       - name: Run agent
         run: |
           uv venv --python 3.12
-          uv pip install -e "../agentic[all,dev]" --extra-index-url https://download.pytorch.org/whl/cpu --index-strategy unsafe-first-match
+          uv pip install -e "../PR_code_review-agent[all,dev]" --extra-index-url https://download.pytorch.org/whl/cpu --index-strategy unsafe-first-match
           git diff --merge-base HEAD^1 HEAD > PRChanges.patch
           cat PRChanges.patch
           uv run pr_agent/PR_agent.py
@@ -41,7 +41,7 @@ jobs:
           PR_ID: ${{ github.event.pull_request.number }}
           GITHUB_API_KEY: ${{ secrets.GITHUB_TOKEN }}
           REPO_OWNER: supercog-ai
-          REPO_NAME: agentic
+          REPO_NAME: PR_code_review-agent
       
       - name: Update weaviate cache
         uses: actions/upload-artifact@v4
