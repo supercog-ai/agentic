@@ -11,10 +11,6 @@ from pydantic import BaseModel
 
 load_dotenv()
 
-def call_llm(input):
-    agent, text = input
-    return agent._get_llm_completion(history=[{"role": "user", "content": text}], thread_context=agent.thread_context, model_override=None, stream=False).choices[0].message.content
-
 class SearchResult(BaseModel):
     query: str = Field(
         description="Query used in this search."
