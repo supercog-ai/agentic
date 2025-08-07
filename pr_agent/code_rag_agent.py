@@ -46,7 +46,7 @@ class CodeRagAgent(Agent):
 
         self.ragTool = RAGTool(
                 default_index="codebase",
-                index_paths=["../**/*.md"],
+                index_paths=[],
                 recursive=True
             )
         
