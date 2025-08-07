@@ -25,6 +25,7 @@ jobs:
         with:
           github_token: ${{secrets.GITHUB_TOKEN}}
           name: weaviate
+          workflow: pr-summary-agent.yml
           if_no_artifact_found: warn
           path: /home/runner/.cache/weaviate
 
