@@ -241,4 +241,4 @@ if __name__ == "__main__":#
     pr_review_agent = PRReviewAgent()
     
     # Run the agent
-    #print(pr_review_agent.grab_final_result("Triggered by a PR",{"patch_content":patch_content}))
+    print(pr_review_agent.grab_final_result("Triggered by a PR",{"patch_content":patch_content}))
