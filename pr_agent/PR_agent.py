@@ -67,8 +67,6 @@ Do not include anything from lines that import, include, or reference known exte
 
 Skip overly broad or generic patterns. Only include identifiers that are likely unique enough to help pinpoint related code.
 
-Output the result as a JSON array of string patterns suitable for use with git grep, such as:
-
 Be strict: if a symbol was defined in the patch, do not include it.""",
             model=GPT_4O_MINI,
             result_model=Searches,
