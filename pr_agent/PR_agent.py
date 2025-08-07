@@ -153,7 +153,7 @@ You are an expert in generating code search queries from a patch file to get add
         all_results = {}
         for query in queries.searches[:10]:
             searchResponse = yield from self.code_rag_agent.grab_final_result(
-                f"Search codebase",
+                "Search codebase",
                 request_context={
                     "query": query,
                     "thread_id": request_context.get("thread_id")
@@ -162,11 +162,11 @@ You are an expert in generating code search queries from a patch file to get add
             
             # Process each result
             for file, result in searchResponse.sections.items():
-                if not file in all_results:
+                if file not in all_results:
                     all_results[file] = SearchResult(query=query,file_path=result.file_path,content=result.search_result,similarity_score=result.similarity_score,included_defs=result.included_defs)
             
             searchResponse = yield from self.git_grep_agent.grab_final_result(
-                f"Search codebase with git grep",
+                "Search codebase with git grep",
                 request_context={
                     "query": query,
                     "thread_id": request_context.get("thread_id")
@@ -176,7 +176,7 @@ You are an expert in generating code search queries from a patch file to get add
             # Process each result
             # grep_response.sections is a list of CodeSection objects
             for file, result in searchResponse.sections.items():
-                if not file in all_results:
+                if file not in all_results:
                     all_results[file] = SearchResult(
                         query=query,
                         file_path=result.file_path,
@@ -241,4 +241,4 @@ if __name__ == "__main__":#
     pr_review_agent = PRReviewAgent()
     
     # Run the agent
-    print(pr_review_agent.grab_final_result("Triggered by a PR",{"patch_content":patch_content}))
+    #print(pr_review_agent.grab_final_result("Triggered by a PR",{"patch_content":patch_content}))
