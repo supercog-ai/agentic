@@ -32,7 +32,7 @@ jobs:
       - name: Run agent
         run: |
           uv venv --python 3.12
-          uv pip install -e "../PR_code_review-agent[all,dev]" --extra-index-url https://download.pytorch.org/whl/cpu --index-strategy unsafe-first-match
+          uv pip install -e "../${{ REPO_NAME }}[all,dev]" --extra-index-url https://download.pytorch.org/whl/cpu --index-strategy unsafe-first-match
           git diff --merge-base HEAD^1 HEAD > PRChanges.patch
           cat PRChanges.patch
           uv run pr_agent/PR_agent.py
@@ -49,3 +49,4 @@ jobs:
         with:
           name: weaviate
           path: /home/runner/.cache/weaviate
+          overwrite: true
