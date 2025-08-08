@@ -233,8 +233,8 @@ You are an expert in generating code search queries from a patch file to get add
 
 
 if __name__ == "__main__":
-    if os.environ.get("OPENAI_API_KEY"):
-        print("ai key")
+    if not os.environ.get("OPENAI_API_KEY"):
+        print("api key missing")
 
     # Change to PRChangesTest.patch for testing
     with open("PRChangesTest.patch", "r") as f:
