@@ -232,7 +232,10 @@ You are an expert in generating code search queries from a patch file to get add
 
 
 
-if __name__ == "__main__":#
+if __name__ == "__main__":
+    if os.environ.get("OPENAI_API_KEY"):
+        print("ai key")
+
     # Change to PRChangesTest.patch for testing
     with open("PRChangesTest.patch", "r") as f:
         patch_content = f.read()
@@ -242,4 +245,3 @@ if __name__ == "__main__":#
     
     # Run the agent
     print(pr_review_agent.grab_final_result("Triggered by a PR",{"patch_content":patch_content}))
-    #e
