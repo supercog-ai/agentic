@@ -109,15 +109,14 @@ You are an expert in generating code search queries from a patch file to get add
 
     def post_to_github(self, summary: str) -> str:
         """Post summary as a GitHub comment"""
-        repo_owner = os.getenv("REPO_OWNER")
-        repo_name = os.getenv("REPO_NAME")
+        repo = os.getenv("repo")
         pr_id = os.getenv("PR_ID")
         gh_token = os.getenv("GITHUB_API_KEY")
         
-        if not all([repo_owner, repo_name, pr_id, gh_token]):
+        if not all([repo, pr_id, gh_token]):
             raise ValueError("Missing required GitHub configuration")
             
-        url = f"https://api.github.com/repos/{repo_owner}/{repo_name}/issues/{pr_id}/comments"
+        url = f"https://api.github.com/repos/{repo}/issues/{pr_id}/comments"
         headers = {
             "Authorization": f"token {gh_token}",
         }
@@ -233,8 +232,6 @@ You are an expert in generating code search queries from a patch file to get add
 
 
 if __name__ == "__main__":
-    if not os.environ.get("OPENAI_API_KEY"):
-        print("api key missing")
 
     # Change to PRChangesTest.patch for testing
     with open("PRChangesTest.patch", "r") as f:
