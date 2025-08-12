@@ -76,16 +76,9 @@ You are an expert in generating code search queries from a patch file to get add
             result_model=Searches,
         )
 
-        self.relevanceAgent = Agent(
-            name="Code Relevange Agent",
-            instructions="""You are an expert in determining if a snippet of code or documentation is directly relevant to understand the changes listed under <Patch File>. Your response must include a 'relevant' field boolean.""",
-            model=GPT_4O_MINI,
-            result_model=RelevanceResult,
-        )
-
         self.summaryAgent = SummaryAgent()
 
-    def prepare_summary(self, patch_content: str, filtered_results: List[SearchResult]) -> str:
+    def prepare_summary(self, patch_content: str, filtered_results: Dict[str,SearchResult]) -> str:
         
         """Prepare for summary agent"""
         formatted_str = ""
@@ -95,12 +88,12 @@ You are an expert in generating code search queries from a patch file to get add
 
         final_str = formatted_str[:]
         
-        for result in filtered_results:
+        for result in filtered_results.values():
             formatted_str += f"<{result.file_path}>\n"
             formatted_str += f"{result.content}\n"
             formatted_str += f"</{result.file_path}>\n\n"
             
-            if token_counter(model=SUMMARY_MODEL, messages=[{"role": "user", "content": {final_str}}]) < 115000:
+            if token_counter(model=SUMMARY_MODEL, messages=[{"role": "user", "content": {final_str}}]) > 115000:
                 break
             else:
                 final_str = formatted_str[:]
@@ -109,7 +102,7 @@ You are an expert in generating code search queries from a patch file to get add
 
     def post_to_github(self, summary: str) -> str:
         """Post summary as a GitHub comment"""
-        repo = os.getenv("repo")
+        repo = os.getenv("REPO")
         pr_id = os.getenv("PR_ID")
         gh_token = os.getenv("GITHUB_API_KEY")
         
@@ -188,27 +181,28 @@ You are an expert in generating code search queries from a patch file to get add
         print("all: ", all_results)
 
         # Filter rag search results using LLM-based relevance checking
-        filtered_results = []
-        for result in all_results.values(): 
+        #filtered_results = []
+        #for result in all_results.values(): 
             
-            try:
-                relevance_check = yield from self.relevanceAgent.grab_final_result(
-                    f"<Patch File>\n{request_context.get('patch_content')}\n</Patch File>\n\n<Content>{result.content}</Content><Query>{result.query}</Query>"
-                )
-                
-                if relevance_check.relevant:
-                    filtered_results.append(result)
-            except Exception as e:
+        #    try:
+        #        relevance_check = yield from self.relevanceAgent.grab_final_result(
+        #            "True"
+        #        )
+        #        print(relevance_check)
+                #f"<Patch File>\n{request_context.get('patch_content')}\n</Patch File>\n\n<Content>{result.content}</Content><Query>{result.query}</Query>"
+                #if relevance_check.relevant:
+                #    filtered_results.append(result)
+        #    except Exception as e:
                 # LLM error
-                print(e)
+        #        print(e)
 
-        for result in all_results.values():
-            filtered_results.append(result)
+        #for result in all_results.values():
+        #    filtered_results.append(result)
 
-        print("filtered: ", str(filtered_results))
+        #print("filtered: ", str(filtered_results))
 
         # Prepare for summary
-        formatted_str = self.prepare_summary(request_context.get("patch_content"),filtered_results)
+        formatted_str = self.prepare_summary(request_context.get("patch_content"),all_results)
 
         print(formatted_str)
 
@@ -233,6 +227,7 @@ You are an expert in generating code search queries from a patch file to get add
 
 if __name__ == "__main__":
 
+    # test
     # Change to PRChangesTest.patch for testing
     with open("PRChangesTest.patch", "r") as f:
         patch_content = f.read()

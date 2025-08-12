@@ -32,7 +32,8 @@ jobs:
       - name: Run agent
         run: |
           uv venv --python 3.12
-          uv pip install -e "../agentic[all,dev]" --extra-index-url https://download.pytorch.org/whl/cpu --index-strategy unsafe-first-match
+          uv pip install -e "../${{ github.event.repository.name }}[all,dev]" --extra-index-url https://download.pytorch.org/whl/cpu --index-strategy unsafe-first-match
+          uv pip install litellm[proxy]
           git diff --merge-base HEAD^1 HEAD > PRChanges.patch
           cat PRChanges.patch
           uv run pr_agent/PR_agent.py
@@ -41,7 +42,7 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.PRAgentOpenAIKey }}
           PR_ID: ${{ github.event.pull_request.number }}
           GITHUB_API_KEY: ${{ secrets.GITHUB_TOKEN }}
-          REPO: ${{ github.GITHUB_REPOSITORY }}
+          REPO: ${{ github.repository }}
       
       - name: Update weaviate cache
         uses: actions/upload-artifact@v4
