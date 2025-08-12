@@ -166,7 +166,7 @@ You are an expert in generating code search queries from a patch file to get add
             )
           
             # Process each result
-            # grep_response.sections is a list of CodeSection objects
+            # grep_response.sections is a dict of filepaths and CodeSection objects
             for file, result in searchResponse.sections.items():
                 if file not in all_results:
                     all_results[file] = SearchResult(
@@ -179,27 +179,6 @@ You are an expert in generating code search queries from a patch file to get add
 
 
         print("all: ", all_results)
-
-        # Filter rag search results using LLM-based relevance checking
-        #filtered_results = []
-        #for result in all_results.values(): 
-            
-        #    try:
-        #        relevance_check = yield from self.relevanceAgent.grab_final_result(
-        #            "True"
-        #        )
-        #        print(relevance_check)
-                #f"<Patch File>\n{request_context.get('patch_content')}\n</Patch File>\n\n<Content>{result.content}</Content><Query>{result.query}</Query>"
-                #if relevance_check.relevant:
-                #    filtered_results.append(result)
-        #    except Exception as e:
-                # LLM error
-        #        print(e)
-
-        #for result in all_results.values():
-        #    filtered_results.append(result)
-
-        #print("filtered: ", str(filtered_results))
 
         # Prepare for summary
         formatted_str = self.prepare_summary(request_context.get("patch_content"),all_results)
