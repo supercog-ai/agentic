@@ -272,7 +272,14 @@ class ToolCall(Event):
 
     def __str__(self):
         name = self.payload["name"]
-        return "  " * (self.depth + 1) + f"[TOOL: {name} >> ({self.arguments})]\n"
+        print_args = self.arguments.copy()
+        if 'run_context' in print_args or 'thread_context' in print_args:
+            rc_arg = print_args.pop('run_context', print_args.pop('thread_context', None))
+            print_args.pop('run_context', None)
+            print_args.pop('thread_context', None)
+            if rc_arg:
+                print_args['run_context'] = rc_arg.get_context().keys()
+        return "  " * (self.depth + 1) + f"[TOOL: {name} >> ({print_args})]\n"
     
     def to_llm_message(self) -> Optional[Dict[str, Any]]:
         """Convert event to LLM message format"""
