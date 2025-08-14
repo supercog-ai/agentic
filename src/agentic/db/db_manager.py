@@ -76,13 +76,11 @@ def _add_depth_column_if_missing(db_path: str):
         columns = [column[1] for column in cursor.fetchall()]
         
         if 'depth' not in columns:
-            print("Adding depth column to thread_logs table...")
             try:
                 cursor.execute("ALTER TABLE thread_logs ADD COLUMN depth INTEGER DEFAULT 0;")
                 conn.commit()
-                print("Depth column added successfully!")
             except sqlite3.OperationalError as e:
-                print(f"Error adding depth column: {e}")
+                pass
         
         conn.close()
 

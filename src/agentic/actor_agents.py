@@ -102,7 +102,6 @@ if os.environ.get("AGENTIC_USE_RAY"):
     import ray
 
 else:
-    print("Using simple Thread engine for running agents")
     from .ray_mock import ray
 
 _AGENT_REGISTRY = []
@@ -709,7 +708,7 @@ class ActorBaseAgent:
         
         
         # Debug: Check if we have reasoning content
-        if self.debug.debug_all():
+        if self.debug.debug_reasoning():
             debug_print(self.debug.debug_all(), f"Checking for reasoning content...")
             debug_print(self.debug.debug_all(), f"Choice object attributes: {[attr for attr in dir(choice) if not attr.startswith('_')]}")
             debug_print(self.debug.debug_all(), f"Message object attributes: {[attr for attr in dir(message) if not attr.startswith('_')]}")
@@ -1474,6 +1473,9 @@ class BaseAgentProxy:
                     request_id=request_id,
                 )
             )
+            # There's some logical issue where we have inserted 'thread_id' into the request_context, but
+            # we already made the request a Prompt with a context that was missing the thread id
+            prompt.request_context.update(request_context)
 
 
             # Transmit depth through the Prompt

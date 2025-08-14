@@ -56,6 +56,9 @@ class DebugLevel:
     def debug_agents(self):
         return self.level == "all" or "agents" in self.level
 
+    def debug_reasoning(self):
+        return "reasoning" in self.level
+    
     def debug_all(self):
         return self.level == "all"
 
