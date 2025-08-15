@@ -20,6 +20,7 @@ def __init__(default_index: str = "knowledge_base", index_paths: list[str] = [])
 
 - `default_index (str)`: Name of the default vector store index (default: "knowledge_base")
 - `index_paths (list[str])`: List of files or glob patterns to index during initialization
+- `recursive (bool)`: Enables recursive glob patterns (/**/) (default: False)
 
 ## Methods
 
@@ -111,6 +112,13 @@ print(response)
 pre_indexed_rag = RAGTool(
     default_index="documentation",
     index_paths=["./docs/*.md"]
+)
+
+# Create a RAG tool with a pre-indexed directory
+pre_indexed_rag = RAGTool(
+    default_index="codebase",
+    index_paths=["../**/*.py","../**/*.md"],
+    recursive=True
 )
 
 # Create an agent with pre-indexed documentation
