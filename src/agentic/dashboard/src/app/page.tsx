@@ -1,5 +1,6 @@
-'use client';
-
+'use client'
+import { signOut, useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { AlertCircle, CircleDashed, Menu } from 'lucide-react';
 import { useState } from 'react';
 import { mutate } from 'swr';
@@ -11,13 +12,32 @@ import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useAgentsWithDetails } from '@/hooks/useAgentData';
 
+
+
 export default function Home() {
   const [selectedAgent, setSelectedAgent] = useState<string>('');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [currentThreadId, setCurrentThreadId] = useState<string | undefined>();
 
   // Use our custom hook to fetch agent data
+  const [currentRunId, setCurrentRunId] = useState<string | undefined>();
+    // Use our custom hook to fetch agent data
   const { agents, error, isLoading } = useAgentsWithDetails();
+
+  const { data: session, status } = useSession();
+  const router = useRouter();
+
+  // Login redirection logic
+  // Redirect if not authenticated
+  if (status === "loading") {
+    return <div>Loading...</div>;
+  }
+  if (status === "unauthenticated" && typeof window !== "undefined" && !localStorage.getItem('agentic-guest')) {
+    router.replace('/login');
+    return null;
+  }
+
+
   
   // Set initial selected agent when data loads
   if (agents && agents.length > 0 && !selectedAgent) {

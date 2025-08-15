@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import BackgroundTasks from '@/components/BackgroundTasks';
 import ChatInputForm from '@/components/ChatInputForm';
 import EventLogs from '@/components/EventLogs';
+import ProfileDropdown from '@/components/ProfileDropdown';
 import MarkdownRenderer from '@/components/MarkdownRenderer';
 import ReasoningDisplay from '@/components/ReasoningDisplay';
 import { AutoScrollArea } from '@/components/ui/auto-scroll-area';
@@ -199,6 +200,7 @@ const AgentChat: React.FC<AgentChatProps> = ({
                   </span>
                 </Button>
               )}
+              <div className="flex gap-2 ml-auto items-center">
               <Button
                 onClick={toggleEventLogs}
                 variant={showEventLogs ? 'default' : 'outline'}
@@ -208,6 +210,8 @@ const AgentChat: React.FC<AgentChatProps> = ({
                 <History className="h-4 w-4" />
                 <span className="hidden md:inline">Event Logs</span>
               </Button>
+                <ProfileDropdown />
+                </div>
             </div>
           </div>
         </CardHeader>
