@@ -28,10 +28,10 @@
     index delete          - Delete an index
     index search          - Search in an index
 
-    index document add    - Add a document to an index
-    index document list   - List documents in an index
-    index document show   - Show document details
-    index document delete - Delete a document from an index
+    index add_doc    - Add a document to an index
+    index list_docs   - List documents in an index
+    index show_doc   - Show document details
+    index delete_doc - Delete a document from an index
 
 ## Model Operations
 

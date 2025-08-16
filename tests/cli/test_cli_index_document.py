@@ -36,7 +36,7 @@ def test_document_add(mock_weaviate_client, tmp_path):
         with patch('agentic.utils.rag_helper.rag_index_file') as mock_index:
             result = runner.invoke(
                 app, 
-                ['index', 'document', 'add', 'test_index', str(test_file)]
+                ['index', 'add_doc', 'test_index', str(test_file)]
             )
             
             assert result.exit_code == 0
@@ -63,7 +63,7 @@ def test_document_list(mock_weaviate_client, mock_collection):
         )
     ]
 
-    result = runner.invoke(app, ['index', 'document', 'list', 'test_index'])
+    result = runner.invoke(app, ['index', 'list_docs', 'test_index'])
     
     assert result.exit_code == 0
     assert 'test.txt' in result.stdout
@@ -90,7 +90,7 @@ def test_document_show(mock_weaviate_client, mock_collection):
 
     result = runner.invoke(
         app, 
-        ['index', 'document', 'show', 'test_index', document_id]
+        ['index', 'show_doc', 'test_index', document_id]
     )
     
     assert result.exit_code == 0
@@ -110,7 +110,7 @@ def test_document_delete(mock_weaviate_client, mock_collection):
     # Test with --yes flag to skip confirmation
     result = runner.invoke(
         app,
-        ['index', 'document', 'delete', 'test_index', 'doc123', '--yes']
+        ['index', 'delete_doc', 'test_index', 'doc123', '--yes']
     )
     
     assert result.exit_code == 0
@@ -124,7 +124,7 @@ def test_document_delete_nonexistent(mock_weaviate_client, mock_collection):
 
     result = runner.invoke(
         app,
-        ['index', 'document', 'delete', 'test_index', 'nonexistent', '--yes']
+        ['index', 'delete_doc', 'test_index', 'nonexistent', '--yes']
     )
     
     assert result.exit_code == 0
@@ -133,7 +133,7 @@ def test_document_delete_nonexistent(mock_weaviate_client, mock_collection):
 def test_document_add_invalid_file(mock_weaviate_client):
     result = runner.invoke(
         app,
-        ['index', 'document', 'add', 'test_index', 'nonexistent.txt']
+        ['index', 'add_doc', 'test_index', 'nonexistent.txt']
     )
     
     assert result.exit_code == 1
@@ -142,7 +142,7 @@ def test_document_add_invalid_file(mock_weaviate_client):
 def test_document_list_nonexistent_index(mock_weaviate_client):
     mock_weaviate_client.collections.exists.return_value = False
 
-    result = runner.invoke(app, ['index', 'document', 'list', 'nonexistent'])
+    result = runner.invoke(app, ['index', 'list_docs', 'nonexistent'])
     
     assert result.exit_code == 0
     assert 'does not exist' in result.stdout
