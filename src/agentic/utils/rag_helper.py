@@ -91,7 +91,7 @@ def prepare_document_metadata(
     
     # Generate document ID from filename
     metadata["document_id"] = hashlib.sha256(
-        metadata["filename"].encode()
+        str(Path(file_path)).encode()
     ).hexdigest()
     
     return metadata
@@ -155,7 +155,7 @@ def rag_index_file(
     client: WeaviateClient|None = None,
     ignore_errors: bool = False,
     distance_metric: VectorDistances = VectorDistances.COSINE,
-):
+) -> str:
     """Index a file using configurable Weaviate Embedded and chunking parameters"""
 
     console = Console()
@@ -186,10 +186,10 @@ def rag_index_file(
         
         if status == "unchanged":
             console.print(f"[yellow]⏩ Document '{metadata['filename']}' unchanged[/yellow]")
-            return
+            return metadata["document_id"]
         elif status == "duplicate":
             console.print(f"[yellow]⚠️ Content already exists under different filename[/yellow]")
-            return
+            return metadata["document_id"]
         elif status == "changed":
             console.print(f"[yellow]🔄 Updating changed document '{metadata['filename']}'[/yellow]")
             collection.data.delete_many(
@@ -233,8 +233,102 @@ def rag_index_file(
     finally:
         if client and client_created:
             client.close()
-    return "indexed"
+    return metadata["document_id"]
+
+def rag_index_multiple_files(
+    file_paths: List[str],
+    index_name: str,
+    chunk_threshold: float = 0.5,
+    chunk_delimiters: str = ". ,! ,? ,\n",
+    embedding_model: str = "BAAI/bge-small-en-v1.5",
+    client: WeaviateClient|None = None,
+    ignore_errors: bool = False,
+    distance_metric: VectorDistances = VectorDistances.COSINE,
+) -> List[str]:
+    """Index a file using configurable Weaviate Embedded and chunking parameters"""
+
+    console = Console()
+    client_created = False
+
+    documents_indexed = []
+    try:
+        with Status("[bold green]Initializing Weaviate..."):
+            if client is None:
+                client = init_weaviate()
+                client_created = True
+            create_collection(client, index_name, distance_metric)
+            
+        with Status("[bold green]Initializing models..."):
+            embed_model = init_embedding_model(embedding_model)
+            chunker = init_chunker(chunk_threshold, chunk_delimiters)
         
+        for file_path in file_paths:
+            with Status(f"[bold green]Processing {file_path}...", console=console):
+                text, mime_type = read_file(str(file_path))
+                metadata = prepare_document_metadata(file_path, text, mime_type, GPT_DEFAULT_MODEL)
+
+            console.print(f"[bold green]Indexing {file_path}...")
+
+            collection = client.collections.get(index_name)
+            exists, status = check_document_exists(
+                collection, 
+                metadata["document_id"],
+                metadata["fingerprint"]
+            )
+            
+            if status == "unchanged":
+                console.print(f"[yellow]⏩ Document '{metadata['filename']}' unchanged[/yellow]")
+                documents_indexed.append(metadata["document_id"])
+                continue
+            elif status == "duplicate":
+                console.print(f"[yellow]⚠️ Content already exists under different filename[/yellow]")
+                documents_indexed.append(metadata["document_id"])
+                continue
+            elif status == "changed":
+                console.print(f"[yellow]🔄 Updating changed document '{metadata['filename']}'[/yellow]")
+                collection.data.delete_many(
+                    where=Filter.by_property("document_id").equal(metadata["document_id"])
+                )
+
+            with Status("[bold green]Generating document summary...", console=console):
+                metadata["summary"] = generate_document_summary(
+                    text=text[:12000],
+                    mime_type=mime_type,
+                    model=GPT_DEFAULT_MODEL
+                )
+            
+            chunks = chunker(text)
+            chunks_text = [chunk.text for chunk in chunks]
+            if not chunks_text:
+                if ignore_errors:
+                    return client
+                raise ValueError("No text chunks generated from document")
+            
+            batch_size = 128
+            embeddings = []
+            with Status("[bold green]Generating embeddings..."):
+                for i in range(0, len(chunks_text), batch_size):
+                    batch = chunks_text[i:i+batch_size]
+                    embeddings.extend(list(embed_model.embed(batch)))
+            
+            with Status("[bold green]Indexing chunks..."), collection.batch.dynamic() as batch:
+                for i, chunk in enumerate(chunks):
+                    vector = embeddings[i].tolist()
+                    batch.add_object(
+                        properties={
+                            **metadata,
+                        "content": chunk.text,
+                        "chunk_index": i,
+                        },
+                        vector=vector
+                    )
+            
+            documents_indexed.append(metadata["document_id"])
+            console.print(f"[bold green]✅ Indexed {len(chunks)} chunks in {index_name}")
+    finally:
+        if client and client_created:
+            client.close()
+    return documents_indexed
 
 def delete_document_from_index(
     collection: Any,
