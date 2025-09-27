@@ -233,18 +233,16 @@ def shell(args: List[str]):
     secrets.copy_secrets_to_env()
     os.execvp("sh", ["sh", "-c", " ".join(args)])
 
-# Create command groups
+# Create the sub-apps
 secrets_app = typer.Typer(name="secrets", help="Manage secrets")
 dashboard_app = typer.Typer(name="dashboard", help="Manage the dashboard UI")
 index_app = typer.Typer(name="index", help="Manage vector indexes")
-index_document_app = typer.Typer(name="document", help="Manage documents in indexes")
 models_app = typer.Typer(name="models", help="Work with LLM models")
 
-# Register command groups
+# Add the sub-apps to the main app
 app.add_typer(secrets_app)
 app.add_typer(dashboard_app)
 app.add_typer(index_app)
-index_app.add_typer(index_document_app)
 app.add_typer(models_app)
 
 # Secrets commands
@@ -512,8 +510,7 @@ def index_search(
         if client:
             client.close()
 
-# Index document commands
-@index_document_app.command("add")
+@index_app.command("add_doc")
 def document_add(
     index_name: str,
     file_path: str,
@@ -548,7 +545,7 @@ def document_add(
         console.print(f"[bold red]Error: {str(e)}")
         raise typer.Exit(1)
 
-@index_document_app.command("list")
+@index_app.command("list_docs")
 def document_list(index_name: str):
     """List all documents in an index with basic info"""
     from agentic.utils.rag_helper import (
@@ -579,7 +576,7 @@ def document_list(index_name: str):
         if client:
             client.close()
 
-@index_document_app.command("show")
+@index_app.command("show_doc")
 def document_show(index_name: str, document_identifier: str):
     """Show detailed metadata for a specific document using its ID or filename/path"""
     from agentic.utils.rag_helper import (
@@ -625,7 +622,7 @@ def document_show(index_name: str, document_identifier: str):
         if client:
             client.close()
 
-@index_document_app.command("delete")
+@index_app.command("delete_doc")
 def document_delete(
     index_name: str,
     document_identifier: str,  # Changed from file_path to accept both
