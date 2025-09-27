@@ -34,6 +34,7 @@ const authFetch = async (url: string, options: RequestInit = {}): Promise<Respon
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          // 'Authorization': `Bearer ${googleIdToken}` 
         },
         // Add any credentials or info needed for authentication
         body: '',
