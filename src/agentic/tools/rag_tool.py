@@ -14,6 +14,8 @@ from agentic.utils.rag_helper import (
     init_embedding_model,
     init_chunker,
     rag_index_file,
+    rag_index_multiple_files,
+    delete_document_from_index,
 )
 
 from agentic.utils.summarizer import generate_document_summary
@@ -22,6 +24,7 @@ from weaviate.classes.query import Filter, HybridFusion
 from weaviate.collections.classes.grpc import Sort
 from weaviate.classes.config import VectorDistances
 
+from rich.console import Console
 
 @tool_registry.register(
     name="RAGTool",
@@ -38,20 +41,59 @@ class RAGTool(BaseAgenticTool):
     def __init__(
         self,
         default_index: str = "knowledge_base",
-        index_paths: list[str] = []
+        index_paths: list[str] = [],
+        recursive: bool = False,
+        overwrite_index = True,
     ):
         # Construct the RAG tool. You can pass a list of files and we will ensure that
         # they are added to the index on startup. Paths can include glob patterns also,
         # like './docs/*.md'.
+        # Enable recursive (**.md) glob patterns with recursive = True
+
         self.default_index = default_index
         self.index_paths = index_paths
         if self.index_paths:
             client = init_weaviate()
             if default_index not in list_collections(client):
                 create_collection(client, default_index, VectorDistances.COSINE)
+            
+            # Keep track of files found during initialization
+            if overwrite_index:
+                indexed_documents = {}
+
             for path in index_paths:
-                for file_path in [path] if path.startswith("http") else glob.glob(path):
-                    rag_index_file(file_path, self.default_index, client=client, ignore_errors=True)
+                if path.startswith("http"):
+                    document_id = rag_index_file(path, self.default_index, client=client, ignore_errors=True)
+
+                    if overwrite_index: 
+                        indexed_documents[document_id] = True
+                    
+                else:
+                    file_paths = glob.glob(path, recursive=recursive)
+                    document_ids = rag_index_multiple_files(file_paths, self.default_index, client=client, ignore_errors=True)
+
+                    if overwrite_index:
+                        for document_id in document_ids:
+                            indexed_documents[document_id] = True
+
+            # Delete indexed files not found during initialization
+            if overwrite_index:
+                try:
+                    console = Console()
+                    collection = client.collections.get(self.default_index)
+                    documents = list_documents_in_collection(collection)
+
+                    for document in documents:
+                        if not document["document_id"] in indexed_documents:
+                            console.print(f"[bold green]✅ Removing deleted file {document['filename']} from index")
+                            delete_document_from_index(collection=collection,document_id=document["document_id"],filename=document["filename"])
+
+                except Exception as e:
+                    print(f"Error listing documents: {str(e)}")
+                    return
+                finally:
+                    if client:
+                        client.close()
 
     def get_tools(self) -> List[Callable]:
         return [
@@ -59,7 +101,7 @@ class RAGTool(BaseAgenticTool):
             #self.list_indexes,
             self.search_knowledge_index,
             self.list_documents,
-            self.review_full_document
+            self.review_full_document,
         ]
 
     def save_content_to_knowledge_index(
