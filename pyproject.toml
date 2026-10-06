@@ -92,7 +92,7 @@ imap = [
 ]
 
 mcp = [
-    "mcp[cli]==1.7.1",
+    "mcp[cli]==1.9.4",
 ]
 
 meeting-baas = [

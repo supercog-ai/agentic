@@ -18,6 +18,7 @@ from .linkedin_tool import LinkedinDataTool
 from .mcp_tool import MCPTool
 from .meeting_tool import MeetingBaasTool
 from .openai_websearch import OpenAIWebSearchTool
+from .parallel_search_tool import ParallelSearchTool
 from .oauth_tool import OAuthTool
 from .playwright import PlaywrightTool
 from .podcast_tool import PodcastTool
@@ -51,6 +52,7 @@ __all__ = [
     "MeetingBaasTool",
     "OAuthTool",
     "OpenAIWebSearchTool",
+    "ParallelSearchTool",
     "PlaywrightTool",
     "PodcastTool",
     "RAGTool",
