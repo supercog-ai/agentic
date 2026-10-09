@@ -911,6 +911,8 @@
       
         
       
+        
+      
     
     
     
@@ -1217,6 +1219,29 @@
   
   <span class="md-ellipsis">
     MCPTool
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../parallel-search-tool/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    ParallelSearchTool
     
   </span>
   
@@ -1902,21 +1927,21 @@ A JSON string containing the URL or file path to the generated audio file.</p>
 
 <span class="c1"># Create an agent with text-to-speech capabilities</span>
 <span class="n">tts_agent</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
-    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Voice Generator&quot;</span><span class="p">,</span>
-    <span class="n">instructions</span><span class="o">=</span><span class="s2">&quot;You convert text to spoken audio with natural-sounding voices.&quot;</span><span class="p">,</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">"Voice Generator"</span><span class="p">,</span>
+    <span class="n">instructions</span><span class="o">=</span><span class="s2">"You convert text to spoken audio with natural-sounding voices."</span><span class="p">,</span>
     <span class="n">tools</span><span class="o">=</span><span class="p">[</span><span class="n">TextToSpeechTool</span><span class="p">()]</span>
 <span class="p">)</span>
 
 <span class="c1"># Generate speech from direct text input</span>
-<span class="n">response</span> <span class="o">=</span> <span class="n">tts_agent</span> <span class="o">&lt;&lt;</span> <span class="s1">&#39;Convert this text to speech using the &quot;nova&quot; voice: &quot;Welcome to Agentic, the framework for building intelligent agents. This audio was generated using OpenAI</span><span class="se">\&#39;</span><span class="s1">s text-to-speech API.&quot;&#39;</span>
+<span class="n">response</span> <span class="o">=</span> <span class="n">tts_agent</span> <span class="o">&lt;&lt;</span> <span class="s1">'Convert this text to speech using the "nova" voice: "Welcome to Agentic, the framework for building intelligent agents. This audio was generated using OpenAI</span><span class="se">\'</span><span class="s1">s text-to-speech API."'</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
 
 <span class="c1"># Generate speech from a text file</span>
-<span class="n">response</span> <span class="o">=</span> <span class="n">tts_agent</span> <span class="o">&lt;&lt;</span> <span class="s1">&#39;Read the contents of &quot;speech_script.txt&quot; using the &quot;echo&quot; voice&#39;</span>
+<span class="n">response</span> <span class="o">=</span> <span class="n">tts_agent</span> <span class="o">&lt;&lt;</span> <span class="s1">'Read the contents of "speech_script.txt" using the "echo" voice'</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
 
 <span class="c1"># Generate speech with specific instructions</span>
-<span class="n">response</span> <span class="o">=</span> <span class="n">tts_agent</span> <span class="o">&lt;&lt;</span> <span class="s1">&#39;Create a narration for this short story using the &quot;fable&quot; voice: &quot;Once upon a time in a digital realm, agents and humans worked together to solve complex problems...&quot;&#39;</span>
+<span class="n">response</span> <span class="o">=</span> <span class="n">tts_agent</span> <span class="o">&lt;&lt;</span> <span class="s1">'Create a narration for this short story using the "fable" voice: "Once upon a time in a digital realm, agents and humans worked together to solve complex problems..."'</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
 </code></pre></div>
 

@@ -911,6 +911,8 @@
       
         
       
+        
+      
     
     
     
@@ -1217,6 +1219,29 @@
   
   <span class="md-ellipsis">
     MCPTool
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="parallel-search-tool/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    ParallelSearchTool
     
   </span>
   
@@ -1766,8 +1791,8 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">agentic.tools</span><span class="w"> </span><span class="kn">import</span> <span class="n">GoogleNewsTool</span><span class="p">,</span> <span class="n">WeatherTool</span>
 
 <span class="n">agent</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
-    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;News and Weather Agent&quot;</span><span class="p">,</span>
-    <span class="n">instructions</span><span class="o">=</span><span class="s2">&quot;You are a helpful assistant that provides news and weather information.&quot;</span><span class="p">,</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">"News and Weather Agent"</span><span class="p">,</span>
+    <span class="n">instructions</span><span class="o">=</span><span class="s2">"You are a helpful assistant that provides news and weather information."</span><span class="p">,</span>
     <span class="n">tools</span><span class="o">=</span><span class="p">[</span><span class="n">WeatherTool</span><span class="p">(),</span> <span class="n">GoogleNewsTool</span><span class="p">()]</span>
 <span class="p">)</span>
 </code></pre></div>
@@ -1775,7 +1800,7 @@
 <p>Some tools require API keys or other configuration. These are typically passed during initialization:</p>
 <div class="codehilite"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">agentic.tools</span><span class="w"> </span><span class="kn">import</span> <span class="n">GithubTool</span>
 
-<span class="n">github_tool</span> <span class="o">=</span> <span class="n">GithubTool</span><span class="p">(</span><span class="n">api_key</span><span class="o">=</span><span class="s2">&quot;your_github_token&quot;</span><span class="p">,</span> <span class="n">default_repo</span><span class="o">=</span><span class="s2">&quot;owner/repo&quot;</span><span class="p">)</span>
+<span class="n">github_tool</span> <span class="o">=</span> <span class="n">GithubTool</span><span class="p">(</span><span class="n">api_key</span><span class="o">=</span><span class="s2">"your_github_token"</span><span class="p">,</span> <span class="n">default_repo</span><span class="o">=</span><span class="s2">"owner/repo"</span><span class="p">)</span>
 </code></pre></div>
 
 <p>For more information on creating your own tools, see <a href="../">Tools</a>.</p>

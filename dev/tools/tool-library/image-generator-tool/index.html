@@ -911,6 +911,8 @@
       
         
       
+        
+      
     
     
     
@@ -1217,6 +1219,29 @@
   
   <span class="md-ellipsis">
     MCPTool
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../parallel-search-tool/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    ParallelSearchTool
     
   </span>
   
@@ -1896,13 +1921,13 @@ A markdown-formatted string with the URL to the generated image, or an error mes
 
 <span class="c1"># Create an agent with image generation capabilities</span>
 <span class="n">image_agent</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
-    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Image Creator&quot;</span><span class="p">,</span>
-    <span class="n">instructions</span><span class="o">=</span><span class="s2">&quot;You create images based on user descriptions.&quot;</span><span class="p">,</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">"Image Creator"</span><span class="p">,</span>
+    <span class="n">instructions</span><span class="o">=</span><span class="s2">"You create images based on user descriptions."</span><span class="p">,</span>
     <span class="n">tools</span><span class="o">=</span><span class="p">[</span><span class="n">ImageGeneratorTool</span><span class="p">()]</span>
 <span class="p">)</span>
 
 <span class="c1"># Use the agent to generate an image</span>
-<span class="n">response</span> <span class="o">=</span> <span class="n">image_agent</span> <span class="o">&lt;&lt;</span> <span class="s2">&quot;Create an image of a futuristic city with flying cars and tall glass buildings&quot;</span>
+<span class="n">response</span> <span class="o">=</span> <span class="n">image_agent</span> <span class="o">&lt;&lt;</span> <span class="s2">"Create an image of a futuristic city with flying cars and tall glass buildings"</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
 
 <span class="c1"># Output will include: [image result](https://image-url.com)</span>

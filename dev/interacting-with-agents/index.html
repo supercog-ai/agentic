@@ -909,6 +909,8 @@
       
         
       
+        
+      
     
     
     
@@ -1215,6 +1217,29 @@
   
   <span class="md-ellipsis">
     MCPTool
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tools/tool-library/parallel-search-tool/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    ParallelSearchTool
     
   </span>
   
@@ -1789,17 +1814,17 @@
 
 <span class="c1"># Create an agent</span>
 <span class="n">agent</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
-    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;My Agent&quot;</span><span class="p">,</span>
-    <span class="n">instructions</span><span class="o">=</span><span class="s2">&quot;You are a helpful assistant.&quot;</span><span class="p">,</span>
-    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;openai/gpt-4o-mini&quot;</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">"My Agent"</span><span class="p">,</span>
+    <span class="n">instructions</span><span class="o">=</span><span class="s2">"You are a helpful assistant."</span><span class="p">,</span>
+    <span class="n">model</span><span class="o">=</span><span class="s2">"openai/gpt-4o-mini"</span>
 <span class="p">)</span>
 
 <span class="c1"># Use the &lt;&lt; operator for a quick response</span>
-<span class="n">response</span> <span class="o">=</span> <span class="n">agent</span> <span class="o">&lt;&lt;</span> <span class="s2">&quot;Hello, how are you?&quot;</span>
+<span class="n">response</span> <span class="o">=</span> <span class="n">agent</span> <span class="o">&lt;&lt;</span> <span class="s2">"Hello, how are you?"</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
 
 <span class="c1"># For more control over the conversation</span>
-<span class="n">request_id</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">start_request</span><span class="p">(</span><span class="s2">&quot;Tell me a joke&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">request_id</span>
+<span class="n">request_id</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">start_request</span><span class="p">(</span><span class="s2">"Tell me a joke"</span><span class="p">)</span><span class="o">.</span><span class="n">request_id</span>
 <span class="k">for</span> <span class="n">event</span> <span class="ow">in</span> <span class="n">agent</span><span class="o">.</span><span class="n">get_events</span><span class="p">(</span><span class="n">request_id</span><span class="p">):</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">event</span><span class="p">)</span>
 </code></pre></div>

@@ -911,6 +911,8 @@
       
         
       
+        
+      
     
     
     
@@ -1217,6 +1219,29 @@
   
   <span class="md-ellipsis">
     MCPTool
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../parallel-search-tool/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    ParallelSearchTool
     
   </span>
   
@@ -1908,7 +1933,7 @@
 <li>Chunking and embedding of content</li>
 </ul>
 <h2 id="initialization">Initialization</h2>
-<div class="codehilite"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="n">default_index</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;knowledge_base&quot;</span><span class="p">,</span> <span class="n">index_paths</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[])</span>
+<div class="codehilite"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="n">default_index</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"knowledge_base"</span><span class="p">,</span> <span class="n">index_paths</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[])</span>
 </code></pre></div>
 
 <p><strong>Parameters:</strong></p>
@@ -1970,34 +1995,34 @@ String containing the full document content.</p>
 
 <span class="c1"># Create an agent with RAG capabilities</span>
 <span class="n">knowledge_agent</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
-    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Knowledge Assistant&quot;</span><span class="p">,</span>
-    <span class="n">instructions</span><span class="o">=</span><span class="s2">&quot;You help users find information in the knowledge base.&quot;</span><span class="p">,</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">"Knowledge Assistant"</span><span class="p">,</span>
+    <span class="n">instructions</span><span class="o">=</span><span class="s2">"You help users find information in the knowledge base."</span><span class="p">,</span>
     <span class="n">tools</span><span class="o">=</span><span class="p">[</span><span class="n">rag_tool</span><span class="p">]</span>
 <span class="p">)</span>
 
 <span class="c1"># Index a file</span>
-<span class="n">response</span> <span class="o">=</span> <span class="n">knowledge_agent</span> <span class="o">&lt;&lt;</span> <span class="s2">&quot;Save this document to the knowledge base: https://www.iana.org/reports/2014/transition-plan-201404.pdf&quot;</span>
+<span class="n">response</span> <span class="o">=</span> <span class="n">knowledge_agent</span> <span class="o">&lt;&lt;</span> <span class="s2">"Save this document to the knowledge base: https://www.iana.org/reports/2014/transition-plan-201404.pdf"</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
 
 <span class="c1"># Search for information</span>
-<span class="n">response</span> <span class="o">=</span> <span class="n">knowledge_agent</span> <span class="o">&lt;&lt;</span> <span class="s2">&quot;What does the document say about the transistion of iana?&quot;</span>
+<span class="n">response</span> <span class="o">=</span> <span class="n">knowledge_agent</span> <span class="o">&lt;&lt;</span> <span class="s2">"What does the document say about the transistion of iana?"</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
 
 <span class="c1"># Create a RAG tool with pre-indexed files</span>
 <span class="n">pre_indexed_rag</span> <span class="o">=</span> <span class="n">RAGTool</span><span class="p">(</span>
-    <span class="n">default_index</span><span class="o">=</span><span class="s2">&quot;documentation&quot;</span><span class="p">,</span>
-    <span class="n">index_paths</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;./docs/*.md&quot;</span><span class="p">]</span>
+    <span class="n">default_index</span><span class="o">=</span><span class="s2">"documentation"</span><span class="p">,</span>
+    <span class="n">index_paths</span><span class="o">=</span><span class="p">[</span><span class="s2">"./docs/*.md"</span><span class="p">]</span>
 <span class="p">)</span>
 
 <span class="c1"># Create an agent with pre-indexed documentation</span>
 <span class="n">docs_agent</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
-    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Documentation Helper&quot;</span><span class="p">,</span>
-    <span class="n">instructions</span><span class="o">=</span><span class="s2">&quot;You help users find information in the documentation.&quot;</span><span class="p">,</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">"Documentation Helper"</span><span class="p">,</span>
+    <span class="n">instructions</span><span class="o">=</span><span class="s2">"You help users find information in the documentation."</span><span class="p">,</span>
     <span class="n">tools</span><span class="o">=</span><span class="p">[</span><span class="n">pre_indexed_rag</span><span class="p">]</span>
 <span class="p">)</span>
 
 <span class="c1"># Use the agent with pre-indexed content</span>
-<span class="n">response</span> <span class="o">=</span> <span class="n">docs_agent</span> <span class="o">&lt;&lt;</span> <span class="s2">&quot;How do I install this software?&quot;</span>
+<span class="n">response</span> <span class="o">=</span> <span class="n">docs_agent</span> <span class="o">&lt;&lt;</span> <span class="s2">"How do I install this software?"</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
 </code></pre></div>
 
@@ -2016,7 +2041,7 @@ String containing the full document content.</p>
 agentic<span class="w"> </span>index_file<span class="w"> </span>my_index<span class="w"> </span>path/to/document.pdf
 
 <span class="c1"># Search the index</span>
-agentic<span class="w"> </span>search<span class="w"> </span>my_index<span class="w"> </span><span class="s2">&quot;my search query&quot;</span>
+agentic<span class="w"> </span>search<span class="w"> </span>my_index<span class="w"> </span><span class="s2">"my search query"</span>
 
 <span class="c1"># List documents in an index</span>
 agentic<span class="w"> </span>list-documents<span class="w"> </span>my_index

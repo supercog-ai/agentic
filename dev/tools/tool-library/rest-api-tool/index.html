@@ -911,6 +911,8 @@
       
         
       
+        
+      
     
     
     
@@ -1217,6 +1219,29 @@
   
   <span class="md-ellipsis">
     MCPTool
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../parallel-search-tool/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    ParallelSearchTool
     
   </span>
   
@@ -1965,7 +1990,7 @@
 </ul>
 <h2 id="methods">Methods</h2>
 <h3 id="prepare_auth_config">prepare_auth_config</h3>
-<div class="codehilite"><pre><span></span><code><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">prepare_auth_config</span><span class="p">(</span><span class="n">auth_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">username</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">password</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">token</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">token_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;Bearer&quot;</span><span class="p">,</span> <span class="n">thread_context</span><span class="p">:</span> <span class="n">ThreadContext</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AsyncGenerator</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
+<div class="codehilite"><pre><span></span><code><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">prepare_auth_config</span><span class="p">(</span><span class="n">auth_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">username</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">password</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">token</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">token_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"Bearer"</span><span class="p">,</span> <span class="n">thread_context</span><span class="p">:</span> <span class="n">ThreadContext</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AsyncGenerator</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
 </code></pre></div>
 
 <p>Constructs an auth_config object to use with later requests.</p>
@@ -1994,7 +2019,7 @@ The variable name of the auth config for use in request calls.</p>
 <p><strong>Returns:</strong>
 "OK" on success.</p>
 <h3 id="get_resource">get_resource</h3>
-<div class="codehilite"><pre><span></span><code><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_resource</span><span class="p">(</span><span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="p">{},</span> <span class="n">auth_config_var</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">thread_context</span><span class="p">:</span> <span class="n">ThreadContext</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span>
+<div class="codehilite"><pre><span></span><code><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_resource</span><span class="p">(</span><span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="p">{},</span> <span class="n">auth_config_var</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span> <span class="n">thread_context</span><span class="p">:</span> <span class="n">ThreadContext</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span>
 </code></pre></div>
 
 <p>Invoke the GET REST endpoint on the indicated URL.</p>
@@ -2008,7 +2033,7 @@ The variable name of the auth config for use in request calls.</p>
 <p><strong>Returns:</strong>
 The parsed response based on content type.</p>
 <h3 id="post_resource">post_resource</h3>
-<div class="codehilite"><pre><span></span><code><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">post_resource</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">content_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;application/json&quot;</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">auth_config_var</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+<div class="codehilite"><pre><span></span><code><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">post_resource</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">content_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"application/json"</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"</span><span class="si">{}</span><span class="s2">"</span><span class="p">,</span> <span class="n">auth_config_var</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">""</span><span class="p">)</span>
 </code></pre></div>
 
 <p>Invoke the POST REST endpoint.</p>
@@ -2022,7 +2047,7 @@ The parsed response based on content type.</p>
 <p><strong>Returns:</strong>
 The parsed response based on content type.</p>
 <h3 id="put_resource">put_resource</h3>
-<div class="codehilite"><pre><span></span><code><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">put_resource</span><span class="p">(</span><span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">auth_config_var</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+<div class="codehilite"><pre><span></span><code><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">put_resource</span><span class="p">(</span><span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"</span><span class="si">{}</span><span class="s2">"</span><span class="p">,</span> <span class="n">auth_config_var</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">""</span><span class="p">)</span>
 </code></pre></div>
 
 <p>Invoke the PUT REST endpoint.</p>
@@ -2035,7 +2060,7 @@ The parsed response based on content type.</p>
 <p><strong>Returns:</strong>
 The parsed response based on content type.</p>
 <h3 id="patch_resource">patch_resource</h3>
-<div class="codehilite"><pre><span></span><code><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">patch_resource</span><span class="p">(</span><span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">auth_config_var</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+<div class="codehilite"><pre><span></span><code><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">patch_resource</span><span class="p">(</span><span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"</span><span class="si">{}</span><span class="s2">"</span><span class="p">,</span> <span class="n">auth_config_var</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">""</span><span class="p">)</span>
 </code></pre></div>
 
 <p>Invoke the PATCH REST endpoint.</p>
@@ -2048,7 +2073,7 @@ The parsed response based on content type.</p>
 <p><strong>Returns:</strong>
 The parsed response based on content type.</p>
 <h3 id="delete_resource">delete_resource</h3>
-<div class="codehilite"><pre><span></span><code><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">delete_resource</span><span class="p">(</span><span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">auth_config_var</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+<div class="codehilite"><pre><span></span><code><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">delete_resource</span><span class="p">(</span><span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">auth_config_var</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">""</span><span class="p">)</span>
 </code></pre></div>
 
 <p>Invoke the DELETE REST endpoint.</p>
@@ -2076,34 +2101,34 @@ A string with debug information.</p>
 
 <span class="c1"># Create an agent with REST API capabilities</span>
 <span class="n">api_agent</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
-    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;API Client&quot;</span><span class="p">,</span>
-    <span class="n">instructions</span><span class="o">=</span><span class="s2">&quot;You help users interact with REST APIs.&quot;</span><span class="p">,</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">"API Client"</span><span class="p">,</span>
+    <span class="n">instructions</span><span class="o">=</span><span class="s2">"You help users interact with REST APIs."</span><span class="p">,</span>
     <span class="n">tools</span><span class="o">=</span><span class="p">[</span><span class="n">RestApiTool</span><span class="p">()]</span>
 <span class="p">)</span>
 
 <span class="c1"># Use the agent to make API calls</span>
-<span class="n">response</span> <span class="o">=</span> <span class="n">api_agent</span> <span class="o">&lt;&lt;</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="n">response</span> <span class="o">=</span> <span class="n">api_agent</span> <span class="o">&lt;&lt;</span> <span class="s2">"""</span>
 <span class="s2">First, set up authentication for the GitHub API:</span>
 <span class="s2">1. Create a bearer token auth config</span>
 <span class="s2">2. Then, get my user information from https://api.github.com/user</span>
-<span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">"""</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
 
 <span class="c1"># Use the agent to make a POST request with data</span>
-<span class="n">response</span> <span class="o">=</span> <span class="n">api_agent</span> <span class="o">&lt;&lt;</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="n">response</span> <span class="o">=</span> <span class="n">api_agent</span> <span class="o">&lt;&lt;</span> <span class="s2">"""</span>
 <span class="s2">Create a new gist on GitHub:</span>
 <span class="s2">1. Prepare bearer token auth</span>
 <span class="s2">2. POST to https://api.github.com/gists with this data:</span>
 <span class="s2">{</span>
-<span class="s2">  &quot;description&quot;: &quot;Example Gist&quot;,</span>
-<span class="s2">  &quot;public&quot;: true,</span>
-<span class="s2">  &quot;files&quot;: {</span>
-<span class="s2">    &quot;example.txt&quot;: {</span>
-<span class="s2">      &quot;content&quot;: &quot;Hello World&quot;</span>
+<span class="s2">  "description": "Example Gist",</span>
+<span class="s2">  "public": true,</span>
+<span class="s2">  "files": {</span>
+<span class="s2">    "example.txt": {</span>
+<span class="s2">      "content": "Hello World"</span>
 <span class="s2">    }</span>
 <span class="s2">  }</span>
 <span class="s2">}</span>
-<span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">"""</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
 </code></pre></div>
 

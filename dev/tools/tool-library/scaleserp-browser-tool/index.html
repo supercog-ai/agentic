@@ -911,6 +911,8 @@
       
         
       
+        
+      
     
     
     
@@ -1217,6 +1219,29 @@
   
   <span class="md-ellipsis">
     MCPTool
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../parallel-search-tool/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    ParallelSearchTool
     
   </span>
   
@@ -1961,25 +1986,25 @@ List of dictionaries containing downloaded page data.</p>
 <span class="kn">from</span><span class="w"> </span><span class="nn">agentic.tools</span><span class="w"> </span><span class="kn">import</span> <span class="n">ScaleSerpBrowserTool</span>
 
 <span class="c1"># Set up the API key</span>
-<span class="c1"># os.environ[&quot;SCALESERP_API_KEY&quot;] = &quot;your-scaleserp-api-key&quot;</span>
+<span class="c1"># os.environ["SCALESERP_API_KEY"] = "your-scaleserp-api-key"</span>
 
 <span class="c1"># Create an agent with web browsing capabilities</span>
 <span class="n">browser_agent</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
-    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Web Browser&quot;</span><span class="p">,</span>
-    <span class="n">instructions</span><span class="o">=</span><span class="s2">&quot;You help users search and browse the web for information.&quot;</span><span class="p">,</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">"Web Browser"</span><span class="p">,</span>
+    <span class="n">instructions</span><span class="o">=</span><span class="s2">"You help users search and browse the web for information."</span><span class="p">,</span>
     <span class="n">tools</span><span class="o">=</span><span class="p">[</span><span class="n">ScaleSerpBrowserTool</span><span class="p">()]</span>
 <span class="p">)</span>
 
 <span class="c1"># Use the agent to search the web</span>
-<span class="n">response</span> <span class="o">=</span> <span class="n">browser_agent</span> <span class="o">&lt;&lt;</span> <span class="s2">&quot;Find information about quantum computing breakthroughs in 2024&quot;</span>
+<span class="n">response</span> <span class="o">=</span> <span class="n">browser_agent</span> <span class="o">&lt;&lt;</span> <span class="s2">"Find information about quantum computing breakthroughs in 2024"</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
 
 <span class="c1"># Use the agent to browse specific websites</span>
-<span class="n">response</span> <span class="o">=</span> <span class="n">browser_agent</span> <span class="o">&lt;&lt;</span> <span class="s2">&quot;Visit github.com/supercog-ai/agentic and tell me what it is&quot;</span>
+<span class="n">response</span> <span class="o">=</span> <span class="n">browser_agent</span> <span class="o">&lt;&lt;</span> <span class="s2">"Visit github.com/supercog-ai/agentic and tell me what it is"</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
 
 <span class="c1"># Use the agent to download multiple pages</span>
-<span class="n">response</span> <span class="o">=</span> <span class="n">browser_agent</span> <span class="o">&lt;&lt;</span> <span class="s2">&quot;Download and compare the content from these sites: example.com, example.org, example.net&quot;</span>
+<span class="n">response</span> <span class="o">=</span> <span class="n">browser_agent</span> <span class="o">&lt;&lt;</span> <span class="s2">"Download and compare the content from these sites: example.com, example.org, example.net"</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
 </code></pre></div>
 

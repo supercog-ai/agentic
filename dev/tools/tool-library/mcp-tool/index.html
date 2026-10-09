@@ -14,7 +14,7 @@
         <link rel="prev" href="../linkedin-data-tool/">
       
       
-        <link rel="next" href="../meeting-baas-tool/">
+        <link rel="next" href="../parallel-search-tool/">
       
       
       <link rel="icon" href="../../../assets/favicon.ico">
@@ -911,6 +911,8 @@
       
         
       
+        
+      
     
     
     
@@ -1360,6 +1362,29 @@
   
 </nav>
       
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../parallel-search-tool/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    ParallelSearchTool
+    
+  </span>
+  
+
+      </a>
     </li>
   
 
@@ -1931,37 +1956,37 @@ The result from the MCP tool execution.</p>
 
 <span class="c1"># Create an MCP tool for a Python-based MCP server</span>
 <span class="n">python_mcp</span> <span class="o">=</span> <span class="n">MCPTool</span><span class="p">(</span>
-    <span class="n">command</span><span class="o">=</span><span class="s2">&quot;python3&quot;</span><span class="p">,</span>
-    <span class="n">args</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;./mcp_servers/data_analysis_server.py&quot;</span><span class="p">]</span>
+    <span class="n">command</span><span class="o">=</span><span class="s2">"python3"</span><span class="p">,</span>
+    <span class="n">args</span><span class="o">=</span><span class="p">[</span><span class="s2">"./mcp_servers/data_analysis_server.py"</span><span class="p">]</span>
 <span class="p">)</span>
 
 <span class="c1"># Create an agent with MCP capabilities</span>
 <span class="n">mcp_agent</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
-    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;MCP-Enabled Assistant&quot;</span><span class="p">,</span>
-    <span class="n">instructions</span><span class="o">=</span><span class="s2">&quot;You help users by leveraging specialized tools through MCP.&quot;</span><span class="p">,</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">"MCP-Enabled Assistant"</span><span class="p">,</span>
+    <span class="n">instructions</span><span class="o">=</span><span class="s2">"You help users by leveraging specialized tools through MCP."</span><span class="p">,</span>
     <span class="n">tools</span><span class="o">=</span><span class="p">[</span><span class="n">python_mcp</span><span class="p">]</span>
 <span class="p">)</span>
 
 <span class="c1"># Use the agent - it will have access to all tools provided by the MCP server</span>
-<span class="n">response</span> <span class="o">=</span> <span class="n">mcp_agent</span> <span class="o">&lt;&lt;</span> <span class="s2">&quot;Analyze the trends in this dataset&quot;</span>
+<span class="n">response</span> <span class="o">=</span> <span class="n">mcp_agent</span> <span class="o">&lt;&lt;</span> <span class="s2">"Analyze the trends in this dataset"</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
 
 <span class="c1"># Create an MCP tool for a JavaScript-based MCP server</span>
 <span class="n">js_mcp</span> <span class="o">=</span> <span class="n">MCPTool</span><span class="p">(</span>
-    <span class="n">command</span><span class="o">=</span><span class="s2">&quot;npx&quot;</span><span class="p">,</span>
-    <span class="n">args</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;./mcp-servers/web-scraper&quot;</span><span class="p">],</span>
-    <span class="n">env</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;API_KEY&quot;</span><span class="p">:</span> <span class="s2">&quot;your-api-key&quot;</span><span class="p">}</span>
+    <span class="n">command</span><span class="o">=</span><span class="s2">"npx"</span><span class="p">,</span>
+    <span class="n">args</span><span class="o">=</span><span class="p">[</span><span class="s2">"./mcp-servers/web-scraper"</span><span class="p">],</span>
+    <span class="n">env</span><span class="o">=</span><span class="p">{</span><span class="s2">"API_KEY"</span><span class="p">:</span> <span class="s2">"your-api-key"</span><span class="p">}</span>
 <span class="p">)</span>
 
 <span class="c1"># Create an agent with the JavaScript MCP capabilities</span>
 <span class="n">web_agent</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
-    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Web Scraping Assistant&quot;</span><span class="p">,</span>
-    <span class="n">instructions</span><span class="o">=</span><span class="s2">&quot;You help users extract data from websites using specialized tools.&quot;</span><span class="p">,</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">"Web Scraping Assistant"</span><span class="p">,</span>
+    <span class="n">instructions</span><span class="o">=</span><span class="s2">"You help users extract data from websites using specialized tools."</span><span class="p">,</span>
     <span class="n">tools</span><span class="o">=</span><span class="p">[</span><span class="n">js_mcp</span><span class="p">]</span>
 <span class="p">)</span>
 
 <span class="c1"># Use the agent with JavaScript MCP tools</span>
-<span class="n">response</span> <span class="o">=</span> <span class="n">web_agent</span> <span class="o">&lt;&lt;</span> <span class="s2">&quot;Extract pricing data from this e-commerce site&quot;</span>
+<span class="n">response</span> <span class="o">=</span> <span class="n">web_agent</span> <span class="o">&lt;&lt;</span> <span class="s2">"Extract pricing data from this e-commerce site"</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
 </code></pre></div>
 
@@ -1975,9 +2000,9 @@ The result from the MCP tool execution.</p>
 <p>Example Python MCP server:</p>
 <div class="codehilite"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">mcp</span><span class="w"> </span><span class="kn">import</span> <span class="n">StdioServer</span><span class="p">,</span> <span class="n">Tool</span><span class="p">,</span> <span class="n">schema</span>
 
-<span class="nd">@schema</span><span class="o">.</span><span class="n">tool</span><span class="p">(</span><span class="s2">&quot;calculator&quot;</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Performs calculations&quot;</span><span class="p">)</span>
+<span class="nd">@schema</span><span class="o">.</span><span class="n">tool</span><span class="p">(</span><span class="s2">"calculator"</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Performs calculations"</span><span class="p">)</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">calculator</span><span class="p">(</span><span class="n">expression</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Calculate the result of a mathematical expression&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Calculate the result of a mathematical expression"""</span>
     <span class="k">return</span> <span class="nb">eval</span><span class="p">(</span><span class="n">expression</span><span class="p">)</span>
 
 <span class="c1"># Create and run MCP server</span>

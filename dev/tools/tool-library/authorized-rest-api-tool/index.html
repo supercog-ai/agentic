@@ -911,6 +911,8 @@
       
         
       
+        
+      
     
     
     
@@ -1382,6 +1384,29 @@
   
   <span class="md-ellipsis">
     MCPTool
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../parallel-search-tool/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    ParallelSearchTool
     
   </span>
   
@@ -1943,7 +1968,7 @@
 <li>Automatic secret retrieval from Agentic's secret store</li>
 </ul>
 <h2 id="initialization">Initialization</h2>
-<div class="codehilite"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="n">token_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">token_var</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">token_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;Bearer&quot;</span><span class="p">)</span>
+<div class="codehilite"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="n">token_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">token_var</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">token_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"Bearer"</span><span class="p">)</span>
 </code></pre></div>
 
 <p><strong>Parameters:</strong></p>
@@ -1995,7 +2020,7 @@
 <p><strong>Returns:</strong>
 The parsed response based on content type.</p>
 <h3 id="post_resource">post_resource</h3>
-<div class="codehilite"><pre><span></span><code><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">post_resource</span><span class="p">(</span><span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">content_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;application/json&quot;</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">thread_context</span><span class="p">:</span> <span class="n">ThreadContext</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span>
+<div class="codehilite"><pre><span></span><code><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">post_resource</span><span class="p">(</span><span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">content_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"application/json"</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"</span><span class="si">{}</span><span class="s2">"</span><span class="p">,</span> <span class="n">thread_context</span><span class="p">:</span> <span class="n">ThreadContext</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span>
 </code></pre></div>
 
 <p>Performs an HTTP POST request with authentication.</p>
@@ -2009,7 +2034,7 @@ The parsed response based on content type.</p>
 <p><strong>Returns:</strong>
 The parsed response based on content type.</p>
 <h3 id="put_resource">put_resource</h3>
-<div class="codehilite"><pre><span></span><code><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">put_resource</span><span class="p">(</span><span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">thread_context</span><span class="p">:</span> <span class="n">ThreadContext</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span>
+<div class="codehilite"><pre><span></span><code><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">put_resource</span><span class="p">(</span><span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"</span><span class="si">{}</span><span class="s2">"</span><span class="p">,</span> <span class="n">thread_context</span><span class="p">:</span> <span class="n">ThreadContext</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span>
 </code></pre></div>
 
 <p>Performs an HTTP PUT request with authentication.</p>
@@ -2022,7 +2047,7 @@ The parsed response based on content type.</p>
 <p><strong>Returns:</strong>
 The parsed response based on content type.</p>
 <h3 id="patch_resource">patch_resource</h3>
-<div class="codehilite"><pre><span></span><code><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">patch_resource</span><span class="p">(</span><span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">thread_context</span><span class="p">:</span> <span class="n">ThreadContext</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span>
+<div class="codehilite"><pre><span></span><code><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">patch_resource</span><span class="p">(</span><span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"</span><span class="si">{}</span><span class="s2">"</span><span class="p">,</span> <span class="n">thread_context</span><span class="p">:</span> <span class="n">ThreadContext</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span>
 </code></pre></div>
 
 <p>Performs an HTTP PATCH request with authentication.</p>
@@ -2054,31 +2079,31 @@ The parsed response based on content type.</p>
 <span class="c1"># agentic secrets set GITHUB_TOKEN=your_token_here</span>
 
 <span class="c1"># Create an agent with authenticated API capability</span>
-<span class="n">github_api</span> <span class="o">=</span> <span class="n">AuthorizedRestApiTool</span><span class="p">(</span><span class="s2">&quot;bearer&quot;</span><span class="p">,</span> <span class="s2">&quot;GITHUB_TOKEN&quot;</span><span class="p">)</span>
+<span class="n">github_api</span> <span class="o">=</span> <span class="n">AuthorizedRestApiTool</span><span class="p">(</span><span class="s2">"bearer"</span><span class="p">,</span> <span class="s2">"GITHUB_TOKEN"</span><span class="p">)</span>
 <span class="n">api_agent</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
-    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;GitHub API Client&quot;</span><span class="p">,</span>
-    <span class="n">instructions</span><span class="o">=</span><span class="s2">&quot;You can make authenticated API calls to GitHub.&quot;</span><span class="p">,</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">"GitHub API Client"</span><span class="p">,</span>
+    <span class="n">instructions</span><span class="o">=</span><span class="s2">"You can make authenticated API calls to GitHub."</span><span class="p">,</span>
     <span class="n">tools</span><span class="o">=</span><span class="p">[</span><span class="n">github_api</span><span class="p">]</span>
 <span class="p">)</span>
 
 <span class="c1"># Use the agent to get user information</span>
-<span class="n">response</span> <span class="o">=</span> <span class="n">api_agent</span> <span class="o">&lt;&lt;</span> <span class="s2">&quot;Get my GitHub profile information from https://api.github.com/user&quot;</span>
+<span class="n">response</span> <span class="o">=</span> <span class="n">api_agent</span> <span class="o">&lt;&lt;</span> <span class="s2">"Get my GitHub profile information from https://api.github.com/user"</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
 
 <span class="c1"># Use the agent to list repositories</span>
-<span class="n">response</span> <span class="o">=</span> <span class="n">api_agent</span> <span class="o">&lt;&lt;</span> <span class="s2">&quot;List my repositories from https://api.github.com/user/repos&quot;</span>
+<span class="n">response</span> <span class="o">=</span> <span class="n">api_agent</span> <span class="o">&lt;&lt;</span> <span class="s2">"List my repositories from https://api.github.com/user/repos"</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
 
 <span class="c1"># Using an API key in a parameter</span>
-<span class="n">weather_api</span> <span class="o">=</span> <span class="n">AuthorizedRestApiTool</span><span class="p">(</span><span class="s2">&quot;parameter&quot;</span><span class="p">,</span> <span class="s2">&quot;WEATHER_API_KEY&quot;</span><span class="p">,</span> <span class="s2">&quot;apikey&quot;</span><span class="p">)</span>
+<span class="n">weather_api</span> <span class="o">=</span> <span class="n">AuthorizedRestApiTool</span><span class="p">(</span><span class="s2">"parameter"</span><span class="p">,</span> <span class="s2">"WEATHER_API_KEY"</span><span class="p">,</span> <span class="s2">"apikey"</span><span class="p">)</span>
 <span class="n">weather_agent</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
-    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Weather API Client&quot;</span><span class="p">,</span>
-    <span class="n">instructions</span><span class="o">=</span><span class="s2">&quot;You can get weather data using the Weather API.&quot;</span><span class="p">,</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">"Weather API Client"</span><span class="p">,</span>
+    <span class="n">instructions</span><span class="o">=</span><span class="s2">"You can get weather data using the Weather API."</span><span class="p">,</span>
     <span class="n">tools</span><span class="o">=</span><span class="p">[</span><span class="n">weather_api</span><span class="p">]</span>
 <span class="p">)</span>
 
 <span class="c1"># Use the agent to get weather data</span>
-<span class="n">response</span> <span class="o">=</span> <span class="n">weather_agent</span> <span class="o">&lt;&lt;</span> <span class="s2">&quot;Get the current weather for London from https://api.weatherapi.com/v1/current.json&quot;</span>
+<span class="n">response</span> <span class="o">=</span> <span class="n">weather_agent</span> <span class="o">&lt;&lt;</span> <span class="s2">"Get the current weather for London from https://api.weatherapi.com/v1/current.json"</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
 </code></pre></div>
 

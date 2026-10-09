@@ -909,6 +909,8 @@
       
         
       
+        
+      
     
     
     
@@ -1215,6 +1217,29 @@
   
   <span class="md-ellipsis">
     MCPTool
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="tool-library/parallel-search-tool/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    ParallelSearchTool
     
   </span>
   
@@ -1729,7 +1754,7 @@ we are testing presently.</p>
 </ul>
 <p>Here are a few examples:</p>
 <div class="codehilite"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">simple_function</span><span class="p">(</span><span class="n">arg1</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">arg2</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot; Multiplies two numbers by a mystery factor &quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">""" Multiplies two numbers by a mystery factor """</span>
 
     <span class="k">return</span> <span class="n">arg1</span> <span class="o">*</span> <span class="n">arg2</span> <span class="o">*</span> <span class="mi">23</span>
 
@@ -1741,14 +1766,14 @@ we are testing presently.</p>
         <span class="p">]</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">read_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot; Returns the file at the given path &quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">""" Returns the file at the given path """</span>
         <span class="k">return</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">write_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">content</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot; Writes the provided content to the indicated path &quot;&quot;&quot;</span>
-        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">""" Writes the provided content to the indicated path """</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s2">"w"</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
             <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">content</span><span class="p">)</span>
-        <span class="k">return</span> <span class="s2">&quot;The file was written&quot;</span>
+        <span class="k">return</span> <span class="s2">"The file was written"</span>
 
 <span class="n">agent</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
     <span class="o">...</span>
@@ -1779,7 +1804,7 @@ during the run. Tool functions just need to define a parameter called <code>thre
 the object when they are invoked:</p>
 <div class="codehilite"><pre><span></span><code>    def hello_func(self, thread_context: ThreadContext, message):
         print(message)
-        print(&quot;I am running in agent: &quot;, thread_context.agent.name)
+        print("I am running in agent: ", thread_context.agent.name)
 </code></pre></div>
 
 <p>ThreadContext also offers various utility methods for getting access to system services.</p>
@@ -1792,7 +1817,7 @@ which most LLMs understand quite well.</p>
 <h2 id="configuration-and-secrets">Configuration and Secrets</h2>
 <p>It is very common for tools to need some configuration or credentials in order to operate.
 Agentic tries to provide some framework support to cover the most common cases:</p>
-<div class="codehilite"><pre><span></span><code><span class="o">-</span><span class="w"> </span><span class="k">For</span><span class="w"> </span><span class="n">config</span><span class="p">,</span><span class="w"> </span><span class="n">take</span><span class="w"> </span><span class="n">parameters</span><span class="w"> </span><span class="k">to</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n n-Quoted">`__init__`</span><span class="w"> </span><span class="k">function</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">your</span><span class="w"> </span><span class="n">tool</span><span class="w"> </span><span class="n">class</span>
+<div class="codehilite"><pre><span></span><code><span class="o">-</span><span class="w"> </span><span class="k">For</span><span class="w"> </span><span class="n">config</span><span class="p">,</span><span class="w"> </span><span class="n">take</span><span class="w"> </span><span class="k">parameters</span><span class="w"> </span><span class="k">to</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n n-Quoted">`__init__`</span><span class="w"> </span><span class="k">function</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">your</span><span class="w"> </span><span class="n">tool</span><span class="w"> </span><span class="n">class</span>
 <span class="o">-</span><span class="w"> </span><span class="n">Configure</span><span class="w"> </span><span class="n">secrets</span><span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">environment</span><span class="p">,</span><span class="w"> </span><span class="n">but</span><span class="w"> </span><span class="k">use</span><span class="w"> </span><span class="n n-Quoted">`thread_context`</span><span class="w"> </span><span class="k">to</span><span class="w"> </span><span class="n">access</span><span class="w"> </span><span class="n">them</span>
 <span class="o">-</span><span class="w"> </span><span class="n">Described</span><span class="w"> </span><span class="n">required</span><span class="w"> </span><span class="n">secrets</span><span class="w"> </span><span class="k">by</span><span class="w"> </span><span class="n">implementing</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n n-Quoted">`required_secrets`</span><span class="w"> </span><span class="n">method</span>
 </code></pre></div>
@@ -1803,14 +1828,14 @@ Agentic tries to provide some framework support to cover the most common cases:<
         <span class="bp">self</span><span class="o">.</span><span class="n">api_key</span> <span class="o">=</span> <span class="n">api_key</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">required_secrets</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
-        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;TAVILY_API_KEY&quot;</span><span class="p">:</span> <span class="s2">&quot;Tavily API key&quot;</span><span class="p">}</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">"TAVILY_API_KEY"</span><span class="p">:</span> <span class="s2">"Tavily API key"</span><span class="p">}</span>
 
     <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">query_for_news</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">thread_context</span><span class="p">:</span> <span class="n">ThreadContext</span><span class="p">,</span> <span class="n">query</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">days_back</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span> <span class="o">|</span> <span class="n">PauseForInputResult</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the latest headlines on the given topic.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Returns the latest headlines on the given topic."""</span>
 
-        <span class="n">api_key</span> <span class="o">=</span> <span class="n">thread_context</span><span class="o">.</span><span class="n">get_secret</span><span class="p">(</span><span class="s2">&quot;TAVILY_API_KEY&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">api_key</span><span class="p">)</span>
+        <span class="n">api_key</span> <span class="o">=</span> <span class="n">thread_context</span><span class="o">.</span><span class="n">get_secret</span><span class="p">(</span><span class="s2">"TAVILY_API_KEY"</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">api_key</span><span class="p">)</span>
         <span class="o">...</span>
 </code></pre></div>
 
@@ -1834,12 +1859,12 @@ to pause to wait for that input. You can achieve this with the <code>PauseForInp
 <div class="codehilite"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">agentic.events</span><span class="w"> </span><span class="kn">import</span> <span class="n">PauseForInputResult</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">get_favorite_tv_show</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">thread_context</span><span class="p">):</span>
-        <span class="n">fave_tv</span> <span class="o">=</span> <span class="n">thread_context</span><span class="o">.</span><span class="n">get_setting</span><span class="p">(</span><span class="s2">&quot;tv_show&quot;</span><span class="p">)</span>
+        <span class="n">fave_tv</span> <span class="o">=</span> <span class="n">thread_context</span><span class="o">.</span><span class="n">get_setting</span><span class="p">(</span><span class="s2">"tv_show"</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">fave_tv</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">PauseForInputResult</span><span class="p">({</span><span class="s2">&quot;tv_show&quot;</span><span class="p">:</span> <span class="s2">&quot;Please indicate your favorite TV Show&quot;</span><span class="p">})</span>
+            <span class="k">return</span> <span class="n">PauseForInputResult</span><span class="p">({</span><span class="s2">"tv_show"</span><span class="p">:</span> <span class="s2">"Please indicate your favorite TV Show"</span><span class="p">})</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">thread_context</span><span class="o">.</span><span class="n">set_setting</span><span class="p">(</span><span class="s2">&quot;tv_show&quot;</span><span class="p">,</span> <span class="n">fave_tv</span><span class="p">)</span> <span class="c1"># remember persistently</span>
-        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;Ok, getting your favorite espiodes from </span><span class="si">{</span><span class="n">fave_tv</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="n">thread_context</span><span class="o">.</span><span class="n">set_setting</span><span class="p">(</span><span class="s2">"tv_show"</span><span class="p">,</span> <span class="n">fave_tv</span><span class="p">)</span> <span class="c1"># remember persistently</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">"Ok, getting your favorite espiodes from </span><span class="si">{</span><span class="n">fave_tv</span><span class="si">}</span><span class="s2">"</span>
 </code></pre></div>
 
 <p>The first time your function is called it determines that the required
@@ -1857,28 +1882,28 @@ emitted by your agent, but they won't be revealed to the LLM. Only the actual re
 from your function is returned to the LLM.</p>
 <p>A classic use case is generating logging events from a function:</p>
 <div class="codehilite"><pre><span></span><code><span class="w">    </span><span class="n">def</span><span class="w"> </span><span class="n">long_running_function</span><span class="p">(</span><span class="kr">self</span><span class="p">,</span><span class="w"> </span><span class="n">thread_context</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">str</span><span class="o">:</span>
-<span class="w">        </span><span class="s">&quot;&quot;&quot; Runs a long operation and returns the result. &quot;&quot;&quot;</span>
+<span class="w">        </span><span class="s">""" Runs a long operation and returns the result. """</span>
 <span class="w">        </span><span class="n">for</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="kr">in</span><span class="w"> </span><span class="nf">range</span><span class="p">()</span><span class="o">:</span>
-<span class="w">            </span><span class="n">yield</span><span class="w"> </span><span class="n">ToolResult</span><span class="p">(</span><span class="n">thread_context</span><span class="p">.</span><span class="n">agent_name</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;long_running_function&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">f</span><span class="s">&quot;working on row {x})</span>
+<span class="w">            </span><span class="n">yield</span><span class="w"> </span><span class="n">ToolResult</span><span class="p">(</span><span class="n">thread_context</span><span class="p">.</span><span class="n">agent_name</span><span class="p">,</span><span class="w"> </span><span class="s">"long_running_function"</span><span class="p">,</span><span class="w"> </span><span class="n">f</span><span class="s">"working on row {x})</span>
 <span class="s">            ... do some work</span>
 
-<span class="s">        return &quot;</span><span class="n">The</span><span class="w"> </span><span class="n">work</span><span class="w"> </span><span class="n">is</span><span class="w"> </span><span class="n">done</span><span class="o">!</span><span class="w"> </span><span class="n">Thanks</span><span class="w"> </span><span class="n">for</span><span class="w"> </span><span class="n">waiting</span><span class="p">.</span><span class="s">&quot;</span>
+<span class="s">        return "</span><span class="n">The</span><span class="w"> </span><span class="n">work</span><span class="w"> </span><span class="n">is</span><span class="w"> </span><span class="n">done</span><span class="o">!</span><span class="w"> </span><span class="n">Thanks</span><span class="w"> </span><span class="n">for</span><span class="w"> </span><span class="n">waiting</span><span class="p">.</span><span class="s">"</span>
 </code></pre></div>
 
 <p>Building the event is toilsome, so <code>thread_context</code> has a convenience method:</p>
-<div class="codehilite"><pre><span></span><code>yield thread_context.log(&quot;Something interesting happened: &quot;, param2, param2)
+<div class="codehilite"><pre><span></span><code>yield thread_context.log("Something interesting happened: ", param2, param2)
 </code></pre></div>
 
 <p>This builds and returns the <code>ToolResult</code> event for you.</p>
 <p>Note that this style works for synchronous functions, but not async. In the async
 case you need to yield the return value:</p>
 <div class="codehilite"><pre><span></span><code><span class="w">    </span><span class="n">async</span><span class="w"> </span><span class="n">def</span><span class="w"> </span><span class="n">long_running_function</span><span class="p">(</span><span class="kr">self</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">str</span><span class="o">:</span>
-<span class="w">        </span><span class="s">&quot;&quot;&quot; Runs a long operation and returns the result. &quot;&quot;&quot;</span>
+<span class="w">        </span><span class="s">""" Runs a long operation and returns the result. """</span>
 <span class="w">        </span><span class="n">for</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="kr">in</span><span class="w"> </span><span class="nf">range</span><span class="p">()</span><span class="o">:</span>
-<span class="w">            </span><span class="n">yield</span><span class="w"> </span><span class="n">thread_context</span><span class="p">.</span><span class="nf">log</span><span class="p">(</span><span class="n">f</span><span class="s">&quot;working on row {x})</span>
+<span class="w">            </span><span class="n">yield</span><span class="w"> </span><span class="n">thread_context</span><span class="p">.</span><span class="nf">log</span><span class="p">(</span><span class="n">f</span><span class="s">"working on row {x})</span>
 <span class="s">            ... do some work</span>
 
-<span class="s">        yield &quot;</span><span class="n">The</span><span class="w"> </span><span class="n">work</span><span class="w"> </span><span class="n">is</span><span class="w"> </span><span class="n">done</span><span class="o">!</span><span class="w"> </span><span class="n">Thanks</span><span class="w"> </span><span class="n">for</span><span class="w"> </span><span class="n">waiting</span><span class="p">.</span><span class="s">&quot;</span>
+<span class="s">        yield "</span><span class="n">The</span><span class="w"> </span><span class="n">work</span><span class="w"> </span><span class="n">is</span><span class="w"> </span><span class="n">done</span><span class="o">!</span><span class="w"> </span><span class="n">Thanks</span><span class="w"> </span><span class="n">for</span><span class="w"> </span><span class="n">waiting</span><span class="p">.</span><span class="s">"</span>
 </code></pre></div>
 
 <p>The generator is the right approach for true long-running tools, because otherwise your agent
@@ -1886,12 +1911,12 @@ cannot emit any status info while the function is running. However, for short-ru
 that still want to do logging, it is annoying to have to implement a generator.</p>
 <p>So for convenience, you can log into the <code>thread_context</code> instead:</p>
 <div class="codehilite"><pre><span></span><code><span class="w">    </span><span class="n">def</span><span class="w"> </span><span class="n">my_func_with_logging</span><span class="p">(</span><span class="kr">self</span><span class="p">,</span><span class="w"> </span><span class="n">thread_context</span><span class="o">:</span><span class="w"> </span><span class="n">ThreadContext</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">str</span><span class="o">:</span>
-<span class="w">        </span><span class="s">&quot;&quot;&quot; An interesting functions. &quot;&quot;&quot;</span>
+<span class="w">        </span><span class="s">""" An interesting functions. """</span>
 <span class="w">        </span><span class="n">for</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="kr">in</span><span class="w"> </span><span class="nf">range</span><span class="p">()</span><span class="o">:</span>
-<span class="w">            </span><span class="n">thread_context</span><span class="p">.</span><span class="nf">log</span><span class="p">(</span><span class="n">f</span><span class="s">&quot;working on row {x})</span>
+<span class="w">            </span><span class="n">thread_context</span><span class="p">.</span><span class="nf">log</span><span class="p">(</span><span class="n">f</span><span class="s">"working on row {x})</span>
 <span class="s">            ... do some work</span>
 
-<span class="s">        return &quot;</span><span class="n">The</span><span class="w"> </span><span class="n">work</span><span class="w"> </span><span class="n">is</span><span class="w"> </span><span class="n">done</span><span class="o">!</span><span class="w"> </span><span class="n">Thanks</span><span class="w"> </span><span class="n">for</span><span class="w"> </span><span class="n">waiting</span><span class="p">.</span><span class="s">&quot;</span>
+<span class="s">        return "</span><span class="n">The</span><span class="w"> </span><span class="n">work</span><span class="w"> </span><span class="n">is</span><span class="w"> </span><span class="n">done</span><span class="o">!</span><span class="w"> </span><span class="n">Thanks</span><span class="w"> </span><span class="n">for</span><span class="w"> </span><span class="n">waiting</span><span class="p">.</span><span class="s">"</span>
 </code></pre></div>
 
 <p>Note that we didn't <code>yield</code> the log object. After your function returns, the system will 

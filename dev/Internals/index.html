@@ -903,6 +903,8 @@
       
         
       
+        
+      
     
     
     
@@ -1209,6 +1211,29 @@
   
   <span class="md-ellipsis">
     MCPTool
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tools/tool-library/parallel-search-tool/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    ParallelSearchTool
     
   </span>
   
@@ -1862,7 +1887,7 @@ to retrieve or wait for the actual result.</p>
 <p>Our basic agent execution loop looks like:</p>
 <div class="codehilite"><pre><span></span><code><span class="n">user</span> <span class="nb">input</span> <span class="o">-&gt;</span>
     <span class="n">remote_gen</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">receiveMessage</span><span class="o">.</span><span class="n">remote</span><span class="p">(</span><span class="n">Prompt</span><span class="p">())</span>
-        <span class="p">(</span><span class="n">agent</span> <span class="n">starts</span> <span class="n">the</span> <span class="n">LLM</span> <span class="s2">&quot;turn&quot;</span> <span class="n">loop</span><span class="p">,</span> <span class="n">calling</span> <span class="n">LLM</span> <span class="n">completions</span> <span class="ow">and</span> <span class="n">yielding</span> <span class="n">events</span><span class="p">)</span>
+        <span class="p">(</span><span class="n">agent</span> <span class="n">starts</span> <span class="n">the</span> <span class="n">LLM</span> <span class="s2">"turn"</span> <span class="n">loop</span><span class="p">,</span> <span class="n">calling</span> <span class="n">LLM</span> <span class="n">completions</span> <span class="ow">and</span> <span class="n">yielding</span> <span class="n">events</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">next_ref</span> <span class="ow">in</span> <span class="n">remote_gen</span><span class="p">:</span>
         <span class="n">event</span> <span class="o">=</span> <span class="n">ray</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">next_ref</span><span class="p">)</span>  <span class="c1"># Prompt handling yields events until turn is over</span>
 </code></pre></div>
@@ -1871,7 +1896,7 @@ to retrieve or wait for the actual result.</p>
 Ray remote:</p>
 <div class="codehilite"><pre><span></span><code><span class="n">user</span> <span class="nb">input</span> <span class="o">-&gt;</span>
     <span class="n">remote_gen</span> <span class="o">=</span> 
-        <span class="p">(</span><span class="n">agent</span> <span class="n">starts</span> <span class="n">the</span> <span class="n">LLM</span> <span class="s2">&quot;turn&quot;</span> <span class="n">loop</span><span class="p">,</span> <span class="n">calling</span> <span class="n">LLM</span> <span class="n">completions</span> <span class="ow">and</span> <span class="n">yielding</span> <span class="n">events</span><span class="p">)</span>
+        <span class="p">(</span><span class="n">agent</span> <span class="n">starts</span> <span class="n">the</span> <span class="n">LLM</span> <span class="s2">"turn"</span> <span class="n">loop</span><span class="p">,</span> <span class="n">calling</span> <span class="n">LLM</span> <span class="n">completions</span> <span class="ow">and</span> <span class="n">yielding</span> <span class="n">events</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">next_ref</span> <span class="ow">in</span> <span class="n">agent</span><span class="o">.</span><span class="n">receiveMessage</span><span class="o">.</span><span class="n">remote</span><span class="p">(</span><span class="n">Prompt</span><span class="p">()):</span>
             <span class="c1"># Agent does a function call to a child. </span>
             <span class="n">agent</span> <span class="o">-&gt;</span> <span class="n">starts</span> <span class="n">sub_agent</span>

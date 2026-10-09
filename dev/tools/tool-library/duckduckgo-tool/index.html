@@ -911,6 +911,8 @@
       
         
       
+        
+      
     
     
     
@@ -1352,6 +1354,29 @@
   
   <span class="md-ellipsis">
     MCPTool
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../parallel-search-tool/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    ParallelSearchTool
     
   </span>
   
@@ -1884,7 +1909,7 @@
 <li>SafeSearch filtering options</li>
 </ul>
 <h2 id="initialization">Initialization</h2>
-<div class="codehilite"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="n">region</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;wt-wt&quot;</span><span class="p">,</span> <span class="n">safesearch</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;moderate&quot;</span><span class="p">,</span> <span class="n">time</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;y&quot;</span><span class="p">,</span> <span class="n">max_results</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span> <span class="n">backend</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;auto&quot;</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;text&quot;</span><span class="p">)</span>
+<div class="codehilite"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="n">region</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"wt-wt"</span><span class="p">,</span> <span class="n">safesearch</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"moderate"</span><span class="p">,</span> <span class="n">time</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"y"</span><span class="p">,</span> <span class="n">max_results</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span> <span class="n">backend</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"auto"</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"text"</span><span class="p">)</span>
 </code></pre></div>
 
 <p><strong>Parameters:</strong></p>
@@ -1924,27 +1949,27 @@ A list of dictionaries with search results. The structure varies by source type:
 
 <span class="c1"># Create an agent with search capabilities</span>
 <span class="n">search_agent</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
-    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Web Researcher&quot;</span><span class="p">,</span>
-    <span class="n">instructions</span><span class="o">=</span><span class="s2">&quot;You help users find information on the web.&quot;</span><span class="p">,</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">"Web Researcher"</span><span class="p">,</span>
+    <span class="n">instructions</span><span class="o">=</span><span class="s2">"You help users find information on the web."</span><span class="p">,</span>
     <span class="n">tools</span><span class="o">=</span><span class="p">[</span><span class="n">search_tool</span><span class="p">]</span>
 <span class="p">)</span>
 
 <span class="c1"># Use the agent for a basic text search</span>
-<span class="n">response</span> <span class="o">=</span> <span class="n">search_agent</span> <span class="o">&lt;&lt;</span> <span class="s2">&quot;Find information about renewable energy technologies&quot;</span>
+<span class="n">response</span> <span class="o">=</span> <span class="n">search_agent</span> <span class="o">&lt;&lt;</span> <span class="s2">"Find information about renewable energy technologies"</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
 
 <span class="c1"># Create a tool for news searches</span>
-<span class="n">news_search</span> <span class="o">=</span> <span class="n">DuckDuckGoTool</span><span class="p">(</span><span class="n">source</span><span class="o">=</span><span class="s2">&quot;news&quot;</span><span class="p">,</span> <span class="n">time</span><span class="o">=</span><span class="s2">&quot;d&quot;</span><span class="p">,</span> <span class="n">max_results</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="n">news_search</span> <span class="o">=</span> <span class="n">DuckDuckGoTool</span><span class="p">(</span><span class="n">source</span><span class="o">=</span><span class="s2">"news"</span><span class="p">,</span> <span class="n">time</span><span class="o">=</span><span class="s2">"d"</span><span class="p">,</span> <span class="n">max_results</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
 
 <span class="c1"># Create an agent focused on news</span>
 <span class="n">news_agent</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
-    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;News Researcher&quot;</span><span class="p">,</span>
-    <span class="n">instructions</span><span class="o">=</span><span class="s2">&quot;You find and summarize recent news stories.&quot;</span><span class="p">,</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">"News Researcher"</span><span class="p">,</span>
+    <span class="n">instructions</span><span class="o">=</span><span class="s2">"You find and summarize recent news stories."</span><span class="p">,</span>
     <span class="n">tools</span><span class="o">=</span><span class="p">[</span><span class="n">news_search</span><span class="p">]</span>
 <span class="p">)</span>
 
 <span class="c1"># Use the agent for news search</span>
-<span class="n">response</span> <span class="o">=</span> <span class="n">news_agent</span> <span class="o">&lt;&lt;</span> <span class="s2">&quot;What are the latest developments in AI regulation?&quot;</span>
+<span class="n">response</span> <span class="o">=</span> <span class="n">news_agent</span> <span class="o">&lt;&lt;</span> <span class="s2">"What are the latest developments in AI regulation?"</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
 </code></pre></div>
 

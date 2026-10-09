@@ -903,6 +903,8 @@
       
         
       
+        
+      
     
     
     
@@ -1209,6 +1211,29 @@
   
   <span class="md-ellipsis">
     MCPTool
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../parallel-search-tool/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    ParallelSearchTool
     
   </span>
   
@@ -1766,8 +1791,8 @@ A status message indicating whether the tool was successfully enabled or suggest
 
 <span class="c1"># Create an agent with dynamic tool capabilities</span>
 <span class="n">dynamic_agent</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
-    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Dynamic Assistant&quot;</span><span class="p">,</span>
-    <span class="n">instructions</span><span class="o">=</span><span class="s2">&quot;You are a helpful assistant that can dynamically enable tools as needed.&quot;</span><span class="p">,</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">"Dynamic Assistant"</span><span class="p">,</span>
+    <span class="n">instructions</span><span class="o">=</span><span class="s2">"You are a helpful assistant that can dynamically enable tools as needed."</span><span class="p">,</span>
     <span class="n">tools</span><span class="o">=</span><span class="p">[</span>
         <span class="n">AutomaticTools</span><span class="p">(</span>
             <span class="n">tool_classes</span><span class="o">=</span><span class="p">[</span>
@@ -1780,10 +1805,10 @@ A status message indicating whether the tool was successfully enabled or suggest
 <span class="p">)</span>
 
 <span class="c1"># The agent can now dynamically enable tools based on user needs</span>
-<span class="n">response</span> <span class="o">=</span> <span class="n">dynamic_agent</span> <span class="o">&lt;&lt;</span> <span class="s2">&quot;What&#39;s the weather like in New York?&quot;</span>
+<span class="n">response</span> <span class="o">=</span> <span class="n">dynamic_agent</span> <span class="o">&lt;&lt;</span> <span class="s2">"What's the weather like in New York?"</span>
 <span class="c1"># The agent will automatically enable the WeatherTool and use it</span>
 
-<span class="n">response</span> <span class="o">=</span> <span class="n">dynamic_agent</span> <span class="o">&lt;&lt;</span> <span class="s2">&quot;Show me the latest tech news&quot;</span>
+<span class="n">response</span> <span class="o">=</span> <span class="n">dynamic_agent</span> <span class="o">&lt;&lt;</span> <span class="s2">"Show me the latest tech news"</span>
 <span class="c1"># The agent will automatically enable the GoogleNewsTool and use it</span>
 </code></pre></div>
 

@@ -907,6 +907,8 @@
       
         
       
+        
+      
     
     
     
@@ -1213,6 +1215,29 @@
   
   <span class="md-ellipsis">
     MCPTool
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tools/tool-library/parallel-search-tool/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    ParallelSearchTool
     
   </span>
   
@@ -2098,14 +2123,14 @@
 
 <span class="c1"># Update model, tools, instructions, etc.</span>
 <span class="n">updated_agent</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
-    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Weather Agent 2.0&quot;</span><span class="p">,</span>
-    <span class="n">welcome</span><span class="o">=</span><span class="s2">&quot;I can now give you detailed weather reports and the news!&quot;</span><span class="p">,</span>
-    <span class="n">instructions</span><span class="o">=</span><span class="s2">&quot;You are a helpful assistant specializing in comprehensive weather information and current events.&quot;</span><span class="p">,</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">"Weather Agent 2.0"</span><span class="p">,</span>
+    <span class="n">welcome</span><span class="o">=</span><span class="s2">"I can now give you detailed weather reports and the news!"</span><span class="p">,</span>
+    <span class="n">instructions</span><span class="o">=</span><span class="s2">"You are a helpful assistant specializing in comprehensive weather information and current events."</span><span class="p">,</span>
     <span class="n">tools</span><span class="o">=</span><span class="p">[</span><span class="n">WeatherTool</span><span class="p">(),</span> <span class="n">GoogleNewsTool</span><span class="p">()],</span>
-    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;openai/gpt-4o&quot;</span>  <span class="c1"># Upgraded model</span>
+    <span class="n">model</span><span class="o">=</span><span class="s2">"openai/gpt-4o"</span>  <span class="c1"># Upgraded model</span>
 <span class="p">)</span>
 
-<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">"__main__"</span><span class="p">:</span>
     <span class="n">AgentRunner</span><span class="p">(</span><span class="n">updated_agent</span><span class="p">)</span><span class="o">.</span><span class="n">repl_loop</span><span class="p">()</span>
 </code></pre></div>
 
@@ -2133,11 +2158,11 @@ python<span class="w"> </span>agents/your_updated_agent.py
 
 <p>Edit <code>terraform.tfvars</code> to update relevant settings:</p>
 <div class="codehilite"><pre><span></span><code><span class="c1"># Update agent path if you renamed or moved the agent file</span>
-<span class="na">agent_path</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;agents/your_updated_agent.py&quot;</span>
+<span class="na">agent_path</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"agents/your_updated_agent.py"</span>
 
 <span class="c1"># Update resource allocations if needed for larger models</span>
-<span class="na">task_cpu</span><span class="w">    </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;2048&quot;</span><span class="c1">  # 2 vCPU</span>
-<span class="na">task_memory</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;4096&quot;</span><span class="c1">  # 4 GB</span>
+<span class="na">task_cpu</span><span class="w">    </span><span class="o">=</span><span class="w"> </span><span class="s2">"2048"</span><span class="c1">  # 2 vCPU</span>
+<span class="na">task_memory</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"4096"</span><span class="c1">  # 4 GB</span>
 
 <span class="c1"># Update any other relevant configuration variables</span>
 <span class="na">use_ray</span><span class="w">     </span><span class="o">=</span><span class="w"> </span><span class="no">true</span><span class="c1">    # Enable Ray for parallel processing if needed</span>
@@ -2186,24 +2211,24 @@ aws<span class="w"> </span>ecs<span class="w"> </span>update-service<span class=
 <h2 id="step-6-monitor-the-deployment">Step 6: Monitor the Deployment</h2>
 <p>Monitor the deployment to ensure your updates are being applied successfully:</p>
 <div class="codehilite"><pre><span></span><code><span class="c1"># Check deployment status</span>
-aws<span class="w"> </span>ecs<span class="w"> </span>describe-services<span class="w"> </span>--cluster<span class="w"> </span><span class="nv">$ECS_CLUSTER</span><span class="w"> </span>--services<span class="w"> </span><span class="nv">$ECS_SERVICE</span><span class="w"> </span>--query<span class="w"> </span><span class="s2">&quot;services[0].deployments&quot;</span>
+aws<span class="w"> </span>ecs<span class="w"> </span>describe-services<span class="w"> </span>--cluster<span class="w"> </span><span class="nv">$ECS_CLUSTER</span><span class="w"> </span>--services<span class="w"> </span><span class="nv">$ECS_SERVICE</span><span class="w"> </span>--query<span class="w"> </span><span class="s2">"services[0].deployments"</span>
 </code></pre></div>
 
 <p>You should see a new deployment in progress with the status <code>PRIMARY</code> and the old deployment with the status <code>ACTIVE</code>. Once the new deployment is complete, the old deployment will be removed.</p>
 <p>Check the CloudWatch logs for any issues:</p>
 <div class="codehilite"><pre><span></span><code><span class="c1"># Get the name of the latest log stream</span>
 <span class="nv">LATEST_LOG_STREAM</span><span class="o">=</span><span class="k">$(</span>aws<span class="w"> </span>logs<span class="w"> </span>describe-log-streams<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>--log-group-name<span class="w"> </span><span class="s2">&quot;/ecs/</span><span class="si">${</span><span class="nv">ECS_CLUSTER</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--log-group-name<span class="w"> </span><span class="s2">"/ecs/</span><span class="si">${</span><span class="nv">ECS_CLUSTER</span><span class="si">}</span><span class="s2">"</span><span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>--order-by<span class="w"> </span>LastEventTime<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>--descending<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>--limit<span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>--query<span class="w"> </span><span class="s2">&quot;logStreams[0].logStreamName&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--query<span class="w"> </span><span class="s2">"logStreams[0].logStreamName"</span><span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>--output<span class="w"> </span>text<span class="k">)</span>
 
 <span class="c1"># View the logs</span>
 aws<span class="w"> </span>logs<span class="w"> </span>get-log-events<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>--log-group-name<span class="w"> </span><span class="s2">&quot;/ecs/</span><span class="si">${</span><span class="nv">ECS_CLUSTER</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>--log-stream-name<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$LATEST_LOG_STREAM</span><span class="s2">&quot;</span>
+<span class="w">  </span>--log-group-name<span class="w"> </span><span class="s2">"/ecs/</span><span class="si">${</span><span class="nv">ECS_CLUSTER</span><span class="si">}</span><span class="s2">"</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--log-stream-name<span class="w"> </span><span class="s2">"</span><span class="nv">$LATEST_LOG_STREAM</span><span class="s2">"</span>
 </code></pre></div>
 
 <h2 id="step-7-test-the-updated-deployment">Step 7: Test the Updated Deployment</h2>
@@ -2214,12 +2239,12 @@ aws<span class="w"> </span>logs<span class="w"> </span>get-log-events<span class
 
 <h3 id="for-api-server-deployments">For API Server Deployments</h3>
 <div class="codehilite"><pre><span></span><code><span class="c1"># Test the discovery endpoint</span>
-curl<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$AGENT_ENDPOINT</span><span class="s2">/_discovery&quot;</span>
+curl<span class="w"> </span><span class="s2">"</span><span class="nv">$AGENT_ENDPOINT</span><span class="s2">/_discovery"</span>
 
 <span class="c1"># Test your agent</span>
-curl<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$AGENT_ENDPOINT</span><span class="s2">/your-agent-name/process&quot;</span><span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>-H<span class="w"> </span><span class="s2">&quot;Content-Type: application/json&quot;</span><span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>-d<span class="w"> </span><span class="s1">&#39;{&quot;prompt&quot;: &quot;Test the new features&quot;}&#39;</span>
+curl<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span><span class="s2">"</span><span class="nv">$AGENT_ENDPOINT</span><span class="s2">/your-agent-name/process"</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-H<span class="w"> </span><span class="s2">"Content-Type: application/json"</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-d<span class="w"> </span><span class="s1">'{"prompt": "Test the new features"}'</span>
 </code></pre></div>
 
 <h3 id="for-dashboard-deployments">For Dashboard Deployments</h3>
@@ -2232,7 +2257,7 @@ curl<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </spa
 <h3 id="using-image-versioning">Using Image Versioning</h3>
 <p>Instead of always using the <code>latest</code> tag, consider implementing versioning for your Docker images:</p>
 <div class="codehilite"><pre><span></span><code><span class="c1"># Tag with version number</span>
-<span class="nb">export</span><span class="w"> </span><span class="nv">VERSION</span><span class="o">=</span><span class="s2">&quot;1.2.0&quot;</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">VERSION</span><span class="o">=</span><span class="s2">"1.2.0"</span>
 docker<span class="w"> </span>build<span class="w"> </span>--platform<span class="w"> </span>linux/amd64<span class="w"> </span>--tag<span class="w"> </span><span class="si">${</span><span class="nv">ECR_REPO_URL</span><span class="si">}</span>:<span class="si">${</span><span class="nv">VERSION</span><span class="si">}</span><span class="w"> </span>--file<span class="w"> </span>deployment/Dockerfile.api<span class="w"> </span>.
 docker<span class="w"> </span>push<span class="w"> </span><span class="si">${</span><span class="nv">ECR_REPO_URL</span><span class="si">}</span>:<span class="si">${</span><span class="nv">VERSION</span><span class="si">}</span>
 
@@ -2245,7 +2270,7 @@ docker<span class="w"> </span>push<span class="w"> </span><span class="si">${</s
 <div class="codehilite"><pre><span></span><code><span class="na">container_definitions</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">jsonencode</span><span class="p">([</span>
 <span class="w">  </span><span class="p">{</span>
 <span class="w">    </span><span class="na">name</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="nv">var.project</span>
-<span class="w">    </span><span class="na">image</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;${aws_ecr_repository.app.repository_url}:1.2.0&quot;</span>
+<span class="w">    </span><span class="na">image</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"${aws_ecr_repository.app.repository_url}:1.2.0"</span>
 <span class="c1">    # ...other config</span>
 <span class="w">  </span><span class="p">}</span>
 <span class="p">])</span>

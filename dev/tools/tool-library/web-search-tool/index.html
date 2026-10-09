@@ -903,6 +903,8 @@
       
         
       
+        
+      
     
     
     
@@ -1209,6 +1211,29 @@
   
   <span class="md-ellipsis">
     MCPTool
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../parallel-search-tool/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    ParallelSearchTool
     
   </span>
   
@@ -1766,11 +1791,11 @@
 <div class="codehilite"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">agentic.common</span><span class="w"> </span><span class="kn">import</span> <span class="n">Agent</span>
 
 <span class="n">agent</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
-    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Web Search Agent&quot;</span><span class="p">,</span>
-    <span class="n">instructions</span><span class="o">=</span><span class="s2">&quot;You can search the web for current information.&quot;</span><span class="p">,</span>
-    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;openai/gpt-4o-search-preview&quot;</span><span class="p">,</span>
-    <span class="n">reasoning_tools</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;websearch&quot;</span><span class="p">],</span>  <span class="c1"># Enable web search</span>
-    <span class="n">web_search_context_size</span><span class="o">=</span><span class="s2">&quot;medium&quot;</span><span class="p">,</span>  <span class="c1"># Options: &quot;low&quot;, &quot;medium&quot;, &quot;high&quot;</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">"Web Search Agent"</span><span class="p">,</span>
+    <span class="n">instructions</span><span class="o">=</span><span class="s2">"You can search the web for current information."</span><span class="p">,</span>
+    <span class="n">model</span><span class="o">=</span><span class="s2">"openai/gpt-4o-search-preview"</span><span class="p">,</span>
+    <span class="n">reasoning_tools</span><span class="o">=</span><span class="p">[</span><span class="s2">"websearch"</span><span class="p">],</span>  <span class="c1"># Enable web search</span>
+    <span class="n">web_search_context_size</span><span class="o">=</span><span class="s2">"medium"</span><span class="p">,</span>  <span class="c1"># Options: "low", "medium", "high"</span>
 <span class="p">)</span>
 </code></pre></div>
 
@@ -1778,16 +1803,16 @@
 <div class="codehilite"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">agentic.common</span><span class="w"> </span><span class="kn">import</span> <span class="n">Agent</span><span class="p">,</span> <span class="n">AgentRunner</span>
 
 <span class="n">agent</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
-    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;News Assistant&quot;</span><span class="p">,</span>
-    <span class="n">welcome</span><span class="o">=</span><span class="s2">&quot;I can help you find current news and information from the web.&quot;</span><span class="p">,</span>
-    <span class="n">instructions</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;You are a helpful assistant that can access current information </span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">"News Assistant"</span><span class="p">,</span>
+    <span class="n">welcome</span><span class="o">=</span><span class="s2">"I can help you find current news and information from the web."</span><span class="p">,</span>
+    <span class="n">instructions</span><span class="o">=</span><span class="s2">"""You are a helpful assistant that can access current information </span>
 <span class="s2">    through web search. When users ask about recent events, news, or current data, </span>
-<span class="s2">    use web search to provide accurate, up-to-date information.&quot;&quot;&quot;</span><span class="p">,</span>
-    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;openai/gpt-4o-search-preview&quot;</span><span class="p">,</span>
-    <span class="n">reasoning_tools</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;websearch&quot;</span><span class="p">],</span>
+<span class="s2">    use web search to provide accurate, up-to-date information."""</span><span class="p">,</span>
+    <span class="n">model</span><span class="o">=</span><span class="s2">"openai/gpt-4o-search-preview"</span><span class="p">,</span>
+    <span class="n">reasoning_tools</span><span class="o">=</span><span class="p">[</span><span class="s2">"websearch"</span><span class="p">],</span>
 <span class="p">)</span>
 
-<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">"__main__"</span><span class="p">:</span>
     <span class="n">AgentRunner</span><span class="p">(</span><span class="n">agent</span><span class="p">)</span><span class="o">.</span><span class="n">repl_loop</span><span class="p">()</span>
 </code></pre></div>
 
@@ -1809,26 +1834,26 @@
 <p>You can customize the web search context size when creating an agent:</p>
 <div class="codehilite"><pre><span></span><code><span class="c1"># Low context - faster but less comprehensive</span>
 <span class="n">agent</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
-    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Quick Search Agent&quot;</span><span class="p">,</span>
-    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;openai/gpt-4o-search-preview&quot;</span><span class="p">,</span>
-    <span class="n">reasoning_tools</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;websearch&quot;</span><span class="p">],</span>
-    <span class="n">web_search_context_size</span><span class="o">=</span><span class="s2">&quot;low&quot;</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">"Quick Search Agent"</span><span class="p">,</span>
+    <span class="n">model</span><span class="o">=</span><span class="s2">"openai/gpt-4o-search-preview"</span><span class="p">,</span>
+    <span class="n">reasoning_tools</span><span class="o">=</span><span class="p">[</span><span class="s2">"websearch"</span><span class="p">],</span>
+    <span class="n">web_search_context_size</span><span class="o">=</span><span class="s2">"low"</span>
 <span class="p">)</span>
 
 <span class="c1"># Medium context - balanced (default)</span>
 <span class="n">agent</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
-    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Balanced Search Agent&quot;</span><span class="p">,</span> 
-    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;openai/gpt-4o-search-preview&quot;</span><span class="p">,</span>
-    <span class="n">reasoning_tools</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;websearch&quot;</span><span class="p">],</span>
-    <span class="n">web_search_context_size</span><span class="o">=</span><span class="s2">&quot;medium&quot;</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">"Balanced Search Agent"</span><span class="p">,</span> 
+    <span class="n">model</span><span class="o">=</span><span class="s2">"openai/gpt-4o-search-preview"</span><span class="p">,</span>
+    <span class="n">reasoning_tools</span><span class="o">=</span><span class="p">[</span><span class="s2">"websearch"</span><span class="p">],</span>
+    <span class="n">web_search_context_size</span><span class="o">=</span><span class="s2">"medium"</span>
 <span class="p">)</span>
 
 <span class="c1"># High context - comprehensive but slower</span>
 <span class="n">agent</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
-    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Thorough Search Agent&quot;</span><span class="p">,</span>
-    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;openai/gpt-4o-search-preview&quot;</span><span class="p">,</span> 
-    <span class="n">reasoning_tools</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;websearch&quot;</span><span class="p">],</span>
-    <span class="n">web_search_context_size</span><span class="o">=</span><span class="s2">&quot;high&quot;</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">"Thorough Search Agent"</span><span class="p">,</span>
+    <span class="n">model</span><span class="o">=</span><span class="s2">"openai/gpt-4o-search-preview"</span><span class="p">,</span> 
+    <span class="n">reasoning_tools</span><span class="o">=</span><span class="p">[</span><span class="s2">"websearch"</span><span class="p">],</span>
+    <span class="n">web_search_context_size</span><span class="o">=</span><span class="s2">"high"</span>
 <span class="p">)</span>
 </code></pre></div>
 
@@ -1845,10 +1870,10 @@
 <div class="codehilite"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">agentic.actor_agents</span><span class="w"> </span><span class="kn">import</span> <span class="n">DebugLevel</span>
 
 <span class="n">agent</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
-    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Debug Web Agent&quot;</span><span class="p">,</span>
-    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;openai/gpt-4o-search-preview&quot;</span><span class="p">,</span>
-    <span class="n">reasoning_tools</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;websearch&quot;</span><span class="p">],</span>
-    <span class="n">debug</span><span class="o">=</span><span class="n">DebugLevel</span><span class="p">(</span><span class="s2">&quot;all&quot;</span><span class="p">),</span>  <span class="c1"># Enable debug logging</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">"Debug Web Agent"</span><span class="p">,</span>
+    <span class="n">model</span><span class="o">=</span><span class="s2">"openai/gpt-4o-search-preview"</span><span class="p">,</span>
+    <span class="n">reasoning_tools</span><span class="o">=</span><span class="p">[</span><span class="s2">"websearch"</span><span class="p">],</span>
+    <span class="n">debug</span><span class="o">=</span><span class="n">DebugLevel</span><span class="p">(</span><span class="s2">"all"</span><span class="p">),</span>  <span class="c1"># Enable debug logging</span>
 <span class="p">)</span>
 </code></pre></div>
 
@@ -1862,16 +1887,16 @@
 <div class="codehilite"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">agentic.tools</span><span class="w"> </span><span class="kn">import</span> <span class="n">OpenAIWebSearchTool</span>
 
 <span class="n">agent</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
-    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Agent&quot;</span><span class="p">,</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">"Agent"</span><span class="p">,</span>
     <span class="n">tools</span><span class="o">=</span><span class="p">[</span><span class="n">OpenAIWebSearchTool</span><span class="p">()],</span>
 <span class="p">)</span>
 </code></pre></div>
 
 <p><strong>After (built-in support):</strong></p>
 <div class="codehilite"><pre><span></span><code><span class="n">agent</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
-    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Agent&quot;</span><span class="p">,</span> 
-    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;openai/gpt-4o-search-preview&quot;</span><span class="p">,</span>
-    <span class="n">reasoning_tools</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;websearch&quot;</span><span class="p">],</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">"Agent"</span><span class="p">,</span> 
+    <span class="n">model</span><span class="o">=</span><span class="s2">"openai/gpt-4o-search-preview"</span><span class="p">,</span>
+    <span class="n">reasoning_tools</span><span class="o">=</span><span class="p">[</span><span class="s2">"websearch"</span><span class="p">],</span>
 <span class="p">)</span>
 </code></pre></div>
 

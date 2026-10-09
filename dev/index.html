@@ -1001,6 +1001,8 @@
       
         
       
+        
+      
     
     
     
@@ -1307,6 +1309,29 @@
   
   <span class="md-ellipsis">
     MCPTool
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="tools/tool-library/parallel-search-tool/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    ParallelSearchTool
     
   </span>
   
@@ -1820,19 +1845,19 @@ and can use tools to do work on your behalf.</p>
 </blockquote>
 <div class="codehilite"><pre><span></span><code><span class="c1"># Install from PyPI</span>
 <span class="c1"># For MacOS</span>
-uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;agentic-framework[all,dev]&quot;</span>
+uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">"agentic-framework[all,dev]"</span>
 
 <span class="c1"># For Linux or Windows</span>
-uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;agentic-framework[all,dev]&quot;</span><span class="w"> </span>--extra-index-url<span class="w"> </span>https://download.pytorch.org/whl/cpu
+uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">"agentic-framework[all,dev]"</span><span class="w"> </span>--extra-index-url<span class="w"> </span>https://download.pytorch.org/whl/cpu
 
 <span class="c1"># Or run from source</span>
 git<span class="w"> </span>clone<span class="w"> </span>git@github.com:supercog-ai/agentic.git
 
 <span class="c1"># For MacOS</span>
-uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;./agentic[all,dev]&quot;</span>
+uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">"./agentic[all,dev]"</span>
 
 <span class="c1"># For Linux or Windows</span>
-uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;./agentic[all,dev]&quot;</span><span class="w"> </span>--extra-index-url<span class="w"> </span>https://download.pytorch.org/whl/cpu
+uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">"./agentic[all,dev]"</span><span class="w"> </span>--extra-index-url<span class="w"> </span>https://download.pytorch.org/whl/cpu
 
 <span class="c1"># Initialize your project</span>
 agentic<span class="w"> </span>init<span class="w"> </span>.
@@ -1843,14 +1868,14 @@ agentic<span class="w"> </span>init<span class="w"> </span>.
 <span class="kn">from</span><span class="w"> </span><span class="nn">agentic.tools</span><span class="w"> </span><span class="kn">import</span> <span class="n">WeatherTool</span>
 
 <span class="n">weather_agent</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
-    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Weather Agent&quot;</span><span class="p">,</span>
-    <span class="n">welcome</span><span class="o">=</span><span class="s2">&quot;I can give you some weather reports! Just tell me which city.&quot;</span><span class="p">,</span>
-    <span class="n">instructions</span><span class="o">=</span><span class="s2">&quot;You are a helpful assistant.&quot;</span><span class="p">,</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">"Weather Agent"</span><span class="p">,</span>
+    <span class="n">welcome</span><span class="o">=</span><span class="s2">"I can give you some weather reports! Just tell me which city."</span><span class="p">,</span>
+    <span class="n">instructions</span><span class="o">=</span><span class="s2">"You are a helpful assistant."</span><span class="p">,</span>
     <span class="n">tools</span><span class="o">=</span><span class="p">[</span><span class="n">WeatherTool</span><span class="p">()],</span>
-    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;openai/gpt-4o-mini&quot;</span>
+    <span class="n">model</span><span class="o">=</span><span class="s2">"openai/gpt-4o-mini"</span>
 <span class="p">)</span>
 
-<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">"__main__"</span><span class="p">:</span>
     <span class="n">AgentRunner</span><span class="p">(</span><span class="n">weather_agent</span><span class="p">)</span><span class="o">.</span><span class="n">repl_loop</span><span class="p">()</span>
 </code></pre></div>
 

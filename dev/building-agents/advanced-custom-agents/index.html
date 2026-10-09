@@ -1113,6 +1113,8 @@
       
         
       
+        
+      
     
     
     
@@ -1419,6 +1421,29 @@
   
   <span class="md-ellipsis">
     MCPTool
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tools/tool-library/parallel-search-tool/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    ParallelSearchTool
     
   </span>
   
@@ -2082,20 +2107,20 @@
 <hr />
 <h2 id="best-practices">Best Practices</h2>
 <h3 id="1-always-yield-promptstarted-first">1. Always Yield <code>PromptStarted</code> First</h3>
-<div class="codehilite"><pre><span></span><code><span class="k">yield</span> <span class="n">PromptStarted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">topic</span><span class="p">})</span>
+<div class="codehilite"><pre><span></span><code><span class="k">yield</span> <span class="n">PromptStarted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="p">{</span><span class="s2">"content"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">topic</span><span class="p">})</span>
 </code></pre></div>
 
 <h3 id="2-use-waitforinput-for-pauses">2. Use <code>WaitForInput</code> for Pauses</h3>
-<div class="codehilite"><pre><span></span><code><span class="k">yield</span> <span class="n">WaitForInput</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;feedback&quot;</span><span class="p">:</span> <span class="s2">&quot;Please provide feedback on the plan.&quot;</span><span class="p">})</span>
+<div class="codehilite"><pre><span></span><code><span class="k">yield</span> <span class="n">WaitForInput</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="p">{</span><span class="s2">"feedback"</span><span class="p">:</span> <span class="s2">"Please provide feedback on the plan."</span><span class="p">})</span>
 <span class="k">return</span>  <span class="c1"># Safely exit the generator after yielding pause</span>
 </code></pre></div>
 
 <h3 id="3-subagent-calls-should-use-yield-from">3. Subagent Calls Should Use <code>yield from</code></h3>
-<div class="codehilite"><pre><span></span><code><span class="n">queries</span> <span class="o">=</span> <span class="k">yield from</span> <span class="bp">self</span><span class="o">.</span><span class="n">query_planner</span><span class="o">.</span><span class="n">final_result</span><span class="p">(</span><span class="s2">&quot;Generate queries&quot;</span><span class="p">,</span> <span class="n">request_context</span><span class="o">=</span><span class="p">{</span><span class="o">...</span><span class="p">})</span>
+<div class="codehilite"><pre><span></span><code><span class="n">queries</span> <span class="o">=</span> <span class="k">yield from</span> <span class="bp">self</span><span class="o">.</span><span class="n">query_planner</span><span class="o">.</span><span class="n">final_result</span><span class="p">(</span><span class="s2">"Generate queries"</span><span class="p">,</span> <span class="n">request_context</span><span class="o">=</span><span class="p">{</span><span class="o">...</span><span class="p">})</span>
 </code></pre></div>
 
 <h3 id="4-always-finish-with-a-turnend-event">4. Always finish with a <code>TurnEnd</code> event</h3>
-<div class="codehilite"><pre><span></span><code><span class="k">yield</span> <span class="n">TurnEnd</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="s2">&quot;Turn completed.&quot;</span><span class="p">})</span>
+<div class="codehilite"><pre><span></span><code><span class="k">yield</span> <span class="n">TurnEnd</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="p">{</span><span class="s2">"status"</span><span class="p">:</span> <span class="s2">"Turn completed."</span><span class="p">})</span>
 </code></pre></div>
 
 <p>This ensures that:</p>
@@ -2110,10 +2135,10 @@
 <h3 id="what-to-do">What to do</h3>
 <p>pass <code>thread_id</code> in every subagent request:</p>
 <div class="codehilite"><pre><span></span><code><span class="n">result</span> <span class="o">=</span> <span class="k">yield from</span> <span class="bp">self</span><span class="o">.</span><span class="n">section_planner</span><span class="o">.</span><span class="n">final_result</span><span class="p">(</span>
-    <span class="s2">&quot;Plan sections&quot;</span><span class="p">,</span>
+    <span class="s2">"Plan sections"</span><span class="p">,</span>
     <span class="n">request_context</span><span class="o">=</span><span class="p">{</span>
-        <span class="s2">&quot;topic&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">topic</span><span class="p">,</span>
-        <span class="s2">&quot;thread_id&quot;</span><span class="p">:</span> <span class="n">thread_context</span><span class="o">.</span><span class="n">thread_id</span>  <span class="c1"># Required for shared logging</span>
+        <span class="s2">"topic"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">topic</span><span class="p">,</span>
+        <span class="s2">"thread_id"</span><span class="p">:</span> <span class="n">thread_context</span><span class="o">.</span><span class="n">thread_id</span>  <span class="c1"># Required for shared logging</span>
     <span class="p">}</span>
 <span class="p">)</span>
 </code></pre></div>
@@ -2153,18 +2178,18 @@
 <h2 id="minimal-example-of-custom-next_turn">Minimal Example of Custom <code>next_turn</code></h2>
 <div class="codehilite"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">next_turn</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Prompt</span><span class="p">,</span> <span class="n">request_context</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="p">{},</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="n">topic</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">payload</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">Prompt</span><span class="p">)</span> <span class="k">else</span> <span class="n">request</span>
-    <span class="k">yield</span> <span class="n">PromptStarted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="n">topic</span><span class="p">})</span>
+    <span class="k">yield</span> <span class="n">PromptStarted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="p">{</span><span class="s2">"content"</span><span class="p">:</span> <span class="n">topic</span><span class="p">})</span>
 
     <span class="c1"># Example: Plan → Research → Write</span>
     <span class="n">plan</span> <span class="o">=</span> <span class="k">yield from</span> <span class="bp">self</span><span class="o">.</span><span class="n">planner_agent</span><span class="o">.</span><span class="n">final_result</span><span class="p">(</span>
-        <span class="s2">&quot;Make a plan&quot;</span><span class="p">,</span> 
-        <span class="n">request_context</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;topic&quot;</span><span class="p">:</span> <span class="n">topic</span><span class="p">,</span> <span class="s2">&quot;thread_id&quot;</span><span class="p">:</span> <span class="n">request_context</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;thread_id&quot;</span><span class="p">)}</span>
+        <span class="s2">"Make a plan"</span><span class="p">,</span> 
+        <span class="n">request_context</span><span class="o">=</span><span class="p">{</span><span class="s2">"topic"</span><span class="p">:</span> <span class="n">topic</span><span class="p">,</span> <span class="s2">"thread_id"</span><span class="p">:</span> <span class="n">request_context</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"thread_id"</span><span class="p">)}</span>
     <span class="p">)</span>
 
-    <span class="k">yield</span> <span class="n">ChatOutput</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;Plan: </span><span class="si">{</span><span class="n">plan</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">})</span>
+    <span class="k">yield</span> <span class="n">ChatOutput</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="p">{</span><span class="s2">"content"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"Plan: </span><span class="si">{</span><span class="n">plan</span><span class="si">}</span><span class="s2">"</span><span class="p">})</span>
 
-    <span class="k">yield</span> <span class="n">WaitForInput</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;feedback&quot;</span><span class="p">:</span> <span class="s2">&quot;Approve the plan or provide feedback.&quot;</span><span class="p">})</span>
-    <span class="k">yield</span> <span class="n">TurnEnd</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="s2">&quot;Turn completed after waiting for input.&quot;</span><span class="p">})</span>
+    <span class="k">yield</span> <span class="n">WaitForInput</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="p">{</span><span class="s2">"feedback"</span><span class="p">:</span> <span class="s2">"Approve the plan or provide feedback."</span><span class="p">})</span>
+    <span class="k">yield</span> <span class="n">TurnEnd</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="p">{</span><span class="s2">"status"</span><span class="p">:</span> <span class="s2">"Turn completed after waiting for input."</span><span class="p">})</span>
 </code></pre></div>
 
 <hr />

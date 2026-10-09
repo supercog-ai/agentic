@@ -1107,6 +1107,8 @@
       
         
       
+        
+      
     
     
     
@@ -1413,6 +1415,29 @@
   
   <span class="md-ellipsis">
     MCPTool
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tool-library/parallel-search-tool/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    ParallelSearchTool
     
   </span>
   
@@ -2015,7 +2040,7 @@
 uv<span class="w"> </span>venv<span class="w">  </span>--python<span class="w"> </span><span class="m">3</span>.12
 <span class="nb">source</span><span class="w"> </span>.venv/bin/activate
 
-uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;agentic-framework[all]&quot;</span>
+uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">"agentic-framework[all]"</span>
 </code></pre></div>
 
 <h3 id="2-project-setup">2. Project Setup</h3>
@@ -2038,28 +2063,28 @@ touch<span class="w"> </span>weather_tool.py
 <span class="kn">from</span><span class="w"> </span><span class="nn">agentic.common</span><span class="w"> </span><span class="kn">import</span> <span class="n">ThreadContext</span>
 
 <span class="nd">@tool_registry</span><span class="o">.</span><span class="n">register</span><span class="p">(</span>
-    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;YourToolName&quot;</span><span class="p">,</span>
-    <span class="n">description</span><span class="o">=</span><span class="s2">&quot;A clear description of what your tool does&quot;</span><span class="p">,</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">"YourToolName"</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="s2">"A clear description of what your tool does"</span><span class="p">,</span>
     <span class="n">dependencies</span><span class="o">=</span><span class="p">[],</span>  <span class="c1"># Any pip packages your tool depends on</span>
     <span class="n">config_requirements</span><span class="o">=</span><span class="p">[],</span>  <span class="c1"># Any required configuration settings</span>
 <span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">YourTool</span><span class="p">(</span><span class="n">BaseAgenticTool</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Detailed description of your tool class.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Detailed description of your tool class."""</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">param1</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">param2</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;default&quot;</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize your tool with any necessary parameters.&quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">param1</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">param2</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"default"</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Initialize your tool with any necessary parameters."""</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">param1</span> <span class="o">=</span> <span class="n">param1</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">param2</span> <span class="o">=</span> <span class="n">param2</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">get_tools</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Callable</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a list of functions that will be exposed to the agent.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Return a list of functions that will be exposed to the agent."""</span>
         <span class="k">return</span> <span class="p">[</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">your_function</span><span class="p">,</span>
             <span class="c1"># Add more functions here</span>
         <span class="p">]</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">your_function</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">thread_context</span><span class="p">:</span> <span class="n">ThreadContext</span><span class="p">,</span> <span class="n">param</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        A function that the agent can call.</span>
 
 <span class="sd">        Args:</span>
@@ -2068,27 +2093,27 @@ touch<span class="w"> </span>weather_tool.py
 
 <span class="sd">        Returns:</span>
 <span class="sd">            Result of the operation</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="c1"># Implement your functionality here</span>
-        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;Processed </span><span class="si">{</span><span class="n">param</span><span class="si">}</span><span class="s2"> with </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">param1</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">"Processed </span><span class="si">{</span><span class="n">param</span><span class="si">}</span><span class="s2"> with </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">param1</span><span class="si">}</span><span class="s2">"</span>
 </code></pre></div>
 
 <h2 id="tool-registry-decorator">Tool Registry Decorator</h2>
 <p>The <code>@tool_registry.register</code> decorator registers your tool with the framework and provides important metadata:</p>
 <div class="codehilite"><pre><span></span><code><span class="nd">@tool_registry</span><span class="o">.</span><span class="n">register</span><span class="p">(</span>
-    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;YourToolName&quot;</span><span class="p">,</span>           <span class="c1"># Name of your tool</span>
-    <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Description&quot;</span><span class="p">,</span>     <span class="c1"># Description of what your tool does</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">"YourToolName"</span><span class="p">,</span>           <span class="c1"># Name of your tool</span>
+    <span class="n">description</span><span class="o">=</span><span class="s2">"Description"</span><span class="p">,</span>     <span class="c1"># Description of what your tool does</span>
     <span class="n">dependencies</span><span class="o">=</span><span class="p">[</span>                 <span class="c1"># External packages required by your tool</span>
         <span class="n">Dependency</span><span class="p">(</span>
-            <span class="n">name</span><span class="o">=</span><span class="s2">&quot;package-name&quot;</span><span class="p">,</span>
-            <span class="n">version</span><span class="o">=</span><span class="s2">&quot;1.0.0&quot;</span><span class="p">,</span>
-            <span class="nb">type</span><span class="o">=</span><span class="s2">&quot;pip&quot;</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="s2">"package-name"</span><span class="p">,</span>
+            <span class="n">version</span><span class="o">=</span><span class="s2">"1.0.0"</span><span class="p">,</span>
+            <span class="nb">type</span><span class="o">=</span><span class="s2">"pip"</span><span class="p">,</span>
         <span class="p">),</span>
     <span class="p">],</span>
     <span class="n">config_requirements</span><span class="o">=</span><span class="p">[</span>          <span class="c1"># Configuration settings required by your tool</span>
         <span class="n">ConfigRequirement</span><span class="p">(</span>
-            <span class="n">key</span><span class="o">=</span><span class="s2">&quot;API_KEY_NAME&quot;</span><span class="p">,</span>
-            <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Description of the setting&quot;</span><span class="p">,</span>
+            <span class="n">key</span><span class="o">=</span><span class="s2">"API_KEY_NAME"</span><span class="p">,</span>
+            <span class="n">description</span><span class="o">=</span><span class="s2">"Description of the setting"</span><span class="p">,</span>
             <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>         <span class="c1"># Whether this setting is required</span>
         <span class="p">),</span>
     <span class="p">],</span>
@@ -2104,21 +2129,21 @@ touch<span class="w"> </span>weather_tool.py
 <h2 id="optional-methods">Optional Methods</h2>
 <p>Common optional functions include:</p>
 <div class="codehilite"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">required_secrets</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Define secrets that this tool requires.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Define secrets that this tool requires."""</span>
     <span class="k">return</span> <span class="p">{</span>
-        <span class="s2">&quot;API_KEY_NAME&quot;</span><span class="p">:</span> <span class="s2">&quot;Description of the API key&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;OTHER_SECRET&quot;</span><span class="p">:</span> <span class="s2">&quot;Description of other secret&quot;</span><span class="p">,</span>
+        <span class="s2">"API_KEY_NAME"</span><span class="p">:</span> <span class="s2">"Description of the API key"</span><span class="p">,</span>
+        <span class="s2">"OTHER_SECRET"</span><span class="p">:</span> <span class="s2">"Description of other secret"</span><span class="p">,</span>
     <span class="p">}</span>
 
 <span class="k">def</span><span class="w"> </span><span class="nf">test_credential</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cred</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">secrets</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Test that the given credential secrets are valid.</span>
 <span class="sd">    Return None if valid, otherwise return an error message.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="c1"># Validate credentials</span>
-    <span class="n">api_key</span> <span class="o">=</span> <span class="n">secrets</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;API_KEY_NAME&quot;</span><span class="p">)</span>
+    <span class="n">api_key</span> <span class="o">=</span> <span class="n">secrets</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"API_KEY_NAME"</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">api_key</span><span class="p">:</span>
-        <span class="k">return</span> <span class="s2">&quot;API key is missing&quot;</span>
+        <span class="k">return</span> <span class="s2">"API key is missing"</span>
     <span class="c1"># Test the API key</span>
     <span class="k">return</span> <span class="kc">None</span>  <span class="c1"># Return None if valid</span>
 </code></pre></div>
@@ -2127,7 +2152,7 @@ touch<span class="w"> </span>weather_tool.py
 <h3 id="asynchronous-methods">Asynchronous Methods</h3>
 <p>You can create asynchronous functions for operations that involve I/O or network requests:</p>
 <div class="codehilite"><pre><span></span><code><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">fetch_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">thread_context</span><span class="p">:</span> <span class="n">ThreadContext</span><span class="p">,</span> <span class="n">query</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">any</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Asynchronously fetch data based on the query.</span>
 
 <span class="sd">    Args:</span>
@@ -2136,44 +2161,44 @@ touch<span class="w"> </span>weather_tool.py
 
 <span class="sd">    Returns:</span>
 <span class="sd">        Dictionary containing the results</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="c1"># Async implementation</span>
     <span class="c1"># You can use httpx, aiohttp, etc. for async HTTP requests</span>
 
-    <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;results&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;data1&quot;</span><span class="p">,</span> <span class="s2">&quot;data2&quot;</span><span class="p">]}</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s2">"results"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"data1"</span><span class="p">,</span> <span class="s2">"data2"</span><span class="p">]}</span>
 </code></pre></div>
 
 <h3 id="handling-authentication">Handling Authentication</h3>
 <p>Tools often need API keys or other credentials. You can get these from the ThreadContext:</p>
 <div class="codehilite"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">authenticated_function</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">thread_context</span><span class="p">:</span> <span class="n">ThreadContext</span><span class="p">,</span> <span class="n">param</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Method that requires authentication.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Method that requires authentication."""</span>
     <span class="c1"># Get API key from secrets or instance variable</span>
-    <span class="n">api_key</span> <span class="o">=</span> <span class="n">thread_context</span><span class="o">.</span><span class="n">get_secret</span><span class="p">(</span><span class="s2">&quot;API_KEY_NAME&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">api_key</span><span class="p">)</span>
+    <span class="n">api_key</span> <span class="o">=</span> <span class="n">thread_context</span><span class="o">.</span><span class="n">get_secret</span><span class="p">(</span><span class="s2">"API_KEY_NAME"</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">api_key</span><span class="p">)</span>
 
     <span class="c1"># If no API key is available, request it from the user</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">api_key</span><span class="p">:</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">agentic.events</span><span class="w"> </span><span class="kn">import</span> <span class="n">PauseForInputResult</span>
         <span class="k">return</span> <span class="n">PauseForInputResult</span><span class="p">(</span>
-            <span class="p">{</span><span class="s2">&quot;API_KEY_NAME&quot;</span><span class="p">:</span> <span class="s2">&quot;Please provide your API key&quot;</span><span class="p">}</span>
+            <span class="p">{</span><span class="s2">"API_KEY_NAME"</span><span class="p">:</span> <span class="s2">"Please provide your API key"</span><span class="p">}</span>
         <span class="p">)</span>
 
     <span class="c1"># Use the API key for authentication</span>
-    <span class="k">return</span> <span class="s2">&quot;Authenticated operation completed&quot;</span>
+    <span class="k">return</span> <span class="s2">"Authenticated operation completed"</span>
 </code></pre></div>
 
 <h3 id="progress-reporting">Progress Reporting</h3>
 <p>For long-running operations, you can report progress using generators:</p>
 <div class="codehilite"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">long_operation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">thread_context</span><span class="p">:</span> <span class="n">ThreadContext</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Perform a long-running operation with progress updates.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Perform a long-running operation with progress updates."""</span>
     <span class="n">total_steps</span> <span class="o">=</span> <span class="mi">10</span>
 
     <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">total_steps</span><span class="p">):</span>
         <span class="c1"># Perform some work...</span>
 
         <span class="c1"># Report progress</span>
-        <span class="k">yield</span> <span class="n">thread_context</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Step </span><span class="si">{</span><span class="n">step</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">total_steps</span><span class="si">}</span><span class="s2"> completed&quot;</span><span class="p">)</span>
+        <span class="k">yield</span> <span class="n">thread_context</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Step </span><span class="si">{</span><span class="n">step</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">total_steps</span><span class="si">}</span><span class="s2"> completed"</span><span class="p">)</span>
 
-    <span class="k">return</span> <span class="s2">&quot;Operation completed successfully&quot;</span>
+    <span class="k">return</span> <span class="s2">"Operation completed successfully"</span>
 </code></pre></div>
 
 <h2 id="registering-your-tool-in-the-framework">Registering Your Tool in the Framework</h2>
@@ -2188,25 +2213,25 @@ touch<span class="w"> </span>weather_tool.py
 <span class="kn">from</span><span class="w"> </span><span class="nn">agentic.common</span><span class="w"> </span><span class="kn">import</span> <span class="n">ThreadContext</span>
 
 <span class="nd">@tool_registry</span><span class="o">.</span><span class="n">register</span><span class="p">(</span>
-    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;SimpleWeatherTool&quot;</span><span class="p">,</span>
-    <span class="n">description</span><span class="o">=</span><span class="s2">&quot;A tool for getting basic weather information&quot;</span><span class="p">,</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">"SimpleWeatherTool"</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="s2">"A tool for getting basic weather information"</span><span class="p">,</span>
     <span class="n">dependencies</span><span class="o">=</span><span class="p">[</span>
         <span class="n">Dependency</span><span class="p">(</span>
-            <span class="n">name</span><span class="o">=</span><span class="s2">&quot;requests&quot;</span><span class="p">,</span>
-            <span class="n">version</span><span class="o">=</span><span class="s2">&quot;2.28.1&quot;</span><span class="p">,</span>
-            <span class="nb">type</span><span class="o">=</span><span class="s2">&quot;pip&quot;</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="s2">"requests"</span><span class="p">,</span>
+            <span class="n">version</span><span class="o">=</span><span class="s2">"2.28.1"</span><span class="p">,</span>
+            <span class="nb">type</span><span class="o">=</span><span class="s2">"pip"</span><span class="p">,</span>
         <span class="p">),</span>
     <span class="p">],</span>
 <span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">SimpleWeatherTool</span><span class="p">(</span><span class="n">BaseAgenticTool</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;A simple tool for fetching weather data.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""A simple tool for fetching weather data."""</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">api_key</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">api_key</span> <span class="o">=</span> <span class="n">api_key</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">required_secrets</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
         <span class="k">return</span> <span class="p">{</span>
-            <span class="s2">&quot;WEATHER_API_KEY&quot;</span><span class="p">:</span> <span class="s2">&quot;API key for accessing weather data&quot;</span>
+            <span class="s2">"WEATHER_API_KEY"</span><span class="p">:</span> <span class="s2">"API key for accessing weather data"</span>
         <span class="p">}</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">get_tools</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Callable</span><span class="p">]:</span>
@@ -2218,38 +2243,38 @@ touch<span class="w"> </span>weather_tool.py
         <span class="bp">self</span><span class="p">,</span> 
         <span class="n">thread_context</span><span class="p">:</span> <span class="n">ThreadContext</span><span class="p">,</span> 
         <span class="n">city</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> 
-        <span class="n">units</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;metric&quot;</span>
+        <span class="n">units</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"metric"</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">any</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Get the current weather for a city.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            thread_context: Execution context</span>
 <span class="sd">            city: The name of the city</span>
-<span class="sd">            units: Units of measurement (&#39;metric&#39; or &#39;imperial&#39;)</span>
+<span class="sd">            units: Units of measurement ('metric' or 'imperial')</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            Weather data for the city</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="c1"># Get API key from secrets or instance variable</span>
-        <span class="n">api_key</span> <span class="o">=</span> <span class="n">thread_context</span><span class="o">.</span><span class="n">get_secret</span><span class="p">(</span><span class="s2">&quot;WEATHER_API_KEY&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">api_key</span><span class="p">)</span>
+        <span class="n">api_key</span> <span class="o">=</span> <span class="n">thread_context</span><span class="o">.</span><span class="n">get_secret</span><span class="p">(</span><span class="s2">"WEATHER_API_KEY"</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">api_key</span><span class="p">)</span>
 
         <span class="c1"># If no API key is available, request it from the user</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">api_key</span><span class="p">:</span>
             <span class="kn">from</span><span class="w"> </span><span class="nn">agentic.events</span><span class="w"> </span><span class="kn">import</span> <span class="n">PauseForInputResult</span>
             <span class="k">return</span> <span class="n">PauseForInputResult</span><span class="p">(</span>
-                <span class="p">{</span><span class="s2">&quot;WEATHER_API_KEY&quot;</span><span class="p">:</span> <span class="s2">&quot;Please provide your weather API key&quot;</span><span class="p">}</span>
+                <span class="p">{</span><span class="s2">"WEATHER_API_KEY"</span><span class="p">:</span> <span class="s2">"Please provide your weather API key"</span><span class="p">}</span>
             <span class="p">)</span>
 
         <span class="c1"># Make API request</span>
-        <span class="n">url</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;https://api.example.com/weather&quot;</span>
+        <span class="n">url</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"https://api.example.com/weather"</span>
         <span class="n">params</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s2">&quot;q&quot;</span><span class="p">:</span> <span class="n">city</span><span class="p">,</span>
-            <span class="s2">&quot;units&quot;</span><span class="p">:</span> <span class="n">units</span><span class="p">,</span>
-            <span class="s2">&quot;appid&quot;</span><span class="p">:</span> <span class="n">api_key</span>
+            <span class="s2">"q"</span><span class="p">:</span> <span class="n">city</span><span class="p">,</span>
+            <span class="s2">"units"</span><span class="p">:</span> <span class="n">units</span><span class="p">,</span>
+            <span class="s2">"appid"</span><span class="p">:</span> <span class="n">api_key</span>
         <span class="p">}</span>
 
-        <span class="n">thread_context</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Fetching weather data for </span><span class="si">{</span><span class="n">city</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">thread_context</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Fetching weather data for </span><span class="si">{</span><span class="n">city</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
         <span class="k">try</span><span class="p">:</span>
             <span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">)</span>
@@ -2257,15 +2282,15 @@ touch<span class="w"> </span>weather_tool.py
             <span class="n">data</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
 
             <span class="k">return</span> <span class="p">{</span>
-                <span class="s2">&quot;city&quot;</span><span class="p">:</span> <span class="n">city</span><span class="p">,</span>
-                <span class="s2">&quot;temperature&quot;</span><span class="p">:</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;main&quot;</span><span class="p">][</span><span class="s2">&quot;temp&quot;</span><span class="p">],</span>
-                <span class="s2">&quot;conditions&quot;</span><span class="p">:</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;weather&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;description&quot;</span><span class="p">],</span>
-                <span class="s2">&quot;humidity&quot;</span><span class="p">:</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;main&quot;</span><span class="p">][</span><span class="s2">&quot;humidity&quot;</span><span class="p">],</span>
-                <span class="s2">&quot;wind_speed&quot;</span><span class="p">:</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;wind&quot;</span><span class="p">][</span><span class="s2">&quot;speed&quot;</span><span class="p">]</span>
+                <span class="s2">"city"</span><span class="p">:</span> <span class="n">city</span><span class="p">,</span>
+                <span class="s2">"temperature"</span><span class="p">:</span> <span class="n">data</span><span class="p">[</span><span class="s2">"main"</span><span class="p">][</span><span class="s2">"temp"</span><span class="p">],</span>
+                <span class="s2">"conditions"</span><span class="p">:</span> <span class="n">data</span><span class="p">[</span><span class="s2">"weather"</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="s2">"description"</span><span class="p">],</span>
+                <span class="s2">"humidity"</span><span class="p">:</span> <span class="n">data</span><span class="p">[</span><span class="s2">"main"</span><span class="p">][</span><span class="s2">"humidity"</span><span class="p">],</span>
+                <span class="s2">"wind_speed"</span><span class="p">:</span> <span class="n">data</span><span class="p">[</span><span class="s2">"wind"</span><span class="p">][</span><span class="s2">"speed"</span><span class="p">]</span>
             <span class="p">}</span>
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="n">thread_context</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error fetching weather data: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-            <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;error&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;Failed to fetch weather data: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">}</span>
+            <span class="n">thread_context</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Error fetching weather data: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+            <span class="k">return</span> <span class="p">{</span><span class="s2">"error"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"Failed to fetch weather data: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">}</span>
 </code></pre></div>
 
 <h2 id="testing-your-tool">Testing Your Tool</h2>
@@ -2278,12 +2303,12 @@ touch<span class="w"> </span>weather_tool.py
 
 <span class="c1"># Create an agent with your tool</span>
 <span class="n">agent</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
-    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;TestAgent&quot;</span><span class="p">,</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">"TestAgent"</span><span class="p">,</span>
     <span class="n">tools</span><span class="o">=</span><span class="p">[</span><span class="n">your_tool</span><span class="p">]</span>
 <span class="p">)</span>
 
 <span class="c1"># Test your agent with a prompt that will use your tool</span>
-<span class="n">result</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;Use YourTool to perform a test operation&quot;</span><span class="p">)</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">"Use YourTool to perform a test operation"</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
 </code></pre></div>
 

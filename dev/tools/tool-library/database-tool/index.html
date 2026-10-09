@@ -911,6 +911,8 @@
       
         
       
+        
+      
     
     
     
@@ -1370,6 +1372,29 @@
   
   <span class="md-ellipsis">
     MCPTool
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../parallel-search-tool/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    ParallelSearchTool
     
   </span>
   
@@ -1978,28 +2003,28 @@ A string indicating the database type (e.g., "PostgreSQL", "MySQL", etc.).</p>
 <span class="kn">from</span><span class="w"> </span><span class="nn">agentic.tools</span><span class="w"> </span><span class="kn">import</span> <span class="n">DatabaseTool</span>
 
 <span class="c1"># Connect with a connection string</span>
-<span class="n">db_tool</span> <span class="o">=</span> <span class="n">DatabaseTool</span><span class="p">(</span><span class="s2">&quot;postgresql+psycopg2://user:pass@localhost:5432/mydb&quot;</span><span class="p">)</span>
+<span class="n">db_tool</span> <span class="o">=</span> <span class="n">DatabaseTool</span><span class="p">(</span><span class="s2">"postgresql+psycopg2://user:pass@localhost:5432/mydb"</span><span class="p">)</span>
 
 <span class="c1"># Create an agent with database capabilities</span>
 <span class="n">db_agent</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
-    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Database Assistant&quot;</span><span class="p">,</span>
-    <span class="n">instructions</span><span class="o">=</span><span class="s2">&quot;You help users query databases and analyze data.&quot;</span><span class="p">,</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">"Database Assistant"</span><span class="p">,</span>
+    <span class="n">instructions</span><span class="o">=</span><span class="s2">"You help users query databases and analyze data."</span><span class="p">,</span>
     <span class="n">tools</span><span class="o">=</span><span class="p">[</span><span class="n">db_tool</span><span class="p">]</span>
 <span class="p">)</span>
 
 <span class="c1"># Use the agent to run queries</span>
-<span class="n">response</span> <span class="o">=</span> <span class="n">db_agent</span> <span class="o">&lt;&lt;</span> <span class="s2">&quot;Show me the top 5 customers by total order amount&quot;</span>
+<span class="n">response</span> <span class="o">=</span> <span class="n">db_agent</span> <span class="o">&lt;&lt;</span> <span class="s2">"Show me the top 5 customers by total order amount"</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
 
-<span class="c1"># Or store the connection info in the agent&#39;s secrets</span>
+<span class="c1"># Or store the connection info in the agent's secrets</span>
 <span class="c1"># and let the agent prompt for it when needed</span>
 <span class="n">generic_db_agent</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
-    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Database Explorer&quot;</span><span class="p">,</span>
-    <span class="n">instructions</span><span class="o">=</span><span class="s2">&quot;You connect to various databases and run queries.&quot;</span><span class="p">,</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">"Database Explorer"</span><span class="p">,</span>
+    <span class="n">instructions</span><span class="o">=</span><span class="s2">"You connect to various databases and run queries."</span><span class="p">,</span>
     <span class="n">tools</span><span class="o">=</span><span class="p">[</span><span class="n">DatabaseTool</span><span class="p">()]</span>
 <span class="p">)</span>
 
-<span class="n">response</span> <span class="o">=</span> <span class="n">generic_db_agent</span> <span class="o">&lt;&lt;</span> <span class="s2">&quot;Connect to our PostgreSQL database and list all tables&quot;</span>
+<span class="n">response</span> <span class="o">=</span> <span class="n">generic_db_agent</span> <span class="o">&lt;&lt;</span> <span class="s2">"Connect to our PostgreSQL database and list all tables"</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
 </code></pre></div>
 

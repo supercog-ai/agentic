@@ -919,6 +919,8 @@
       
         
       
+        
+      
     
     
     
@@ -1225,6 +1227,29 @@
   
   <span class="md-ellipsis">
     MCPTool
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tools/tool-library/parallel-search-tool/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    ParallelSearchTool
     
   </span>
   
@@ -1647,10 +1672,10 @@
 
 <h1 id="debugging">Debugging</h1>
 <p>The simplest tools for debugging are using the debug levels in the REPL:</p>
-<div class="codehilite"><pre><span></span><code><span class="s1">&#39;agents&#39;</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">Log</span><span class="w"> </span><span class="n">agent</span><span class="w"> </span><span class="n">operations</span>
-<span class="s1">&#39;tools&#39;</span><span class="w">  </span><span class="o">-</span><span class="w"> </span><span class="n">Log</span><span class="w"> </span><span class="n">all</span><span class="w"> </span><span class="k">tool</span><span class="w"> </span><span class="n">calls</span>
-<span class="s1">&#39;llm&#39;</span><span class="w">    </span><span class="o">-</span><span class="w"> </span><span class="n">Log</span><span class="w"> </span><span class="n">LLM</span><span class="w"> </span><span class="n">completions</span>
-<span class="s1">&#39;all&#39;</span><span class="w">    </span><span class="o">-</span><span class="w"> </span><span class="n">Log</span><span class="w"> </span><span class="n">everything</span>
+<div class="codehilite"><pre><span></span><code><span class="s1">'agents'</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">Log</span><span class="w"> </span><span class="n">agent</span><span class="w"> </span><span class="n">operations</span>
+<span class="s1">'tools'</span><span class="w">  </span><span class="o">-</span><span class="w"> </span><span class="n">Log</span><span class="w"> </span><span class="n">all</span><span class="w"> </span><span class="k">tool</span><span class="w"> </span><span class="n">calls</span>
+<span class="s1">'llm'</span><span class="w">    </span><span class="o">-</span><span class="w"> </span><span class="n">Log</span><span class="w"> </span><span class="n">LLM</span><span class="w"> </span><span class="n">completions</span>
+<span class="s1">'all'</span><span class="w">    </span><span class="o">-</span><span class="w"> </span><span class="n">Log</span><span class="w"> </span><span class="n">everything</span>
 </code></pre></div>
 
 <p>Note that you can also combine tags like 'tools,llm':</p>

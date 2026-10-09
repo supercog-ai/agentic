@@ -907,6 +907,8 @@
       
         
       
+        
+      
     
     
     
@@ -1213,6 +1215,29 @@
   
   <span class="md-ellipsis">
     MCPTool
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tools/tool-library/parallel-search-tool/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    ParallelSearchTool
     
   </span>
   
@@ -1675,11 +1700,11 @@ agentic<span class="w"> </span>index<span class="w"> </span>search<span class="w
 <div class="codehilite"><pre><span></span><code>$<span class="w"> </span>agentic<span class="w"> </span>index<span class="w"> </span>document<span class="w"> </span>add<span class="w"> </span>index1<span class="w"> </span>tests/data/agentic_reasoning.pdf
 
 $<span class="w"> </span>agentic<span class="w"> </span>index<span class="w"> </span>document<span class="w"> </span>list<span class="w"> </span>index1
-<span class="w">                                                         </span>Documents<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="s1">&#39;index1&#39;</span><span class="w"> </span><span class="o">(</span><span class="m">3</span><span class="o">)</span><span class="w">                                                         </span>
+<span class="w">                                                         </span>Documents<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="s1">'index1'</span><span class="w"> </span><span class="o">(</span><span class="m">3</span><span class="o">)</span><span class="w">                                                         </span>
 -<span class="w"> </span>agentic_reasoning.pdf<span class="w"> </span>
 <span class="w">  </span>ID:<span class="w"> </span>27c0600f...<span class="w"> </span><span class="p">|</span><span class="w"> </span>Chunks:<span class="w"> </span><span class="m">19</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>Last<span class="w"> </span>indexed:<span class="w"> </span><span class="m">2025</span>-02-22<span class="w"> </span><span class="m">05</span>:54:51+00:00
 
-$<span class="w"> </span>agentic<span class="w"> </span>index<span class="w"> </span>search<span class="w"> </span>index1<span class="w"> </span><span class="s2">&quot;reasoning models&quot;</span>
+$<span class="w"> </span>agentic<span class="w"> </span>index<span class="w"> </span>search<span class="w"> </span>index1<span class="w"> </span><span class="s2">"reasoning models"</span>
 <span class="w">                                                     </span>Result<span class="w"> </span><span class="m">1</span><span class="w"> </span>-<span class="w"> </span>agentic_reasoning.pdf<span class="w">                                                      </span>
 -<span class="w"> </span>Source:<span class="w"> </span>None
 -<span class="w"> </span>Date:<span class="w"> </span><span class="m">2025</span>-02-22<span class="w"> </span><span class="m">05</span>:54:51+00:00
@@ -1694,18 +1719,18 @@ $<span class="w"> </span>agentic<span class="w"> </span>index<span class="w"> </
 
 <span class="c1"># Create Sequential Thinking MCP tool</span>
 <span class="n">sequential_thinker</span> <span class="o">=</span> <span class="n">MCPTool</span><span class="p">(</span>
-    <span class="n">command</span><span class="o">=</span><span class="s2">&quot;npx&quot;</span><span class="p">,</span>
-    <span class="n">args</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;-y&quot;</span><span class="p">,</span> <span class="s2">&quot;@modelcontextprotocol/server-sequential-thinking&quot;</span><span class="p">]</span>
+    <span class="n">command</span><span class="o">=</span><span class="s2">"npx"</span><span class="p">,</span>
+    <span class="n">args</span><span class="o">=</span><span class="p">[</span><span class="s2">"-y"</span><span class="p">,</span> <span class="s2">"@modelcontextprotocol/server-sequential-thinking"</span><span class="p">]</span>
 <span class="p">)</span>
 
 <span class="n">agent</span><span class="o">=</span><span class="n">Agent</span><span class="p">(</span>
-    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Agent with RAG&quot;</span><span class="p">,</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">"Agent with RAG"</span><span class="p">,</span>
     <span class="n">tools</span><span class="o">=</span><span class="p">[</span>
-        <span class="n">RAGTool</span><span class="p">(</span><span class="s2">&quot;index1&quot;</span><span class="p">),</span>
+        <span class="n">RAGTool</span><span class="p">(</span><span class="s2">"index1"</span><span class="p">),</span>
         <span class="n">sequential_thinker</span>
     <span class="p">]</span>
 <span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">agent</span> <span class="o">&lt;&lt;</span> <span class="s2">&quot;What do we know about reasoning models?&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">agent</span> <span class="o">&lt;&lt;</span> <span class="s2">"What do we know about reasoning models?"</span><span class="p">)</span>
 </code></pre></div>
 
 <p><strong>Coming soon</strong>: Classic RAG</p>

@@ -1062,6 +1062,8 @@
       
         
       
+        
+      
     
     
     
@@ -1368,6 +1370,29 @@
   
   <span class="md-ellipsis">
     MCPTool
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tools/tool-library/parallel-search-tool/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    ParallelSearchTool
     
   </span>
   
@@ -1924,9 +1949,9 @@
 <h4 id="ai-news-reporter"><a href="https://github.com/supercog-ai/agentic/blob/main/examples/podcast.prompts.py">AI News Reporter</a></h4>
 <div class="codehilite"><pre><span></span><code><span class="n">You</span><span class="w"> </span><span class="n">are</span><span class="w"> </span><span class="n">an</span><span class="w"> </span><span class="n">experienced</span><span class="p">,</span><span class="w"> </span><span class="n">hard</span><span class="o">-</span><span class="n">hitting</span><span class="w"> </span><span class="n">news</span><span class="w"> </span><span class="n">reporter</span><span class="o">.</span><span class="w"> </span><span class="n">You</span><span class="w"> </span><span class="n">are</span><span class="w"> </span><span class="n">preparing</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">news</span><span class="w"> </span><span class="n">report</span><span class="o">.</span>
 <span class="n">Follow</span><span class="w"> </span><span class="n">these</span><span class="w"> </span><span class="n">steps</span><span class="w"> </span><span class="n">precisely</span><span class="p">:</span>
-<span class="w">    </span><span class="mf">1.</span><span class="w"> </span><span class="n">Search</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">headlines</span><span class="p">,</span><span class="w"> </span><span class="n">using</span><span class="w"> </span><span class="n">query_news</span><span class="p">,</span><span class="w"> </span><span class="n">about</span><span class="w"> </span><span class="s2">&quot;AI and artificial intelligence&quot;</span><span class="w"> </span><span class="n">but</span><span class="w"> </span><span class="n">exclude</span><span class="w"> </span><span class="s2">&quot;motley fool&quot;</span><span class="o">.</span>
+<span class="w">    </span><span class="mf">1.</span><span class="w"> </span><span class="n">Search</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">headlines</span><span class="p">,</span><span class="w"> </span><span class="n">using</span><span class="w"> </span><span class="n">query_news</span><span class="p">,</span><span class="w"> </span><span class="n">about</span><span class="w"> </span><span class="s2">"AI and artificial intelligence"</span><span class="w"> </span><span class="n">but</span><span class="w"> </span><span class="n">exclude</span><span class="w"> </span><span class="s2">"motley fool"</span><span class="o">.</span>
 <span class="w">    </span><span class="mf">2.</span><span class="w"> </span><span class="n">Download</span><span class="w"> </span><span class="n">pages</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">most</span><span class="w"> </span><span class="n">interesting</span><span class="w"> </span><span class="n">articles</span><span class="p">,</span><span class="w"> </span><span class="nb">max</span><span class="w"> </span><span class="mf">10.</span>
-<span class="w">    </span><span class="mf">3.</span><span class="w"> </span><span class="n">Now</span><span class="w"> </span><span class="n">create</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">long</span><span class="p">,</span><span class="w"> </span><span class="n">extensive</span><span class="w"> </span><span class="s2">&quot;morning news&quot;</span><span class="w"> </span><span class="n">report</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">style</span><span class="w"> </span><span class="n">of</span><span class="w"> </span><span class="n">NPR</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="n">CNN</span><span class="p">,</span><span class="w"> </span><span class="n">but</span><span class="w"> </span><span class="n">with</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">hard</span><span class="w"> </span><span class="n">news</span><span class="w"> </span><span class="n">edge</span><span class="p">,</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="n">reporting</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="s2">&quot;Supercog News&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">at</span><span class="w"> </span><span class="n">least</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span><span class="mi">000</span><span class="w"> </span><span class="n">characters</span><span class="o">.</span><span class="w"> </span><span class="n">Do</span><span class="w"> </span><span class="ow">not</span><span class="w"> </span><span class="nb">print</span><span class="w"> </span><span class="n">any</span><span class="w"> </span><span class="n">paragraph</span><span class="w"> </span><span class="n">headers</span><span class="o">.</span>
+<span class="w">    </span><span class="mf">3.</span><span class="w"> </span><span class="n">Now</span><span class="w"> </span><span class="n">create</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">long</span><span class="p">,</span><span class="w"> </span><span class="n">extensive</span><span class="w"> </span><span class="s2">"morning news"</span><span class="w"> </span><span class="n">report</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">style</span><span class="w"> </span><span class="n">of</span><span class="w"> </span><span class="n">NPR</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="n">CNN</span><span class="p">,</span><span class="w"> </span><span class="n">but</span><span class="w"> </span><span class="n">with</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">hard</span><span class="w"> </span><span class="n">news</span><span class="w"> </span><span class="n">edge</span><span class="p">,</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="n">reporting</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="s2">"Supercog News"</span><span class="p">,</span><span class="w"> </span><span class="n">at</span><span class="w"> </span><span class="n">least</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span><span class="mi">000</span><span class="w"> </span><span class="n">characters</span><span class="o">.</span><span class="w"> </span><span class="n">Do</span><span class="w"> </span><span class="ow">not</span><span class="w"> </span><span class="nb">print</span><span class="w"> </span><span class="n">any</span><span class="w"> </span><span class="n">paragraph</span><span class="w"> </span><span class="n">headers</span><span class="o">.</span>
 <span class="w">    </span><span class="mf">4.</span><span class="w"> </span><span class="n">Now</span><span class="w"> </span><span class="nb">convert</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">show</span><span class="w"> </span><span class="n">into</span><span class="w"> </span><span class="n">speech</span><span class="p">,</span><span class="w"> </span><span class="n">choosing</span><span class="w"> </span><span class="n">one</span><span class="w"> </span><span class="n">of</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">available</span><span class="w"> </span><span class="n">voices</span><span class="w"> </span><span class="n">at</span><span class="w"> </span><span class="n">random</span><span class="o">.</span>
 </code></pre></div>
 

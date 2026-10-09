@@ -911,6 +911,8 @@
       
         
       
+        
+      
     
     
     
@@ -1337,6 +1339,29 @@
   
   <span class="md-ellipsis">
     MCPTool
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../parallel-search-tool/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    ParallelSearchTool
     
   </span>
   
@@ -1886,24 +1911,24 @@ A list containing the history of browsing actions taken and a FinishCompletion e
 
 <span class="c1"># Create an agent with browser automation capabilities</span>
 <span class="n">browser_agent</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
-    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Web Automator&quot;</span><span class="p">,</span>
-    <span class="n">instructions</span><span class="o">=</span><span class="s2">&quot;You help users navigate websites and perform tasks online.&quot;</span><span class="p">,</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">"Web Automator"</span><span class="p">,</span>
+    <span class="n">instructions</span><span class="o">=</span><span class="s2">"You help users navigate websites and perform tasks online."</span><span class="p">,</span>
     <span class="n">tools</span><span class="o">=</span><span class="p">[</span><span class="n">BrowserUseTool</span><span class="p">()]</span>
 <span class="p">)</span>
 
 <span class="c1"># Use the agent with natural language instructions</span>
-<span class="n">response</span> <span class="o">=</span> <span class="n">browser_agent</span> <span class="o">&lt;&lt;</span> <span class="s2">&quot;Go to weather.gov, search for the weather in Boston, and tell me the forecast for tomorrow.&quot;</span>
+<span class="n">response</span> <span class="o">=</span> <span class="n">browser_agent</span> <span class="o">&lt;&lt;</span> <span class="s2">"Go to weather.gov, search for the weather in Boston, and tell me the forecast for tomorrow."</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
 
 <span class="c1"># Using a specific Chrome instance (with user cookies/login state)</span>
-<span class="n">chrome_path</span> <span class="o">=</span> <span class="s1">&#39;/Applications/Google Chrome.app/Contents/MacOS/Google Chrome&#39;</span>  <span class="c1"># macOS example</span>
+<span class="n">chrome_path</span> <span class="o">=</span> <span class="s1">'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'</span>  <span class="c1"># macOS example</span>
 <span class="n">browser_agent</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
-    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Authenticated Browser&quot;</span><span class="p">,</span>
-    <span class="n">instructions</span><span class="o">=</span><span class="s2">&quot;You help automate tasks on websites where the user is already logged in.&quot;</span><span class="p">,</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">"Authenticated Browser"</span><span class="p">,</span>
+    <span class="n">instructions</span><span class="o">=</span><span class="s2">"You help automate tasks on websites where the user is already logged in."</span><span class="p">,</span>
     <span class="n">tools</span><span class="o">=</span><span class="p">[</span><span class="n">BrowserUseTool</span><span class="p">(</span><span class="n">chrome_instance_path</span><span class="o">=</span><span class="n">chrome_path</span><span class="p">)]</span>
 <span class="p">)</span>
 
-<span class="n">response</span> <span class="o">=</span> <span class="n">browser_agent</span> <span class="o">&lt;&lt;</span> <span class="s2">&quot;Go to my Gmail account and summarize the last 3 unread emails&quot;</span>
+<span class="n">response</span> <span class="o">=</span> <span class="n">browser_agent</span> <span class="o">&lt;&lt;</span> <span class="s2">"Go to my Gmail account and summarize the last 3 unread emails"</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
 </code></pre></div>
 

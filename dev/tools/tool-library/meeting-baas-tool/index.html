@@ -11,7 +11,7 @@
         <link rel="canonical" href="https://supercog.ai/agentic/dev/tools/tool-library/meeting-baas-tool/">
       
       
-        <link rel="prev" href="../mcp-tool/">
+        <link rel="prev" href="../parallel-search-tool/">
       
       
         <link rel="next" href="../image-generator-tool/">
@@ -911,6 +911,8 @@
       
         
       
+        
+      
     
     
     
@@ -1217,6 +1219,29 @@
   
   <span class="md-ellipsis">
     MCPTool
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../parallel-search-tool/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    ParallelSearchTool
     
   </span>
   
@@ -1983,7 +2008,7 @@
 <p>Requires a MeetingBaaS API key, which can be stored in Agentic's secrets system as <code>MEETING_BAAS_API_KEY</code>.</p>
 <h2 id="methods">Methods</h2>
 <h3 id="join_meeting">join_meeting</h3>
-<div class="codehilite"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">join_meeting</span><span class="p">(</span><span class="n">meeting_url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">thread_context</span><span class="p">:</span> <span class="n">ThreadContext</span><span class="p">,</span> <span class="n">bot_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;Meeting Assistant&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span>
+<div class="codehilite"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">join_meeting</span><span class="p">(</span><span class="n">meeting_url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">thread_context</span><span class="p">:</span> <span class="n">ThreadContext</span><span class="p">,</span> <span class="n">bot_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"Meeting Assistant"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span>
 </code></pre></div>
 
 <p>Join a video meeting and start recording.</p>
@@ -2064,21 +2089,21 @@ A dictionary containing the processing status and any updated meeting informatio
 
 <span class="c1"># Create an agent with meeting capabilities</span>
 <span class="n">meeting_agent</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
-    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Meeting Assistant&quot;</span><span class="p">,</span>
-    <span class="n">instructions</span><span class="o">=</span><span class="s2">&quot;You help users join, record, and summarize video meetings.&quot;</span><span class="p">,</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">"Meeting Assistant"</span><span class="p">,</span>
+    <span class="n">instructions</span><span class="o">=</span><span class="s2">"You help users join, record, and summarize video meetings."</span><span class="p">,</span>
     <span class="n">tools</span><span class="o">=</span><span class="p">[</span><span class="n">MeetingBaasTool</span><span class="p">()]</span>
 <span class="p">)</span>
 
 <span class="c1"># Use the agent to join a meeting</span>
-<span class="n">response</span> <span class="o">=</span> <span class="n">meeting_agent</span> <span class="o">&lt;&lt;</span> <span class="s2">&quot;Join the Zoom meeting at https://zoom.us/j/123456789&quot;</span>
+<span class="n">response</span> <span class="o">=</span> <span class="n">meeting_agent</span> <span class="o">&lt;&lt;</span> <span class="s2">"Join the Zoom meeting at https://zoom.us/j/123456789"</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
 
 <span class="c1"># Use the agent to get a meeting transcript</span>
-<span class="n">response</span> <span class="o">=</span> <span class="n">meeting_agent</span> <span class="o">&lt;&lt;</span> <span class="s2">&quot;Get the transcript from my last meeting&quot;</span>
+<span class="n">response</span> <span class="o">=</span> <span class="n">meeting_agent</span> <span class="o">&lt;&lt;</span> <span class="s2">"Get the transcript from my last meeting"</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
 
 <span class="c1"># Use the agent to summarize a meeting</span>
-<span class="n">response</span> <span class="o">=</span> <span class="n">meeting_agent</span> <span class="o">&lt;&lt;</span> <span class="s2">&quot;Summarize what was discussed in the marketing meeting yesterday&quot;</span>
+<span class="n">response</span> <span class="o">=</span> <span class="n">meeting_agent</span> <span class="o">&lt;&lt;</span> <span class="s2">"Summarize what was discussed in the marketing meeting yesterday"</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
 </code></pre></div>
 

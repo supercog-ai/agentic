@@ -907,6 +907,8 @@
       
         
       
+        
+      
     
     
     
@@ -1213,6 +1215,29 @@
   
   <span class="md-ellipsis">
     MCPTool
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tools/tool-library/parallel-search-tool/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    ParallelSearchTool
     
   </span>
   
@@ -1961,7 +1986,7 @@ uv<span class="w"> </span>venv<span class="w"> </span>--python<span class="w"> <
 
 <h2 id="step-2-install-agentic-framework">Step 2: Install Agentic Framework</h2>
 <p>Next, install the Agentic framework with all optional dependencies:</p>
-<div class="codehilite"><pre><span></span><code>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;agentic-framework[all]&quot;</span><span class="w"> </span>--extra-index-url<span class="w"> </span>https://download.pytorch.org/whl/cpu
+<div class="codehilite"><pre><span></span><code>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">"agentic-framework[all]"</span><span class="w"> </span>--extra-index-url<span class="w"> </span>https://download.pytorch.org/whl/cpu
 </code></pre></div>
 
 <h2 id="step-3-initialize-your-project">Step 3: Initialize Your Project</h2>
@@ -1976,14 +2001,14 @@ uv<span class="w"> </span>venv<span class="w"> </span>--python<span class="w"> <
 <span class="kn">from</span><span class="w"> </span><span class="nn">agentic.tools</span><span class="w"> </span><span class="kn">import</span> <span class="n">WeatherTool</span>
 
 <span class="n">basic_agent</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
-    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Weather Agent&quot;</span><span class="p">,</span>
-    <span class="n">welcome</span><span class="o">=</span><span class="s2">&quot;I can give you weather reports! Just tell me which city.&quot;</span><span class="p">,</span>
-    <span class="n">instructions</span><span class="o">=</span><span class="s2">&quot;You are a helpful assistant specializing in weather information.&quot;</span><span class="p">,</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">"Weather Agent"</span><span class="p">,</span>
+    <span class="n">welcome</span><span class="o">=</span><span class="s2">"I can give you weather reports! Just tell me which city."</span><span class="p">,</span>
+    <span class="n">instructions</span><span class="o">=</span><span class="s2">"You are a helpful assistant specializing in weather information."</span><span class="p">,</span>
     <span class="n">tools</span><span class="o">=</span><span class="p">[</span><span class="n">WeatherTool</span><span class="p">()],</span>
-    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;openai/gpt-4o-mini&quot;</span>
+    <span class="n">model</span><span class="o">=</span><span class="s2">"openai/gpt-4o-mini"</span>
 <span class="p">)</span>
 
-<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">"__main__"</span><span class="p">:</span>
     <span class="n">AgentRunner</span><span class="p">(</span><span class="n">basic_agent</span><span class="p">)</span><span class="o">.</span><span class="n">repl_loop</span><span class="p">()</span>
 </code></pre></div>
 
@@ -2023,53 +2048,53 @@ ANTHROPIC_API_KEY=sk-ant-your-anthropic-key
 <li>Edit <code>deployment/terraform/terraform.tfvars</code> to configure your deployment:</li>
 </ol>
 <div class="codehilite"><pre><span></span><code><span class="c1"># Project and Environment</span>
-<span class="na">project</span><span class="w">     </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;agentic&quot;</span>
-<span class="na">environment</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;dev&quot;</span>
+<span class="na">project</span><span class="w">     </span><span class="o">=</span><span class="w"> </span><span class="s2">"agentic"</span>
+<span class="na">environment</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"dev"</span>
 
 <span class="c1"># AWS Region</span>
-<span class="na">aws_region</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;us-east-1&quot;</span>
+<span class="na">aws_region</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"us-east-1"</span>
 
 <span class="c1"># Network Settings</span>
-<span class="na">vpc_cidr</span><span class="w">            </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;10.0.0.0/16&quot;</span>
-<span class="na">availability_zones</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;us-east-1a&quot;, &quot;us-east-1b&quot;</span><span class="p">]</span>
-<span class="na">private_subnet_cidrs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;10.0.1.0/24&quot;, &quot;10.0.2.0/24&quot;</span><span class="p">]</span>
-<span class="na">public_subnet_cidrs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;10.0.101.0/24&quot;, &quot;10.0.102.0/24&quot;</span><span class="p">]</span>
+<span class="na">vpc_cidr</span><span class="w">            </span><span class="o">=</span><span class="w"> </span><span class="s2">"10.0.0.0/16"</span>
+<span class="na">availability_zones</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"us-east-1a", "us-east-1b"</span><span class="p">]</span>
+<span class="na">private_subnet_cidrs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"10.0.1.0/24", "10.0.2.0/24"</span><span class="p">]</span>
+<span class="na">public_subnet_cidrs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"10.0.101.0/24", "10.0.102.0/24"</span><span class="p">]</span>
 
-<span class="c1"># Deployment Mode - options: &quot;api&quot; or &quot;dashboard&quot;</span>
-<span class="na">deployment_mode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;api&quot;</span>
+<span class="c1"># Deployment Mode - options: "api" or "dashboard"</span>
+<span class="na">deployment_mode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"api"</span>
 
 <span class="c1"># Port Settings</span>
 <span class="na">agent_port</span><span class="w">     </span><span class="o">=</span><span class="w"> </span><span class="m">8086</span>
 <span class="na">dashboard_port</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">3000</span>
 
 <span class="c1"># ECS Settings</span>
-<span class="na">task_cpu</span><span class="w">              </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;1024&quot;</span><span class="c1">  # 1 vCPU</span>
-<span class="na">task_memory</span><span class="w">           </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;2048&quot;</span><span class="c1">  # 2 GB</span>
+<span class="na">task_cpu</span><span class="w">              </span><span class="o">=</span><span class="w"> </span><span class="s2">"1024"</span><span class="c1">  # 1 vCPU</span>
+<span class="na">task_memory</span><span class="w">           </span><span class="o">=</span><span class="w"> </span><span class="s2">"2048"</span><span class="c1">  # 2 GB</span>
 <span class="na">service_desired_count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">1</span>
 
 <span class="c1"># Agent Settings</span>
-<span class="na">agent_path</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;agents/basic_agent.py&quot;</span><span class="c1">  # Path to your agent file</span>
+<span class="na">agent_path</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="s2">"agents/basic_agent.py"</span><span class="c1">  # Path to your agent file</span>
 <span class="na">user_agents</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">false</span><span class="c1">  # Set to true if you want to enable user-specific agents</span>
 <span class="na">use_ray</span><span class="w">     </span><span class="o">=</span><span class="w"> </span><span class="no">false</span><span class="c1">  # Set to true if you want to use Ray for agent execution</span>
 
 <span class="c1"># Secrets Settings</span>
 <span class="nb">secrets_values</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="na">OPENAI_API_KEY</span><span class="w">    </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;your-openai-api-key&quot;</span>
-<span class="w">  </span><span class="na">ANTHROPIC_API_KEY</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;your-anthropic-api-key&quot;</span>
+<span class="w">  </span><span class="na">OPENAI_API_KEY</span><span class="w">    </span><span class="o">=</span><span class="w"> </span><span class="s2">"your-openai-api-key"</span>
+<span class="w">  </span><span class="na">ANTHROPIC_API_KEY</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"your-anthropic-api-key"</span>
 <span class="p">}</span>
 
 <span class="c1"># Secrets environment variables mapping</span>
 <span class="nb">secrets_env_mapping</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="na">OPENAI_API_KEY</span><span class="w">    </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;OPENAI_API_KEY&quot;</span>
-<span class="w">  </span><span class="na">ANTHROPIC_API_KEY</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;ANTHROPIC_API_KEY&quot;</span>
+<span class="w">  </span><span class="na">OPENAI_API_KEY</span><span class="w">    </span><span class="o">=</span><span class="w"> </span><span class="s2">"OPENAI_API_KEY"</span>
+<span class="w">  </span><span class="na">ANTHROPIC_API_KEY</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"ANTHROPIC_API_KEY"</span>
 <span class="c1">  # Add other secrets as needed</span>
 <span class="p">}</span>
 
 <span class="c1"># Common tags for resources</span>
 <span class="nb">common_tags</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="na">Project</span><span class="w">     </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;agentic&quot;</span>
-<span class="w">  </span><span class="na">Environment</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;dev&quot;</span>
-<span class="w">  </span><span class="na">Terraform</span><span class="w">   </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;true&quot;</span>
+<span class="w">  </span><span class="na">Project</span><span class="w">     </span><span class="o">=</span><span class="w"> </span><span class="s2">"agentic"</span>
+<span class="w">  </span><span class="na">Environment</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"dev"</span>
+<span class="w">  </span><span class="na">Terraform</span><span class="w">   </span><span class="o">=</span><span class="w"> </span><span class="s2">"true"</span>
 <span class="p">}</span>
 </code></pre></div>
 
@@ -2078,23 +2103,23 @@ ANTHROPIC_API_KEY=sk-ant-your-anthropic-key
 <li>Update the <code>outputs.tf</code> file to include cluster and service information:</li>
 </ol>
 <div class="codehilite"><pre><span></span><code><span class="c1"># Outputs</span>
-<span class="kr">output</span><span class="w"> </span><span class="nv">&quot;ecr_repository_url&quot;</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="na">description</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;The ECR repository URL where you should push your Docker image&quot;</span>
+<span class="kr">output</span><span class="w"> </span><span class="nv">"ecr_repository_url"</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="na">description</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"The ECR repository URL where you should push your Docker image"</span>
 <span class="w">  </span><span class="na">value</span><span class="w">       </span><span class="o">=</span><span class="w"> </span><span class="nv">aws_ecr_repository.app.repository_url</span>
 <span class="p">}</span>
 
-<span class="kr">output</span><span class="w"> </span><span class="nv">&quot;agent_endpoint&quot;</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="na">description</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;The endpoint where the agent API or dashboard can be accessed&quot;</span>
+<span class="kr">output</span><span class="w"> </span><span class="nv">"agent_endpoint"</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="na">description</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"The endpoint where the agent API or dashboard can be accessed"</span>
 <span class="w">  </span><span class="na">value</span><span class="w">       </span><span class="o">=</span><span class="w"> </span><span class="nv">aws_lb.app_alb.dns_name</span>
 <span class="p">}</span>
 
-<span class="kr">output</span><span class="w"> </span><span class="nv">&quot;ecs_cluster_name&quot;</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="na">description</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;The name of the ECS cluster where the service is running&quot;</span>
+<span class="kr">output</span><span class="w"> </span><span class="nv">"ecs_cluster_name"</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="na">description</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"The name of the ECS cluster where the service is running"</span>
 <span class="w">  </span><span class="na">value</span><span class="w">       </span><span class="o">=</span><span class="w"> </span><span class="nv">aws_ecs_cluster.app_cluster.name</span>
 <span class="p">}</span>
 
-<span class="kr">output</span><span class="w"> </span><span class="nv">&quot;ecs_service_name&quot;</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="na">description</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;The name of the ECS service&quot;</span>
+<span class="kr">output</span><span class="w"> </span><span class="nv">"ecs_service_name"</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="na">description</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"The name of the ECS service"</span>
 <span class="w">  </span><span class="na">value</span><span class="w">       </span><span class="o">=</span><span class="w"> </span><span class="nv">aws_ecs_service.app.name</span>
 <span class="p">}</span>
 </code></pre></div>
@@ -2141,13 +2166,13 @@ aws<span class="w"> </span>ecr<span class="w"> </span>get-login-password<span cl
 </code></pre></div>
 
 <p>Build and push the appropriate Docker image based on your deployment mode:</p>
-<div class="codehilite"><pre><span></span><code><span class="c1"># For API Server Deployment (if deployment_mode = &quot;api&quot; in terraform.tfvars)</span>
+<div class="codehilite"><pre><span></span><code><span class="c1"># For API Server Deployment (if deployment_mode = "api" in terraform.tfvars)</span>
 docker<span class="w"> </span>build<span class="w"> </span>--platform<span class="w"> </span>linux/amd64<span class="w"> </span>--tag<span class="w"> </span><span class="si">${</span><span class="nv">ECR_REPO_URL</span><span class="si">}</span>:latest<span class="w"> </span>--file<span class="w"> </span>deployment/Dockerfile.api<span class="w"> </span>.
 docker<span class="w"> </span>push<span class="w"> </span><span class="si">${</span><span class="nv">ECR_REPO_URL</span><span class="si">}</span>:latest
 
 <span class="c1"># OR</span>
 
-<span class="c1"># For Dashboard Deployment (if deployment_mode = &quot;dashboard&quot; in terraform.tfvars)</span>
+<span class="c1"># For Dashboard Deployment (if deployment_mode = "dashboard" in terraform.tfvars)</span>
 docker<span class="w"> </span>build<span class="w"> </span>--platform<span class="w"> </span>linux/amd64<span class="w"> </span>--tag<span class="w"> </span><span class="si">${</span><span class="nv">ECR_REPO_URL</span><span class="si">}</span>:latest<span class="w"> </span>--file<span class="w"> </span>deployment/Dockerfile.dashboard<span class="w"> </span>.
 docker<span class="w"> </span>push<span class="w"> </span><span class="si">${</span><span class="nv">ECR_REPO_URL</span><span class="si">}</span>:latest
 </code></pre></div>
@@ -2165,7 +2190,7 @@ docker<span class="w"> </span>push<span class="w"> </span><span class="si">${</s
 aws<span class="w"> </span>ecs<span class="w"> </span>update-service<span class="w"> </span>--cluster<span class="w"> </span><span class="nv">$ECS_CLUSTER</span><span class="w"> </span>--service<span class="w"> </span><span class="nv">$ECS_SERVICE</span><span class="w"> </span>--force-new-deployment
 
 <span class="c1"># Monitor the deployment status</span>
-aws<span class="w"> </span>ecs<span class="w"> </span>describe-services<span class="w"> </span>--cluster<span class="w"> </span><span class="nv">$ECS_CLUSTER</span><span class="w"> </span>--services<span class="w"> </span><span class="nv">$ECS_SERVICE</span><span class="w"> </span>--query<span class="w"> </span><span class="s2">&quot;services[0].deployments&quot;</span>
+aws<span class="w"> </span>ecs<span class="w"> </span>describe-services<span class="w"> </span>--cluster<span class="w"> </span><span class="nv">$ECS_CLUSTER</span><span class="w"> </span>--services<span class="w"> </span><span class="nv">$ECS_SERVICE</span><span class="w"> </span>--query<span class="w"> </span><span class="s2">"services[0].deployments"</span>
 </code></pre></div>
 
 <p>This will trigger a new deployment of your service with the latest container image, without needing to make changes to your configuration.</p>
@@ -2189,12 +2214,12 @@ aws<span class="w"> </span>ecs<span class="w"> </span>describe-services<span cla
 
 <h3 id="testing-api-server-deployment">Testing API Server Deployment</h3>
 <div class="codehilite"><pre><span></span><code><span class="c1"># Test the discovery endpoint</span>
-curl<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$AGENT_ENDPOINT</span><span class="s2">/_discovery&quot;</span>
+curl<span class="w"> </span><span class="s2">"</span><span class="nv">$AGENT_ENDPOINT</span><span class="s2">/_discovery"</span>
 
 <span class="c1"># Test your agent</span>
-curl<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$AGENT_ENDPOINT</span><span class="s2">/basic-agent/process&quot;</span><span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>-H<span class="w"> </span><span class="s2">&quot;Content-Type: application/json&quot;</span><span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>-d<span class="w"> </span><span class="s1">&#39;{&quot;prompt&quot;: &quot;Hello, how can you help me?&quot;}&#39;</span>
+curl<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span><span class="s2">"</span><span class="nv">$AGENT_ENDPOINT</span><span class="s2">/basic-agent/process"</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-H<span class="w"> </span><span class="s2">"Content-Type: application/json"</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-d<span class="w"> </span><span class="s1">'{"prompt": "Hello, how can you help me?"}'</span>
 </code></pre></div>
 
 <h3 id="testing-dashboard-deployment">Testing Dashboard Deployment</h3>
@@ -2263,8 +2288,8 @@ terraform<span class="w"> </span>destroy
 <h3 id="scaling-your-agent">Scaling Your Agent</h3>
 <p>To scale your agent deployment, adjust the following in <code>terraform.tfvars</code>:</p>
 <div class="codehilite"><pre><span></span><code><span class="na">service_desired_count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">2</span><span class="c1">  # Number of instances to run</span>
-<span class="na">task_cpu</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;2048&quot;</span><span class="c1">          # CPU units (1024 = 1 vCPU)</span>
-<span class="na">task_memory</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;4096&quot;</span><span class="c1">       # Memory in MB</span>
+<span class="na">task_cpu</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"2048"</span><span class="c1">          # CPU units (1024 = 1 vCPU)</span>
+<span class="na">task_memory</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"4096"</span><span class="c1">       # Memory in MB</span>
 </code></pre></div>
 
 <h3 id="using-a-custom-domain">Using a Custom Domain</h3>
@@ -2277,10 +2302,10 @@ terraform<span class="w"> </span>destroy
 <h3 id="switching-between-api-and-dashboard">Switching Between API and Dashboard</h3>
 <p>To switch between API server and dashboard deployments, update the <code>deployment_mode</code> variable in your <code>terraform.tfvars</code> file:</p>
 <div class="codehilite"><pre><span></span><code><span class="c1"># For API server</span>
-<span class="na">deployment_mode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;api&quot;</span>
+<span class="na">deployment_mode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"api"</span>
 
 <span class="c1"># For dashboard</span>
-<span class="na">deployment_mode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;dashboard&quot;</span>
+<span class="na">deployment_mode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"dashboard"</span>
 </code></pre></div>
 
 <p>Then run <code>terraform apply</code> to update your deployment, rebuild and push the appropriate Docker image, and force a new deployment as described in Step 10.</p>

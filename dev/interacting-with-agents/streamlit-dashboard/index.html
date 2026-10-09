@@ -1101,6 +1101,8 @@
       
         
       
+        
+      
     
     
     
@@ -1407,6 +1409,29 @@
   
   <span class="md-ellipsis">
     MCPTool
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tools/tool-library/parallel-search-tool/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    ParallelSearchTool
     
   </span>
   
@@ -2037,11 +2062,11 @@ agentic<span class="w"> </span>serve<span class="w"> </span>examples/basic_agent
 <h3 id="theming">Theming</h3>
 <p>Customize the dashboard appearance by creating a <code>.streamlit/config.toml</code> file with your theme preferences:</p>
 <div class="codehilite"><pre><span></span><code><span class="k">[theme]</span>
-<span class="n">primaryColor</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;#FF4B4B&quot;</span>
-<span class="n">backgroundColor</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;#0E1117&quot;</span>
-<span class="n">secondaryBackgroundColor</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;#262730&quot;</span>
-<span class="n">textColor</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;#FAFAFA&quot;</span>
-<span class="n">font</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;sans serif&quot;</span>
+<span class="n">primaryColor</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"#FF4B4B"</span>
+<span class="n">backgroundColor</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"#0E1117"</span>
+<span class="n">secondaryBackgroundColor</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"#262730"</span>
+<span class="n">textColor</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"#FAFAFA"</span>
+<span class="n">font</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"sans serif"</span>
 </code></pre></div>
 
 <h3 id="custom-agent-views">Custom Agent Views</h3>
@@ -2055,11 +2080,11 @@ agentic<span class="w"> </span>serve<span class="w"> </span>examples/basic_agent
 
 <span class="k">def</span><span class="w"> </span><span class="nf">custom_agent_view</span><span class="p">(</span><span class="n">agent_name</span><span class="p">,</span> <span class="n">agent_data</span><span class="p">):</span>
     <span class="c1"># Your custom rendering logic here</span>
-    <span class="n">st</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Custom view for </span><span class="si">{</span><span class="n">agent_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">st</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Custom view for </span><span class="si">{</span><span class="n">agent_name</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
     <span class="c1"># Add visualizations, metrics, etc.</span>
 
 <span class="c1"># Register your custom view</span>
-<span class="n">dashboard_app</span><span class="o">.</span><span class="n">add_agent_view</span><span class="p">(</span><span class="s2">&quot;MyCustomAgent&quot;</span><span class="p">,</span> <span class="n">custom_agent_view</span><span class="p">)</span>
+<span class="n">dashboard_app</span><span class="o">.</span><span class="n">add_agent_view</span><span class="p">(</span><span class="s2">"MyCustomAgent"</span><span class="p">,</span> <span class="n">custom_agent_view</span><span class="p">)</span>
 </code></pre></div>
 
 <h2 id="integration-with-nextjs-dashboard">Integration with Next.js Dashboard</h2>

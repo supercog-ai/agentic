@@ -1245,6 +1245,8 @@
       
         
       
+        
+      
     
     
     
@@ -1551,6 +1553,29 @@
   
   <span class="md-ellipsis">
     MCPTool
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tools/tool-library/parallel-search-tool/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    ParallelSearchTool
     
   </span>
   
@@ -2286,8 +2311,8 @@
 <h3 id="prompt">Prompt</h3>
 <p>Represents a request sent to an agent to perform an operation.</p>
 <div class="codehilite"><pre><span></span><code>Prompt(
-    agent=&quot;my_agent&quot;,
-    message=&quot;What&#39;s the weather like today?&quot;,
+    agent="my_agent",
+    message="What's the weather like today?",
     debug=DebugLevel.NONE,
     request_context={},  # Optional context data
     depth=0,  # Level in agent hierarchy
@@ -2299,22 +2324,22 @@
 <h3 id="promptstarted">PromptStarted</h3>
 <p>Signals that an agent has started processing a prompt.</p>
 <div class="codehilite"><pre><span></span><code>PromptStarted(
-    agent=&quot;my_agent&quot;,
-    message=&quot;What&#39;s the weather like today?&quot;,
+    agent="my_agent",
+    message="What's the weather like today?",
     depth=0
 )
 </code></pre></div>
 
 <h3 id="resethistory">ResetHistory</h3>
 <p>Indicates that an agent's conversation history has been reset.</p>
-<div class="codehilite"><pre><span></span><code>ResetHistory(agent=&quot;my_agent&quot;)
+<div class="codehilite"><pre><span></span><code>ResetHistory(agent="my_agent")
 </code></pre></div>
 
 <h3 id="chatoutput">ChatOutput</h3>
 <p>Output containing a chat message.</p>
 <div class="codehilite"><pre><span></span><code><span class="n">ChatOutput</span><span class="p">(</span>
-<span class="w">    </span><span class="n">agent</span><span class="o">=</span><span class="s2">&quot;my_agent&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="n">payload</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;content&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;This is a response&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;role&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;assistant&quot;</span><span class="p">},</span>
+<span class="w">    </span><span class="n">agent</span><span class="o">=</span><span class="s2">"my_agent"</span><span class="p">,</span>
+<span class="w">    </span><span class="n">payload</span><span class="o">=</span><span class="p">{</span><span class="s2">"content"</span><span class="p">:</span><span class="w"> </span><span class="s2">"This is a response"</span><span class="p">,</span><span class="w"> </span><span class="s2">"role"</span><span class="p">:</span><span class="w"> </span><span class="s2">"assistant"</span><span class="p">},</span>
 <span class="w">    </span><span class="n">depth</span><span class="o">=</span><span class="mi">0</span>
 <span class="p">)</span>
 </code></pre></div>
@@ -2322,8 +2347,8 @@
 <h3 id="turnend">TurnEnd</h3>
 <p>Signals the completion of an agent's processing for a run.</p>
 <div class="codehilite"><pre><span></span><code>TurnEnd(
-    agent=&quot;my_agent&quot;,
-    messages=[{&quot;role&quot;: &quot;assistant&quot;, &quot;content&quot;: &quot;Final response&quot;}],
+    agent="my_agent",
+    messages=[{"role": "assistant", "content": "Final response"}],
     thread_context=thread_context_obj,
     depth=0
 )
@@ -2331,16 +2356,16 @@
 
 <h3 id="turncancelled">TurnCancelled</h3>
 <p>Indicates that an agent's run was cancelled.</p>
-<div class="codehilite"><pre><span></span><code>TurnCancelled(agent=&quot;my_agent&quot;, depth=0)
+<div class="codehilite"><pre><span></span><code>TurnCancelled(agent="my_agent", depth=0)
 </code></pre></div>
 
 <h2 id="tool-related-events">Tool-Related Events</h2>
 <h3 id="toolcall">ToolCall</h3>
 <p>Represents an agent calling a tool with arguments.</p>
 <div class="codehilite"><pre><span></span><code><span class="n">ToolCall</span><span class="p">(</span>
-<span class="w">    </span><span class="n">agent</span><span class="o">=</span><span class="s2">&quot;my_agent&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;weather_tool&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="n">arguments</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;location&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;New York&quot;</span><span class="p">},</span>
+<span class="w">    </span><span class="n">agent</span><span class="o">=</span><span class="s2">"my_agent"</span><span class="p">,</span>
+<span class="w">    </span><span class="n">name</span><span class="o">=</span><span class="s2">"weather_tool"</span><span class="p">,</span>
+<span class="w">    </span><span class="n">arguments</span><span class="o">=</span><span class="p">{</span><span class="s2">"location"</span><span class="p">:</span><span class="w"> </span><span class="s2">"New York"</span><span class="p">},</span>
 <span class="w">    </span><span class="n">depth</span><span class="o">=</span><span class="mi">0</span>
 <span class="p">)</span>
 </code></pre></div>
@@ -2348,9 +2373,9 @@
 <h3 id="toolresult">ToolResult</h3>
 <p>Contains the result returned from a tool call.</p>
 <div class="codehilite"><pre><span></span><code><span class="n">ToolResult</span><span class="p">(</span>
-<span class="w">    </span><span class="n">agent</span><span class="o">=</span><span class="s2">&quot;my_agent&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;weather_tool&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="n">result</span><span class="o">=</span><span class="s2">&quot;It&#39;s 75°F and sunny in New York&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="n">agent</span><span class="o">=</span><span class="s2">"my_agent"</span><span class="p">,</span>
+<span class="w">    </span><span class="n">name</span><span class="o">=</span><span class="s2">"weather_tool"</span><span class="p">,</span>
+<span class="w">    </span><span class="n">result</span><span class="o">=</span><span class="s2">"It's 75°F and sunny in New York"</span><span class="p">,</span>
 <span class="w">    </span><span class="n">depth</span><span class="o">=</span><span class="mi">0</span>
 <span class="p">)</span>
 </code></pre></div>
@@ -2358,9 +2383,9 @@
 <h3 id="toolerror">ToolError</h3>
 <p>Represents an error that occurred during a tool call.</p>
 <div class="codehilite"><pre><span></span><code><span class="n">ToolError</span><span class="p">(</span>
-<span class="w">    </span><span class="n">agent</span><span class="o">=</span><span class="s2">&quot;my_agent&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;weather_tool&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="n">error</span><span class="o">=</span><span class="s2">&quot;Failed to retrieve weather data: API timeout&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="n">agent</span><span class="o">=</span><span class="s2">"my_agent"</span><span class="p">,</span>
+<span class="w">    </span><span class="n">name</span><span class="o">=</span><span class="s2">"weather_tool"</span><span class="p">,</span>
+<span class="w">    </span><span class="n">error</span><span class="o">=</span><span class="s2">"Failed to retrieve weather data: API timeout"</span><span class="p">,</span>
 <span class="w">    </span><span class="n">depth</span><span class="o">=</span><span class="mi">0</span>
 <span class="p">)</span>
 </code></pre></div>
@@ -2368,15 +2393,15 @@
 <h2 id="llm-completion-events">LLM Completion Events</h2>
 <h3 id="startcompletion">StartCompletion</h3>
 <p>Signals the start of an LLM completion operation.</p>
-<div class="codehilite"><pre><span></span><code>StartCompletion(agent=&quot;my_agent&quot;, depth=0)
+<div class="codehilite"><pre><span></span><code>StartCompletion(agent="my_agent", depth=0)
 </code></pre></div>
 
 <h3 id="finishcompletion">FinishCompletion</h3>
 <p>Contains information about a completed LLM operation, including token usage and cost.</p>
 <div class="codehilite"><pre><span></span><code>FinishCompletion.create(
-    agent=&quot;my_agent&quot;,
-    llm_message=&quot;The generated response&quot;,
-    model=&quot;gpt-4&quot;,
+    agent="my_agent",
+    llm_message="The generated response",
+    model="gpt-4",
     cost=0.02,
     input_tokens=150,
     output_tokens=50,
@@ -2389,17 +2414,17 @@
 <h3 id="waitforinput">WaitForInput</h3>
 <p>Indicates that an agent is waiting for human input to continue.</p>
 <div class="codehilite"><pre><span></span><code>WaitForInput(
-    agent=&quot;my_agent&quot;,
-    request_keys={&quot;user_preference&quot;: &quot;Please specify your preference&quot;}
+    agent="my_agent",
+    request_keys={"user_preference": "Please specify your preference"}
 )
 </code></pre></div>
 
 <h3 id="resumewithinput">ResumeWithInput</h3>
 <p>Sent by the caller with human input to resume an agent's execution.</p>
 <div class="codehilite"><pre><span></span><code>ResumeWithInput(
-    agent=&quot;my_agent&quot;,
-    request_keys={&quot;user_preference&quot;: &quot;Option A&quot;},
-    request_id=&quot;abc123&quot;
+    agent="my_agent",
+    request_keys={"user_preference": "Option A"},
+    request_id="abc123"
 )
 </code></pre></div>
 
@@ -2407,9 +2432,9 @@
 <h3 id="oauthflow">OAuthFlow</h3>
 <p>Emitted when OAuth authentication is required.</p>
 <div class="codehilite"><pre><span></span><code><span class="n">OAuthFlow</span><span class="p">(</span>
-<span class="w">    </span><span class="n">agent</span><span class="o">=</span><span class="s2">&quot;my_agent&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="n">auth_url</span><span class="o">=</span><span class="s2">&quot;https://example.com/oauth&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="n">tool_name</span><span class="o">=</span><span class="s2">&quot;github_tool&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="n">agent</span><span class="o">=</span><span class="s2">"my_agent"</span><span class="p">,</span>
+<span class="w">    </span><span class="n">auth_url</span><span class="o">=</span><span class="s2">"https://example.com/oauth"</span><span class="p">,</span>
+<span class="w">    </span><span class="n">tool_name</span><span class="o">=</span><span class="s2">"github_tool"</span><span class="p">,</span>
 <span class="w">    </span><span class="n">depth</span><span class="o">=</span><span class="mi">0</span>
 <span class="p">)</span>
 </code></pre></div>
@@ -2417,24 +2442,24 @@
 <h2 id="agent-state-events">Agent State Events</h2>
 <h3 id="setstate">SetState</h3>
 <p>Used to update an agent's internal state.</p>
-<div class="codehilite"><pre><span></span><code><span class="n">SetState</span><span class="p">(</span><span class="n">agent</span><span class="o">=</span><span class="s2">&quot;my_agent&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">payload</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;key&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;value&quot;</span><span class="p">},</span><span class="w"> </span><span class="n">depth</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<div class="codehilite"><pre><span></span><code><span class="n">SetState</span><span class="p">(</span><span class="n">agent</span><span class="o">=</span><span class="s2">"my_agent"</span><span class="p">,</span><span class="w"> </span><span class="n">payload</span><span class="o">=</span><span class="p">{</span><span class="s2">"key"</span><span class="p">:</span><span class="w"> </span><span class="s2">"value"</span><span class="p">},</span><span class="w"> </span><span class="n">depth</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 </code></pre></div>
 
 <h3 id="addchild">AddChild</h3>
 <p>Adds a child agent to a parent agent.</p>
-<div class="codehilite"><pre><span></span><code>AddChild(agent=&quot;parent_agent&quot;, remote_ref=child_agent_ref, handoff=False)
+<div class="codehilite"><pre><span></span><code>AddChild(agent="parent_agent", remote_ref=child_agent_ref, handoff=False)
 </code></pre></div>
 
 <h2 id="special-result-types">Special Result Types</h2>
 <p>These aren't events, but special return values that affect agent flow:</p>
 <h3 id="pauseforinputresult">PauseForInputResult</h3>
 <p>Tells the agent to pause and wait for human input.</p>
-<div class="codehilite"><pre><span></span><code>PauseForInputResult(request_keys={&quot;user_preference&quot;: &quot;Please specify your preference&quot;})
+<div class="codehilite"><pre><span></span><code>PauseForInputResult(request_keys={"user_preference": "Please specify your preference"})
 </code></pre></div>
 
 <h3 id="oauthflowresult">OAuthFlowResult</h3>
 <p>Indicates that OAuth flow needs to be initiated.</p>
-<div class="codehilite"><pre><span></span><code><span class="n">OAuthFlowResult</span><span class="p">(</span><span class="n">request_keys</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;auth_url&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;https://example.com/oauth&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;tool_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;github_tool&quot;</span><span class="p">})</span>
+<div class="codehilite"><pre><span></span><code><span class="n">OAuthFlowResult</span><span class="p">(</span><span class="n">request_keys</span><span class="o">=</span><span class="p">{</span><span class="s2">"auth_url"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://example.com/oauth"</span><span class="p">,</span><span class="w"> </span><span class="s2">"tool_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"github_tool"</span><span class="p">})</span>
 </code></pre></div>
 
 <h3 id="finishagentresult">FinishAgentResult</h3>
