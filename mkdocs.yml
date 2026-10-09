@@ -71,6 +71,7 @@ nav:
       - IMAPTool: tools/tool-library/imap-tool.md
       - LinkedinDataTool: tools/tool-library/linkedin-data-tool.md
       - MCPTool: tools/tool-library/mcp-tool.md
+      - ParallelSearchTool: tools/tool-library/parallel-search-tool.md
       - MeetingBaasTool: tools/tool-library/meeting-baas-tool.md
       - ImageGeneratorTool: tools/tool-library/image-generator-tool.md
       - PlaywrightTool: tools/tool-library/playwright-tool.md
