@@ -10,6 +10,7 @@ Agentic comes with a comprehensive set of built-in tools to help your agents int
 | [AuthorizedRestApiTool](./authorized-rest-api-tool.md) | Make authenticated REST API calls with various auth methods |
 | [BrowserUseTool](./browser-use-tool.md) | Automate browser interactions with a smart agent |
 | [DatabaseTool](./database-tool.md) | Connect to and query SQL databases |
+| [DeedPageTool](./deed-page-tool.md) | Publish HTML pages to public URLs with the deed.page MCP server |
 | [DuckDuckGoTool](./duckduckgo-tool.md) | Search the web using DuckDuckGo |
 | [FileDownloadTool](./file-download-tool.md) | Download files from URLs |
 | [GithubTool](./github-tool.md) | Interact with GitHub repositories and APIs |

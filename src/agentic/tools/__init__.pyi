@@ -5,6 +5,7 @@ from .automatic_tools import AutomaticTools
 from .base import BaseAgenticTool
 from .browser_use import BrowserUseTool
 from .database_tool import DatabaseTool
+from .deed_page_tool import DeedPageTool
 from .duckduckgo import DuckDuckGoTool
 from .example_tool import ExampleTool
 from .file_download import FileDownloadTool
@@ -38,6 +39,7 @@ __all__ = [
     "BaseAgenticTool",
     "BrowserUseTool",
     "DatabaseTool",
+    "DeedPageTool",
     "DuckDuckGoTool",
     "ExampleTool",
     "FileDownloadTool",
